@@ -3,7 +3,7 @@
 This document defines the exact semantics our simulator must implement. It is the
 source of truth for the test harness. When wiki behavior and this spec disagree,
 this spec wins (we deviate intentionally where the wiki documents engine quirks
-that aren't worth replicating for a CPU substrate). Deviations are marked
+that aren't worth replicating). Deviations are marked
 **[DEVIATION]**.
 
 References: `babaiswiki_pages_current.xml` — pages *Order of Operations*, *Rule*,
@@ -336,8 +336,7 @@ These map 1:1 to test fixture files in `tests/fixtures/`.
 ## 9. Open questions
 
 - **OPEN/SHUT during movement**: wiki distinguishes "collision check on
-  movement" vs "overlap check after". v1 collapses to overlap-only. Revisit if
-  CPU experiments need door logic during a single tick.
+  movement" vs "overlap check after". v1 collapses to overlap-only. Revisit if need door logic during a single tick.
 - **`ALL` semantics**: wiki says `ALL` excludes `TEXT`/`EMPTY`/`LEVEL`. v1
   treats `ALL` as "every non-text kind in the level".
 - **Letter words / WORD objects**: deferred entirely.

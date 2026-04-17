@@ -1,8 +1,6 @@
 # baba-is-true — Claude session guide
 
-A from-scratch Baba Is You simulator in C++. Long-term goal: build a
-working CPU/ISA *inside* the game using its rule rewriting as the
-substrate. This file orients new Claude sessions; nested CLAUDE.md files
+A from-scratch Baba Is You simulator in C++. Long-term goal: Build the Baba Is You simulator and ensure that it works properly. This file orients new Claude sessions; nested CLAUDE.md files
 exist in every meaningful subdirectory and go deeper.
 
 ## Where we are
@@ -70,4 +68,4 @@ Each of those directories has its own CLAUDE.md.
 2. Implement remaining tick phases (defeat/sink/melt/open-shut, undo
    stack) with the same TDD loop.
 3. Once the simulator is feature-complete enough for "WALL IS PUSH" /
-   transformations, start the CPU/ISA design pass.
+   transformations, try to make the simulator robust enough for a user to create a level.

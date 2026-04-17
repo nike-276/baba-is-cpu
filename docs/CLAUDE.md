@@ -30,7 +30,6 @@ will catch up):
   modifiers.
 - Undo stack (snapshots between ticks).
 - Raylib GUI + sprite atlas (Phase 2).
-- The CPU/ISA construction inside the simulator (long-term goal).
 
 ## When you change a spec
 

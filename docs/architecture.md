@@ -9,7 +9,7 @@
 2. **One binary, two faces.** A single `babaiwt` executable runs interactively (raylib + dear imgui) or headless (`--headless`), with a CLI for batch scenarios. No DLL split, no separate server.
 3. **Edit and play in the same address space.** Mode is a runtime flag, not a separate process; switching to play snapshots the world, switching back restores it.
 4. **Diff-based undo, always on.** Every forward tick records a `Change` list; undo is replay-in-reverse. Capped buffer, not unbounded.
-5. **Plug a CPU into this later.** The architecture must allow replacing the input source (keyboard → tape → MMIO) without touching `core` or `sim`.
+
 
 ## 2. Locked Design Decisions
 
@@ -30,7 +30,7 @@ These are the 17 decisions resolved during planning. Listed here so subsequent w
 |11 | No JSON anywhere in `core` or `sim`. Disk format is the line-based text from §3.          | One representation; no schema drift.                               |
 |12 | Test fixtures are `.test` files (setup + inputs + expected) parsed by the same loader.    | Same code path as gameplay; no test-only mocks.                    |
 |13 | The rule engine is specified independently of the wiki and lives in `rule-engine-spec.md`. | Wiki is reference, not contract.                                   |
-|14 | Determinism: no RNG anywhere in `core` or `sim`. Multiple-YOU resolved by ascending id.   | Reproducible CPU behavior is the whole point.                      |
+|14 | Determinism: no RNG anywhere in `core` or `sim`. Multiple-YOU resolved by ascending id.   | Reproducible behavior is the whole point.                      |
 |15 | Test-first for the rule engine: scenario `.test` files exist before the engine compiles.  | Forces the spec to be operational, not aspirational.               |
 |16 | CMake enforces layer dependencies (see §4). A `core` source including `<raylib.h>` fails to configure. | Architectural drift is caught at build time.            |
 |17 | Phase 1 ships: core skeleton, loader, headless tick loop, ≥6 passing `.test` scenarios. No GUI yet. | Smallest verifiable slice; GUI is a renderer over a working sim.   |
@@ -122,7 +122,7 @@ A `core` translation unit attempting `#include <raylib.h>` fails to configure be
 
 ## 6. Threading
 
-v1 is single-threaded. The simulator runs on the main thread; raylib renders on the main thread. If the embedded CPU later wants worker threads, they must marshal through a queue and call `step_forward` on the sim thread — the sim itself stays single-threaded for determinism.
+v1 is single-threaded. The simulator runs on the main thread; raylib renders on the main thread. 
 
 ## 7. Error Handling
 
