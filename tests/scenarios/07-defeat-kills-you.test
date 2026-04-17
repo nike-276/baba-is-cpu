@@ -1,0 +1,28 @@
+# Scenario 7: DEFEAT destroys YOU on contact; DEFEAT object survives.
+# Verifies DESTRUCT phase sub-step (c): when a YOU object and a DEFEAT object
+# share a tile, the YOU is destroyed.
+
+[setup]
+version 1
+name "defeat kills you"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 skull
+text 1 1 is
+text 2 1 defeat
+
+object 5 5 baba right
+object 6 5 skull right
+
+[inputs]
+input right
+
+[expected]
+not_at 6 5 baba
+at 6 5 skull
+count baba 0
+tick 1
+not_won

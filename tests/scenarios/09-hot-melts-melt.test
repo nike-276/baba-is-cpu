@@ -1,0 +1,31 @@
+# Scenario 9: HOT melts any MELT object on the same tile; the HOT object survives.
+# Lava (HOT) and rock (MELT) start co-located; a wait tick triggers the DESTRUCT phase.
+
+[setup]
+version 1
+name "hot melts melt"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 lava
+text 1 1 is
+text 2 1 hot
+
+text 0 2 rock
+text 1 2 is
+text 2 2 melt
+
+object 5 5 baba right
+object 10 10 lava right
+object 10 10 rock right
+
+[inputs]
+wait
+
+[expected]
+at 10 10 lava
+count rock 0
+tick 1
+not_won

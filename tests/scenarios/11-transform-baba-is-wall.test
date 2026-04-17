@@ -1,0 +1,22 @@
+# Scenario 11: BABA IS WALL transforms all baba objects into wall objects.
+# Verifies TRANSFORM phase: original id preserved for single-target; baba disappears,
+# wall appears at the same position.
+
+[setup]
+version 1
+name "baba is wall transforms baba"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 wall
+
+object 5 5 baba right
+
+[inputs]
+wait
+
+[expected]
+count baba 0
+at 5 5 wall
+tick 1
+not_won

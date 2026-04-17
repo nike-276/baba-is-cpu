@@ -1,0 +1,26 @@
+# Scenario 8: SINK destroys all objects on a tile when any two share it and
+# at least one has SINK. Both the YOU (baba) and the SINK (water) are destroyed.
+
+[setup]
+version 1
+name "sink destroys both"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 water
+text 1 1 is
+text 2 1 sink
+
+object 5 5 baba right
+object 6 5 water right
+
+[inputs]
+input right
+
+[expected]
+count baba 0
+count water 0
+tick 1
+not_won
