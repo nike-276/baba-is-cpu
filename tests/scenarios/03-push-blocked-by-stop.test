@@ -1,0 +1,27 @@
+# Scenario 3: WALL IS STOP — baba is blocked, no movement.
+# Verifies a STOP object that is not also PUSH halts the move resolution.
+
+[setup]
+version 1
+name "stop blocks movement"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 wall
+text 1 1 is
+text 2 1 stop
+
+object 5 5 baba right
+object 6 5 wall right
+
+[inputs]
+input right
+
+[expected]
+at 5 5 baba
+at 6 5 wall
+not_at 6 5 baba
+tick 1
+not_won

@@ -1,0 +1,27 @@
+# Scenario 6: FLAG IS WIN — baba steps onto flag and the win flag fires.
+# Verifies CHECK_WIN phase: any YOU object coexisting with any WIN object
+# triggers `won` for the run.
+
+[setup]
+version 1
+name "flag is win"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 flag
+text 1 1 is
+text 2 1 win
+
+object 5 5 baba right
+object 6 5 flag right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+at 6 5 flag
+tick 1
+won

@@ -1,0 +1,21 @@
+# Scenario 1: BABA IS YOU — single move right.
+# Verifies APPLY_INPUT phase moves a YOU object by one tile per tick.
+
+[setup]
+version 1
+name "baba is you basic move"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+not_at 5 5 baba
+tick 1
+not_won

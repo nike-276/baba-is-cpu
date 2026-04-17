@@ -1,2 +1,6 @@
 .claude
 babaiswiki_pages_current.xml
+build/
+*.o
+*.green
+.DS_Store

@@ -1,0 +1,47 @@
+# Scenario 5: rule breaks when one of its texts is pushed PERPENDICULAR to
+# the strip, splitting the run apart.
+#
+# Setup:
+#   row 0:           BABA IS YOU
+#   row 5:           WALL IS STOP        (text strip at columns 0,1,2)
+#   baba sits one tile ABOVE the STOP text (column 2, row 4) and pushes DOWN.
+#
+# Tick 1: baba moves DOWN. Tile (2,5) holds STOP — pushable via base rule
+#   TEXT IS PUSH. Tile (2,6) is empty so the chain ends. STOP shifts to
+#   (2,6); baba lands on (2,5). The WALL/IS/STOP strip is now WALL(0,5)
+#   IS(1,5) <gap>(2,5) — no longer parses, so WALL loses its STOP property.
+#
+# Tick 2..6: baba walks RIGHT five times. Without the STOP property, the
+#   wall at (7,5) is walk-through-able; baba steps onto its tile.
+
+[setup]
+version 1
+name "rule breaks when its property text is pushed off the strip"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 5 wall
+text 1 5 is
+text 2 5 stop
+
+object 2 4 baba right
+object 7 5 wall right
+
+[inputs]
+input down
+input right
+input right
+input right
+input right
+input right
+
+[expected]
+at 7 5 baba
+at 7 5 wall
+text_at 0 5 wall
+text_at 1 5 is
+text_at 2 6 stop
+tick 6
+not_won

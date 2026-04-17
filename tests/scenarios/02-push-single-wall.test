@@ -1,0 +1,28 @@
+# Scenario 2: WALL IS PUSH — baba shoves a single wall one tile.
+# Verifies push-chain resolution for a chain of length 1.
+
+[setup]
+version 1
+name "push single wall when wall is push"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 wall
+text 1 1 is
+text 2 1 push
+
+object 5 5 baba right
+object 6 5 wall right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+at 7 5 wall
+not_at 5 5 baba
+not_at 6 5 wall
+tick 1
+not_won

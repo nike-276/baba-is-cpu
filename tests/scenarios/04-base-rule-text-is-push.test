@@ -1,0 +1,24 @@
+# Scenario 4: TEXT IS PUSH base rule.
+# No explicit "TEXT IS PUSH" written; the rule engine must inject it implicitly.
+# Baba (YOU) shoves a stray text "WALL" one tile right.
+
+[setup]
+version 1
+name "base rule text is push lets baba push a text"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+object 5 5 baba right
+text 6 5 wall
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+text_at 7 5 wall
+not_at 5 5 baba
+tick 1
+not_won
