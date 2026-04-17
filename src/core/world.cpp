@@ -42,6 +42,13 @@ bool World::face(ObjectId id, Direction d) {
     return true;
 }
 
+bool World::retype(ObjectId id, Kind new_kind) {
+    auto it = objects_.find(id);
+    if (it == objects_.end()) return false;
+    it->second.kind = new_kind;
+    return true;
+}
+
 bool World::destroy(ObjectId id) {
     auto it = objects_.find(id);
     if (it == objects_.end()) return false;

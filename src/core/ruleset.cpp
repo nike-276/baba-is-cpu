@@ -27,7 +27,8 @@ std::optional<Kind> text_kind_at(World const& world, Coord c) {
 }
 
 void scan_strip(World const& world, Coord start, Coord step_dir,
-                std::vector<PropertyRule>& out) {
+                std::vector<PropertyRule>& prop_out,
+                std::vector<TransformRule>& xform_out) {
     auto first = text_kind_at(world, start);
     if (!first || !is_noun(*first)) return;
 
@@ -51,26 +52,35 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
     if (!is_tok || *is_tok != Kind::O_Is) return;
     cursor = {cursor.x + step_dir.x, cursor.y + step_dir.y};
 
-    // First property.
-    auto p0 = text_kind_at(world, cursor);
-    if (!p0 || !is_property(*p0)) return;
-    m.properties.push_back(*p0);
-    cursor = {cursor.x + step_dir.x, cursor.y + step_dir.y};
+    // Predicate: either a property (phrase) or a noun (transform).
+    auto pred0 = text_kind_at(world, cursor);
+    if (!pred0) return;
 
-    // Optional AND PROPERTY repetition.
-    while (true) {
-        auto k = text_kind_at(world, cursor);
-        if (!k || *k != Kind::O_And) break;
-        Coord next = {cursor.x + step_dir.x, cursor.y + step_dir.y};
-        auto p = text_kind_at(world, next);
-        if (!p || !is_property(*p)) break;
-        m.properties.push_back(*p);
-        cursor = {next.x + step_dir.x, next.y + step_dir.y};
-    }
+    if (is_property(*pred0)) {
+        // NOUN IS PROPERTY [AND PROPERTY]*
+        m.properties.push_back(*pred0);
+        cursor = {cursor.x + step_dir.x, cursor.y + step_dir.y};
 
-    for (Kind n : m.subjects) {
-        for (Kind p : m.properties) {
-            out.push_back({n, p});
+        while (true) {
+            auto k = text_kind_at(world, cursor);
+            if (!k || *k != Kind::O_And) break;
+            Coord next = {cursor.x + step_dir.x, cursor.y + step_dir.y};
+            auto p = text_kind_at(world, next);
+            if (!p || !is_property(*p)) break;
+            m.properties.push_back(*p);
+            cursor = {next.x + step_dir.x, next.y + step_dir.y};
+        }
+
+        for (Kind n : m.subjects) {
+            for (Kind p : m.properties) {
+                prop_out.push_back({n, p});
+            }
+        }
+    } else if (is_noun(*pred0)) {
+        // NOUN IS NOUN — single-target transform only (AND-noun-predicates deferred)
+        Kind target = *pred0;
+        for (Kind n : m.subjects) {
+            xform_out.push_back({n, target});
         }
     }
 }
@@ -91,8 +101,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_);
     }
 
     // Base rule: TEXT IS PUSH (always).

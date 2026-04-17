@@ -17,11 +17,15 @@
 
 namespace baba::core {
 
-// One parsed atom: noun N has property P (or transforms into noun M, but
-// transformations are out of scope for Phase 1).
 struct PropertyRule {
     Kind subject;   // a noun kind (or Kind::N_Text for the abstract noun)
     Kind property;  // a P_* kind
+};
+
+// NOUN IS NOUN transformation: every non-text object of kind `from` becomes `to`.
+struct TransformRule {
+    Kind from;  // source noun kind
+    Kind to;    // target noun kind
 };
 
 class RuleSet {
@@ -39,10 +43,12 @@ public:
     // base rule TEXT IS PUSH for PUSH, otherwise no properties).
     bool object_has_property(World const& world, ObjectId id, Kind property) const;
 
-    std::vector<PropertyRule> const& property_rules() const { return rules_; }
+    std::vector<PropertyRule> const& property_rules()   const { return rules_; }
+    std::vector<TransformRule> const& transform_rules() const { return transforms_; }
 
 private:
-    std::vector<PropertyRule> rules_;
+    std::vector<PropertyRule>  rules_;
+    std::vector<TransformRule> transforms_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 
