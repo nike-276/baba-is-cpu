@@ -1,0 +1,20 @@
+# MAKE is idempotent: if the target kind is already on the tile, no second
+# copy is spawned. Rock and flag both at (5,5); after one tick still one each.
+
+[setup]
+version 1
+name "make idempotent"
+
+text 0 0 rock
+text 1 0 make
+text 2 0 flag
+
+object 5 5 rock right
+object 5 5 flag right
+
+[inputs]
+wait
+
+[expected]
+count rock 1
+count flag 1

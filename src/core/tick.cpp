@@ -96,18 +96,54 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
 // ── APPLY_AUTO_MOVE phase ──────────────────────────────────────────────────
 
 void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) {
-    std::vector<ObjectId> movers;
+    struct Mover { ObjectId id; Coord step_v; bool flip_on_block; };
+    std::vector<Mover> movers;
+
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
-        if (rs.object_has_property(world, id, Kind::P_Move)) movers.push_back(id);
+        if (rs.object_has_property(world, id, Kind::P_Move))
+            movers.push_back({id, step(o->facing), true});
+        else if (rs.object_has_property(world, id, Kind::P_Auto))
+            movers.push_back({id, step(o->facing), false});
+        else if (rs.object_has_property(world, id, Kind::P_Fall))
+            movers.push_back({id, step(Direction::Down), false});
+        else if (rs.object_has_property(world, id, Kind::P_Fallup))
+            movers.push_back({id, step(Direction::Up), false});
+        else if (rs.object_has_property(world, id, Kind::P_Fallleft))
+            movers.push_back({id, step(Direction::Left), false});
+        else if (rs.object_has_property(world, id, Kind::P_Fallright))
+            movers.push_back({id, step(Direction::Right), false});
     }
-    // ascending id order for determinism (all_ids already sorted)
-    for (ObjectId id : movers) {
-        Object const* o = world.get(id);
-        if (!o) continue;  // may have been destroyed earlier in this loop
-        if (!try_move(world, id, step(o->facing), rs, log)) {
-            do_face(world, id, opposite(o->facing), log);
+
+    for (auto const& m : movers) {
+        Object const* o = world.get(m.id);
+        if (!o) continue;
+        if (!try_move(world, m.id, m.step_v, rs, log)) {
+            if (m.flip_on_block) do_face(world, m.id, opposite(o->facing), log);
+        }
+    }
+}
+
+// ── APPLY_MAKE phase ───────────────────────────────────────────────────────
+
+void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    auto const& makes = rs.make_rules();
+    if (makes.empty()) return;
+
+    // Snapshot all occupied cells to avoid iterating modified world.
+    std::vector<Coord> cells = world.all_cells();
+    for (auto const& mr : makes) {
+        for (Coord c : cells) {
+            bool has_from = false, has_to = false;
+            for (ObjectId id : world.at(c)) {
+                Object const* o = world.get(id);
+                if (!o || o->text) continue;
+                if (o->kind == mr.from) has_from = true;
+                if (o->kind == mr.to)   has_to   = true;
+            }
+            if (has_from && !has_to)
+                do_spawn(world, c, mr.to, /*text=*/false, Direction::Right, log);
         }
     }
 }
@@ -321,6 +357,9 @@ TickReport apply_tick(World& world, Input input) {
 
     // Phase 6: DESTRUCT
     apply_destructions(world, rs, log);
+
+    // Phase 6.5: APPLY_MAKE
+    apply_make(world, rs, log);
 
     // Phase 7: PARSE_POST_DESTRUCT
     rs = RuleSet::parse(world);

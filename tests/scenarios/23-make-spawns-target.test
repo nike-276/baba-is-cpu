@@ -1,0 +1,21 @@
+# NOUN MAKE NOUN: each tick, every rock tile also spawns a flag.
+# One rock at (5,5). After one tick a flag should also be at (5,5).
+
+[setup]
+version 1
+name "make spawns target"
+
+text 0 0 rock
+text 1 0 make
+text 2 0 flag
+
+object 5 5 rock right
+
+[inputs]
+wait
+
+[expected]
+count rock 1
+count flag 1
+at 5 5 rock
+at 5 5 flag

@@ -29,7 +29,9 @@ std::optional<Kind> text_kind_at(World const& world, Coord c) {
 // v1: we implement predicate-NOT cancellation only.
 void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<PropertyRule>& prop_out,
-                std::vector<TransformRule>& xform_out) {
+                std::vector<TransformRule>& xform_out,
+                std::vector<MakeRule>& make_out,
+                std::vector<ConditionalPropertyRule>& cond_out) {
     auto at = [&](Coord c) { return text_kind_at(world, c); };
     auto adv = [&](Coord c) -> Coord { return {c.x + step_dir.x, c.y + step_dir.y}; };
 
@@ -52,9 +54,65 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         cursor = adv(next);
     }
 
-    // Require IS.
-    auto is_tok = at(cursor);
-    if (!is_tok || *is_tok != Kind::O_Is) return;
+    // Operator: IS, ON, or MAKE.
+    auto op_tok = at(cursor);
+    if (!op_tok) return;
+
+    // ── NOUN MAKE NOUN ──────────────────────────────────────────────────────
+    if (*op_tok == Kind::O_Make) {
+        cursor = adv(cursor);
+        auto target = at(cursor);
+        if (target && is_noun(*target)) {
+            for (Kind n : subjects) make_out.push_back({n, *target});
+        }
+        return;
+    }
+
+    // ── NOUN ON NOUN IS [NOT] PROPERTY [AND …] ─────────────────────────────
+    if (*op_tok == Kind::O_On) {
+        cursor = adv(cursor);
+        auto cond_noun = at(cursor);
+        if (!cond_noun || !is_noun(*cond_noun)) return;
+        Kind condition = *cond_noun;
+        cursor = adv(cursor);
+        auto is_tok2 = at(cursor);
+        if (!is_tok2 || *is_tok2 != Kind::O_Is) return;
+        cursor = adv(cursor);
+
+        struct PropEntry { Kind prop; bool neg; };
+        std::vector<PropEntry> props;
+        auto parse_one_prop_local = [&]() -> bool {
+            auto k = at(cursor);
+            if (!k) return false;
+            bool neg = false;
+            if (*k == Kind::O_Not) {
+                neg = true;
+                cursor = adv(cursor);
+                k = at(cursor);
+                if (!k || !is_property(*k)) return false;
+            }
+            if (!is_property(*k)) return false;
+            props.push_back({*k, neg});
+            cursor = adv(cursor);
+            return true;
+        };
+        if (!parse_one_prop_local()) return;
+        while (true) {
+            auto k = at(cursor);
+            if (!k || *k != Kind::O_And) break;
+            cursor = adv(cursor);
+            if (!parse_one_prop_local()) { cursor = {cursor.x - step_dir.x, cursor.y - step_dir.y}; break; }
+        }
+        for (Kind n : subjects) {
+            for (auto const& pe : props) {
+                if (!pe.neg) cond_out.push_back({n, condition, pe.prop});
+            }
+        }
+        return;
+    }
+
+    // Must be IS.
+    if (*op_tok != Kind::O_Is) return;
     cursor = adv(cursor);
 
     // Predicate: optional leading NOT, then PROPERTY or NOUN.
@@ -120,8 +178,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.cond_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.cond_rules_);
     }
 
     // Base rule: TEXT IS PUSH (always, treated as positive non-cancellable).
@@ -169,10 +227,21 @@ bool RuleSet::has_property(Kind noun, Kind property) const {
 bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property) const {
     Object const* o = world.get(id);
     if (!o) return false;
-    if (o->text) {
-        return index_.count(key_(Kind::N_Text, property)) > 0;
+    Kind noun = o->text ? Kind::N_Text : o->kind;
+    if (index_.count(key_(noun, property))) return true;
+
+    // Check conditional rules (NOUN ON NOUN IS PROPERTY).
+    if (!o->text) {
+        for (auto const& cr : cond_rules_) {
+            if (cr.subject != o->kind || cr.property != property) continue;
+            for (ObjectId other : world.at(o->pos)) {
+                if (other == id) continue;
+                Object const* ob = world.get(other);
+                if (ob && !ob->text && ob->kind == cr.condition_noun) return true;
+            }
+        }
     }
-    return index_.count(key_(o->kind, property)) > 0;
+    return false;
 }
 
 }  // namespace baba::core

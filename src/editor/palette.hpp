@@ -47,24 +47,31 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::N_Key,   true, "T:key");
 
     // Text: operators
-    add(K::O_Is,  true, "T:is");
-    add(K::O_And, true, "T:and");
-    add(K::O_Not, true, "T:not");
+    add(K::O_Is,   true, "T:is");
+    add(K::O_And,  true, "T:and");
+    add(K::O_Not,  true, "T:not");
+    add(K::O_On,   true, "T:on");
+    add(K::O_Make, true, "T:make");
 
     // Text: properties
-    add(K::P_You,    true, "T:you");
-    add(K::P_Push,   true, "T:push");
-    add(K::P_Stop,   true, "T:stop");
-    add(K::P_Win,    true, "T:win");
-    add(K::P_Defeat, true, "T:defeat");
-    add(K::P_Sink,   true, "T:sink");
-    add(K::P_Hot,    true, "T:hot");
-    add(K::P_Melt,   true, "T:melt");
-    add(K::P_Open,   true, "T:open");
-    add(K::P_Shut,   true, "T:shut");
-    add(K::P_Move,   true, "T:move");
-    add(K::P_Eat,    true, "T:eat");
-    add(K::P_Weak,   true, "T:weak");
+    add(K::P_You,       true, "T:you");
+    add(K::P_Push,      true, "T:push");
+    add(K::P_Stop,      true, "T:stop");
+    add(K::P_Win,       true, "T:win");
+    add(K::P_Defeat,    true, "T:defeat");
+    add(K::P_Sink,      true, "T:sink");
+    add(K::P_Hot,       true, "T:hot");
+    add(K::P_Melt,      true, "T:melt");
+    add(K::P_Open,      true, "T:open");
+    add(K::P_Shut,      true, "T:shut");
+    add(K::P_Move,      true, "T:move");
+    add(K::P_Eat,       true, "T:eat");
+    add(K::P_Weak,      true, "T:weak");
+    add(K::P_Auto,      true, "T:auto");
+    add(K::P_Fall,      true, "T:fall");
+    add(K::P_Fallup,    true, "T:fallup");
+    add(K::P_Fallleft,  true, "T:fallleft");
+    add(K::P_Fallright, true, "T:fallright");
 
     return p;
 }

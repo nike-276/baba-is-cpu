@@ -25,8 +25,23 @@ struct PropertyRule {
 
 // NOUN IS NOUN transformation: every non-text object of kind `from` becomes `to`.
 struct TransformRule {
-    Kind from;  // source noun kind
-    Kind to;    // target noun kind
+    Kind from;
+    Kind to;
+};
+
+// NOUN IS MAKE NOUN: each tick, spawn one `to` object on every tile
+// containing a non-text `from` object (idempotent — skipped if already present).
+struct MakeRule {
+    Kind from;
+    Kind to;
+};
+
+// NOUN ON NOUN IS PROPERTY: `subject` has `property` only when sharing a tile
+// with a non-text object of kind `condition_noun`.
+struct ConditionalPropertyRule {
+    Kind subject;
+    Kind condition_noun;
+    Kind property;
 };
 
 class RuleSet {
@@ -44,12 +59,16 @@ public:
     // base rule TEXT IS PUSH for PUSH, otherwise no properties).
     bool object_has_property(World const& world, ObjectId id, Kind property) const;
 
-    std::vector<PropertyRule> const& property_rules()   const { return rules_; }
-    std::vector<TransformRule> const& transform_rules() const { return transforms_; }
+    std::vector<PropertyRule>            const& property_rules()    const { return rules_; }
+    std::vector<TransformRule>           const& transform_rules()  const { return transforms_; }
+    std::vector<MakeRule>                const& make_rules()       const { return makes_; }
+    std::vector<ConditionalPropertyRule> const& conditional_rules() const { return cond_rules_; }
 
 private:
-    std::vector<PropertyRule>  rules_;
-    std::vector<TransformRule> transforms_;
+    std::vector<PropertyRule>            rules_;
+    std::vector<TransformRule>           transforms_;
+    std::vector<MakeRule>                makes_;
+    std::vector<ConditionalPropertyRule> cond_rules_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 

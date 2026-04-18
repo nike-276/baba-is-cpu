@@ -1,0 +1,28 @@
+# BABA ON ROCK IS YOU: baba has YOU only while sharing a tile with rock.
+# Baba and rock share (2,2). No standalone BABA IS YOU rule.
+# FLAG IS WIN. Player input right → baba moves to flag at (3,2) → won.
+
+[setup]
+version 1
+name "on conditional property"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 rock
+text 3 0 is
+text 4 0 you
+text 0 1 flag
+text 1 1 is
+text 2 1 win
+
+object 2 2 baba right
+object 2 2 rock right
+object 3 2 flag right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 3 2 baba
+won

@@ -30,6 +30,8 @@ enum class Kind : std::uint16_t {
     O_Is,
     O_And,
     O_Not,
+    O_On,
+    O_Make,
 
     // ---- Properties (text-only) ----
     P_You,
@@ -45,6 +47,11 @@ enum class Kind : std::uint16_t {
     P_Move,
     P_Eat,
     P_Weak,
+    P_Auto,
+    P_Fall,
+    P_Fallup,
+    P_Fallleft,
+    P_Fallright,
 
     Count_,
 };
@@ -53,10 +60,10 @@ constexpr bool is_noun(Kind k) {
     return k >= Kind::N_Baba && k <= Kind::N_Text;
 }
 constexpr bool is_operator(Kind k) {
-    return k >= Kind::O_Is && k <= Kind::O_Not;
+    return k >= Kind::O_Is && k <= Kind::O_Make;
 }
 constexpr bool is_property(Kind k) {
-    return k >= Kind::P_You && k <= Kind::P_Weak;
+    return k >= Kind::P_You && k <= Kind::P_Fallright;
 }
 
 // Lowercase canonical name as it appears in .level / .test files.

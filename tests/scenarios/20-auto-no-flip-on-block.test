@@ -1,0 +1,25 @@
+# AUTO: like MOVE but does NOT flip facing when blocked.
+# Rock faces right with a wall immediately to the right (WALL IS STOP).
+# After one tick the rock stays put. We verify it didn't move to (1,0).
+
+[setup]
+version 1
+name "auto no flip on block"
+
+text 0 1 rock
+text 1 1 is
+text 2 1 auto
+text 0 2 wall
+text 1 2 is
+text 2 2 stop
+
+object 0 0 rock right
+object 1 0 wall right
+
+[inputs]
+wait
+
+[expected]
+at 0 0 rock
+not_at 1 0 rock
+not_won

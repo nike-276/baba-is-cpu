@@ -21,7 +21,7 @@ checklist) and any scenario file that locks the behavior down.
 | `IS`     | DONE     | Property + transform + identity (`X IS X`). |
 | `AND`    | DONE     | Subject and predicate distribution. |
 | `NOT`    | DONE (predicate side) | Cancels positive of same property; negative-only is a no-op. **PLANNED**: subject side (`NOT X IS P`). |
-| `ON`     | PLANNED  | Conditional rule: `X ON Y IS P` only applies to X-instances sharing a tile with Y. Forces per-object property derivation (see Architecture note below). |
+| `ON`     | DONE     | `X ON Y IS P`: X has P only when sharing a tile with a non-text Y. Checked per-object in `object_has_property`. |
 | `NEAR`   | DEFERRED | Same shape as `ON` but uses 8-neighborhood. |
 | `FACING` | DEFERRED | Subject must be facing a tile containing the noun. |
 | `LONELY` | DEFERRED | Subject must be the only object on its tile (or in 4-neighborhood per wiki variant). |
@@ -48,9 +48,9 @@ checklist) and any scenario file that locks the behavior down.
 | `PUSH`       | DONE     | Chain walks forward, applies back-to-front. |
 | `STOP`       | DONE     | Blocks the entire chain. |
 | `MOVE`       | DONE     | Self-propelled; reverses facing on block. Phase APPLY_AUTO_MOVE (phase 2.5) runs after APPLY_INPUT using PARSE_INITIAL rules. |
-| `AUTO`       | PLANNED  | Self-propelled but stays put on block (no flip). Same phase as MOVE. |
-| `FALL`       | PLANNED  | Constant downward push every tick. |
-| `FALLUP` / `FALLLEFT` / `FALLRIGHT` | PLANNED | Same as FALL but in their respective directions. |
+| `AUTO`       | DONE     | Self-propelled but stays put on block (no flip). Same phase as MOVE. |
+| `FALL`       | DONE     | Constant downward push every tick; no facing flip on block. |
+| `FALLUP` / `FALLLEFT` / `FALLRIGHT` | DONE | Same as FALL but in their respective directions. |
 | `UP` / `DOWN` / `LEFT` / `RIGHT` | PLANNED | Per-tick directional impulse on the carrying object — separate phase APPLY_DIRECTIONAL. |
 | `SHIFT`      | PLANNED  | Carries any object that ends a tick on top of it one tile in SHIFT's facing direction. |
 | `PULL`       | PLANNED  | Mirror of PUSH on the back of the chain. |
@@ -81,7 +81,7 @@ Removal precedence inside DESTRUCT (lower = earlier):
 | `OPEN` / `SHUT` | DONE | Mutual destruction. |
 | `EAT`    | DONE     | EAT object on tile with any non-EAT, non-text object → other object destroyed. EAT itself survives. DESTRUCT sub-step (b). |
 | `WEAK`   | DONE     | Destroyed when any object arrives on its tile this tick (determined from Move changes in the log). DESTRUCT sub-step (d). |
-| `MAKE`   | PLANNED  | New phase MAKE post-DESTRUCT: `X IS MAKE Y` spawns a Y on every tile containing X. Idempotent (don't spawn duplicates per tick). |
+| `MAKE`   | DONE     | `X MAKE Y` (MAKE is an operator, not a property). Phase APPLY_MAKE post-DESTRUCT: spawns a Y on every tile containing X. Idempotent (skips if Y already present). |
 | `HAS`    | DEFERRED | `X HAS Y` spawns Y when X is destroyed; needs to hook DESTRUCT. |
 | `BOOM`   | DEFERRED | Destroys self + neighbouring tiles' contents. |
 | `SAFE`   | DEFERRED | Immune to DEFEAT/SINK/MELT/etc. |

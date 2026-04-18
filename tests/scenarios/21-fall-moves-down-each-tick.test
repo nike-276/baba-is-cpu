@@ -1,0 +1,20 @@
+# FALL: rock moves downward each tick regardless of its facing direction.
+# Rock at (2,0). After one wait tick it should be at (2,1).
+
+[setup]
+version 1
+name "fall moves down each tick"
+
+text 0 5 rock
+text 1 5 is
+text 2 5 fall
+
+object 2 0 rock right
+
+[inputs]
+wait
+
+[expected]
+at 2 1 rock
+not_at 2 0 rock
+not_won
