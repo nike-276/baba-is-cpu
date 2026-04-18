@@ -68,11 +68,6 @@ COMMIT
 ```
 
 ## Open architectural debts
-
-- `World::respawn(id, ...)` exists but undo of Destroy in the editor
-  uses a fresh id (BUG-1, BUG-3 in feature-status §9). Fix is to call
-  `respawn` instead of `spawn` in `sim/simulator.cpp` step_back and
-  `editor/editor.cpp` undo_edit.
 - NOT subject-side (`NOT X IS P` → applies P to everything except X)
   is parsed but not resolved.
 - X IS TEXT predicate transform is unimplemented.

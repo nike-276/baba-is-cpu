@@ -164,8 +164,8 @@ to keep the engine general:
 
 | ID | Where | Symptom | Status |
 |----|-------|---------|--------|
-| BUG-1 | `src/sim/simulator.cpp:39-40`, `src/editor/editor.cpp:80-81` | Undo of Destroy spawns a fresh id; subsequent reverse-applied Move records target a now-missing id and the resurrected object lands in the wrong place. | PLANNED fix in Phase B (id-preserving `respawn`). |
+| BUG-1 | ~~`src/sim/simulator.cpp:39-40`, `src/editor/editor.cpp:80-81`~~ | ~~Undo of Destroy spawns a fresh id; subsequent reverse-applied Move records target a now-missing id and the resurrected object lands in the wrong place.~~ | **FIXED** — `World::respawn(id, ...)` added; `sim::Simulator::step_back` and `editor::Editor::undo_edit` both call `respawn` to restore the original id. |
 | BUG-2 | ~~`src/app/input_handler.hpp`~~ | ~~`scroll_x/y` is `int`, accumulating ½-tile rounding errors on zoom~~ | **FIXED** — `scroll_x/y` changed to `float`; zoom math is now exact; grid offset uses fractional part. |
-| BUG-3 | `src/editor/editor.cpp:81` | Editor's edit-undo also loses original ids (same root cause as BUG-1). | Same fix as BUG-1. |
+| BUG-3 | ~~`src/editor/editor.cpp:81`~~ | ~~Editor's edit-undo also loses original ids (same root cause as BUG-1).~~ | **FIXED** — same `respawn` fix as BUG-1. |
 
 Add new bugs above this line with the next free ID and the same shape.
