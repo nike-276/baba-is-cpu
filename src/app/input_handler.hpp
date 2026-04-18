@@ -2,6 +2,7 @@
 
 #include "core/direction.hpp"
 #include "editor/editor.hpp"
+#include "render/palette_layout.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -11,8 +12,10 @@
 
 namespace baba::app {
 
-static constexpr int PALETTE_SEARCH_H  = 22;  // search box pixel height
-static constexpr int PALETTE_ENTRY_TOP = 20 + PALETTE_SEARCH_H + 4;  // entries start y
+using render::PALETTE_W;
+using render::PALETTE_ENTRY_H;
+using render::PALETTE_SEARCH_H;
+using render::PALETTE_ENTRY_TOP;
 
 // Translates raw raylib input into editor actions each frame.
 // Call poll() once per frame; it mutates the Editor and scroll state in place.
@@ -40,9 +43,8 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
     // ── Zoom (mouse wheel over viewport) or palette scroll (over palette) ──
     float wheel = GetMouseWheelMove();
     if (wheel != 0.0f) {
-        int palette_w = st.tile_px + 8;
-        if (GetMouseX() < palette_w) {
-            st.palette_scroll = std::max(0, st.palette_scroll - static_cast<int>(wheel * (st.tile_px + 4)));
+        if (GetMouseX() < PALETTE_W) {
+            st.palette_scroll = std::max(0, st.palette_scroll - static_cast<int>(wheel * PALETTE_ENTRY_H));
         } else {
             st.tile_px = std::clamp(st.tile_px + static_cast<int>(wheel * 4), 8, 128);
         }
@@ -65,22 +67,17 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
 
     // ── Palette panel clicks (both modes) ────────────────────────────────
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        int palette_w = st.tile_px + 8;
-        Vector2 mp    = GetMousePosition();
+        Vector2 mp = GetMousePosition();
         int mx = static_cast<int>(mp.x);
         int my = static_cast<int>(mp.y);
 
-        if (mx < palette_w) {
-            int search_top = 20;
-            int entry_h    = st.tile_px + 4;
-
+        if (mx < PALETTE_W) {
+            constexpr int search_top = 20;
             if (my >= search_top && my < search_top + PALETTE_SEARCH_H) {
-                // Clicked the search box.
                 st.palette_search_active = true;
             } else if (my >= PALETTE_ENTRY_TOP) {
-                // Clicked an entry.
                 st.palette_search_active = false;
-                int clicked = (my - PALETTE_ENTRY_TOP + st.palette_scroll) / entry_h;
+                int clicked = (my - PALETTE_ENTRY_TOP + st.palette_scroll) / PALETTE_ENTRY_H;
                 if (clicked >= 0 && clicked < static_cast<int>(st.palette_filtered.size())) {
                     ed.palette_select(st.palette_filtered[clicked]);
                 }
@@ -136,9 +133,8 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         // Use tile-tracking: only act when the cursor enters a new tile,
         // so holding the button down paints one object per tile (no spam).
         // Skip when mouse is over the palette panel.
-        int palette_w_guard = st.tile_px + 8;
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) &&
-            GetMouseX() >= palette_w_guard) {
+            GetMouseX() >= PALETTE_W) {
             Vector2 mp = GetMousePosition();
             core::Coord tile{
                 static_cast<int>(mp.x) / st.tile_px + st.scroll_x,
@@ -153,7 +149,7 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
             st.last_place_tile = {INT_MIN, INT_MIN};  // reset on button release
         }
         if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) &&
-            GetMouseX() >= palette_w_guard) {
+            GetMouseX() >= PALETTE_W) {
             Vector2 mp = GetMousePosition();
             core::Coord tile{
                 static_cast<int>(mp.x) / st.tile_px + st.scroll_x,

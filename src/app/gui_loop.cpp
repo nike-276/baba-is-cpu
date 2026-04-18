@@ -2,6 +2,7 @@
 #include "input_handler.hpp"
 
 #include "editor/editor.hpp"
+#include "render/palette_layout.hpp"
 #include "render/renderer.hpp"
 #include "sim/simulator.hpp"
 
@@ -89,7 +90,7 @@ int run_gui(std::string const& level_path) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        int palette_w = state.tile_px + 8;
+        int palette_w = render::PALETTE_W;
         int rules_w   = 220;
         int content_x = palette_w;
         int content_w = WIN_W - palette_w - rules_w;

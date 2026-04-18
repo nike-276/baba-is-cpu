@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 #include "tile_colors.hpp"
+#include "palette_layout.hpp"
 
 #include "core/object.hpp"
 
@@ -138,10 +139,10 @@ int Renderer::draw_palette(std::vector<std::string> const& entries,
                             int selected_idx, int px, int py,
                             int scroll_px, int panel_h,
                             std::string const& search_text, bool search_active) const {
-    constexpr int SEARCH_H = 22;
-    int entry_h   = tile_px_ + 4;
-    int font_size = std::max(8, tile_px_ / 5);
-    int panel_w   = tile_px_ + 4;
+    constexpr int SEARCH_H = PALETTE_SEARCH_H;
+    int entry_h   = PALETTE_ENTRY_H;
+    int font_size = std::max(8, PALETTE_PX / 5);
+    int panel_w   = PALETTE_W;
 
     DrawText("PALETTE", px, py - 18, 12, LIGHTGRAY);
 
@@ -171,7 +172,7 @@ int Renderer::draw_palette(std::vector<std::string> const& entries,
         if (ey + entry_h < entry_start || ey > entry_start + visible_h) continue;
 
         Rectangle bg{static_cast<float>(px), static_cast<float>(ey),
-                     static_cast<float>(panel_w), static_cast<float>(tile_px_ + 2)};
+                     static_cast<float>(panel_w), static_cast<float>(PALETTE_PX + 2)};
 
         if (i == selected_idx) {
             DrawRectangleRec(bg, WHITE);
@@ -181,7 +182,7 @@ int Renderer::draw_palette(std::vector<std::string> const& entries,
         }
 
         Color tc = (i == selected_idx) ? BLACK : LIGHTGRAY;
-        DrawText(entries[i].c_str(), px + 2, ey + (tile_px_ - font_size) / 2, font_size, tc);
+        DrawText(entries[i].c_str(), px + 2, ey + (PALETTE_PX - font_size) / 2, font_size, tc);
     }
 
     EndScissorMode();
