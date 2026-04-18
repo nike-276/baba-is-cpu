@@ -36,8 +36,7 @@ checklist) and any scenario file that locks the behavior down.
 | Token | Status | Notes |
 |-------|--------|-------|
 | `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`, `DOOR` | DONE | Original palette objects. |
-| `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
-| `KEKE`                    | PLANNED | Required for transform/duplicate scenarios. |
+| `KEKE`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
 | `TEXT` (meta-noun)        | PARTIAL | Recognized in rule grammar (base rule `TEXT IS PUSH`). PLANNED: as predicate (`X IS TEXT` transforms X into its text twin). |
 | `EMPTY`                   | PLANNED | As subject = "empty tiles"; as predicate = self-destruct. Currently neither is wired. |
 | `ALL`                     | DEFERRED | Distribution-over-everything semantics. |

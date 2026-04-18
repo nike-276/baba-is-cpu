@@ -24,6 +24,7 @@ enum class Kind : std::uint16_t {
     N_Skull,
     N_Door,
     N_Key,
+    N_Keke,
     N_Me,
     N_Box,
     N_Leaf,

@@ -24,6 +24,7 @@ inline const char* object_label(core::Kind k) {
         case K::N_Skull: return "SKUL";
         case K::N_Door:  return "DOOR";
         case K::N_Key:    return "KEY";
+        case K::N_Keke:   return "KEKE";
         case K::N_Me:     return "ME";
         case K::N_Box:    return "BOX";
         case K::N_Leaf:   return "LEAF";
@@ -55,6 +56,7 @@ inline TileStyle style_for(core::Kind k, bool is_text) {
             case K::N_Skull: return {{60,60,60,255},               WHITE, object_label(k)};
             case K::N_Door:  return {{100,60,20,255},              WHITE, object_label(k)};
             case K::N_Key:    return {GOLD,                         BLACK, object_label(k)};
+            case K::N_Keke:   return {{255,100,60,255},              BLACK, object_label(k)};
             case K::N_Me:     return {{180,140,255,255},            BLACK, object_label(k)};
             case K::N_Box:    return {{160,110,60,255},             WHITE, object_label(k)};
             case K::N_Leaf:   return {{80,180,60,255},              BLACK, object_label(k)};

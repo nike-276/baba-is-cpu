@@ -19,6 +19,7 @@ constexpr std::array kTable = {
     Entry{"skull",  Kind::N_Skull},
     Entry{"door",   Kind::N_Door},
     Entry{"key",    Kind::N_Key},
+    Entry{"keke",   Kind::N_Keke},
     Entry{"me",     Kind::N_Me},
     Entry{"box",    Kind::N_Box},
     Entry{"leaf",   Kind::N_Leaf},
