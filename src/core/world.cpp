@@ -17,6 +17,11 @@ ObjectId World::spawn(Coord pos, Kind kind, bool text, Direction facing) {
     return id;
 }
 
+void World::respawn(ObjectId id, Coord pos, Kind kind, bool text, Direction facing) {
+    objects_.emplace(id, Object{id, pos, kind, text, facing});
+    grid_[pos].push_back(id);
+}
+
 bool World::move(ObjectId id, Coord new_pos) {
     auto it = objects_.find(id);
     if (it == objects_.end()) return false;

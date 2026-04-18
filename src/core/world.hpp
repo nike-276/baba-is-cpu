@@ -25,6 +25,11 @@ public:
     // Allocate a new object and insert it into the grid.
     ObjectId spawn(Coord pos, Kind kind, bool text, Direction facing = Direction::Right);
 
+    // Re-insert a previously-destroyed object with its original id.
+    // id must be < next_id_ (i.e., it was previously allocated by spawn).
+    // next_id_ is NOT advanced. Used exclusively by undo-of-Destroy.
+    void respawn(ObjectId id, Coord pos, Kind kind, bool text, Direction facing);
+
     // Mutators (return false if id unknown).
     bool move(ObjectId id, Coord new_pos);
     bool face(ObjectId id, Direction d);

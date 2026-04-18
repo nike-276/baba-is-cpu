@@ -78,7 +78,7 @@ bool Editor::undo_edit() {
                 sim_.world().destroy(c.id);
                 break;
             case ChangeKind::Destroy:
-                sim_.world().spawn(c.obj_pos, c.obj_kind, c.obj_text, c.obj_facing);
+                sim_.world().respawn(c.id, c.obj_pos, c.obj_kind, c.obj_text, c.obj_facing);
                 break;
             default: break;  // edit ops only produce Spawn/Destroy
         }
