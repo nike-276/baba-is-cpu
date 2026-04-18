@@ -1,15 +1,16 @@
 // core/tick.hpp — apply one tick of simulation given a player input.
 //
-// Full 9-phase pipeline per rule-engine-spec.md §4:
-//   1. PARSE_INITIAL
-//   2. APPLY_INPUT   — move every YOU object; resolve push chain (PUSH / STOP)
-//   3. PARSE_POST_MOVE
-//   4. TRANSFORM     — apply X IS Y transformation rules
-//   5. PARSE_POST_TRANSFORM
-//   6. DESTRUCT      — SINK / HOT+MELT / DEFEAT / OPEN+SHUT
-//   7. PARSE_POST_DESTRUCT
-//   8. CHECK_WIN     — any (YOU, WIN) co-tile triggers `won`
-//   9. COMMIT        — TickReport.changes carries all mutations for the undo stack
+// Full 10-phase pipeline:
+//   1.  PARSE_INITIAL
+//   2.  APPLY_INPUT      — move every YOU object; resolve push chain (PUSH / STOP)
+//   2.5 APPLY_AUTO_MOVE  — self-propelled objects (MOVE); reverse facing on block
+//   3.  PARSE_POST_MOVE
+//   4.  TRANSFORM        — apply X IS Y transformation rules
+//   5.  PARSE_POST_TRANSFORM
+//   6.  DESTRUCT         — SINK / EAT / HOT+MELT / WEAK / DEFEAT / OPEN+SHUT
+//   7.  PARSE_POST_DESTRUCT
+//   8.  CHECK_WIN        — any (YOU, WIN) co-tile triggers `won`
+//   9.  COMMIT           — TickReport.changes carries all mutations for undo stack
 #pragma once
 
 #include "change.hpp"

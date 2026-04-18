@@ -1,0 +1,28 @@
+# Scenario 18: EAT destroys any non-EAT object on the same tile; the EAT object survives.
+# Verifies DESTRUCT sub-step (b): when baba (YOU) moves onto a water (EAT) tile,
+# baba is destroyed and water remains.
+
+[setup]
+version 1
+name "eat destroys non-eat on contact"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 water
+text 1 1 is
+text 2 1 eat
+
+object 5 5 baba right
+object 6 5 water right
+
+[inputs]
+input right
+
+[expected]
+not_at 6 5 baba
+at 6 5 water
+count baba 0
+tick 1
+not_won

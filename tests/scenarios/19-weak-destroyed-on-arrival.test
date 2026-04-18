@@ -1,0 +1,28 @@
+# Scenario 19: WEAK objects are destroyed when another object moves onto their tile.
+# WEAK does not have STOP, so movement succeeds; the WEAK object is then
+# removed in DESTRUCT because a mover arrived on its tile this tick.
+
+[setup]
+version 1
+name "weak destroyed when object arrives on tile"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 rock
+text 1 1 is
+text 2 1 weak
+
+object 5 5 baba right
+object 6 5 rock right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+not_at 6 5 rock
+count rock 0
+tick 1
+not_won

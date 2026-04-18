@@ -1,5 +1,5 @@
 .claude
-babaiswiki_pages_current.xml
+babaiswiki*.xml
 build/
 build_cmake/
 *.o

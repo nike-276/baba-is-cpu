@@ -93,6 +93,25 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
     return true;
 }
 
+// ── APPLY_AUTO_MOVE phase ──────────────────────────────────────────────────
+
+void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    std::vector<ObjectId> movers;
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        if (rs.object_has_property(world, id, Kind::P_Move)) movers.push_back(id);
+    }
+    // ascending id order for determinism (all_ids already sorted)
+    for (ObjectId id : movers) {
+        Object const* o = world.get(id);
+        if (!o) continue;  // may have been destroyed earlier in this loop
+        if (!try_move(world, id, step(o->facing), rs, log)) {
+            do_face(world, id, opposite(o->facing), log);
+        }
+    }
+}
+
 // ── TRANSFORM phase ────────────────────────────────────────────────────────
 
 void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log) {
@@ -146,6 +165,13 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         for (ObjectId id : sorted) do_destroy(world, id, log);
     };
 
+    // Capture tiles that received a moving object this tick (for WEAK check below).
+    // Read log before any destructions add to it.
+    std::unordered_set<Coord, CoordHash> arrived;
+    for (auto const& c : log) {
+        if (c.kind == ChangeKind::Move) arrived.insert(c.to_pos);
+    }
+
     // a. SINK
     {
         std::unordered_set<ObjectId> doomed;
@@ -161,7 +187,25 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         destroy_set(doomed);
     }
 
-    // b. HOT / MELT
+    // b. EAT — an EAT object destroys all non-EAT, non-text objects on the same tile.
+    {
+        std::unordered_set<ObjectId> doomed;
+        for (Coord c : world.all_cells()) {
+            auto const& cell = world.at(c);
+            bool any_eat = false;
+            for (ObjectId id : cell)
+                if (rs.object_has_property(world, id, Kind::P_Eat)) { any_eat = true; break; }
+            if (!any_eat) continue;
+            for (ObjectId id : cell) {
+                Object const* o = world.get(id);
+                if (!o || o->text) continue;
+                if (!rs.object_has_property(world, id, Kind::P_Eat)) doomed.insert(id);
+            }
+        }
+        destroy_set(doomed);
+    }
+
+    // c. HOT / MELT (re-labeled; was b)
     {
         std::unordered_set<ObjectId> doomed;
         for (Coord c : world.all_cells()) {
@@ -178,7 +222,18 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         destroy_set(doomed);
     }
 
-    // c. DEFEAT
+    // d. WEAK — destroyed when any object arrives on their tile this tick.
+    if (!arrived.empty()) {
+        std::unordered_set<ObjectId> doomed;
+        for (Coord const& c : arrived) {
+            for (ObjectId id : world.at(c)) {
+                if (rs.object_has_property(world, id, Kind::P_Weak)) doomed.insert(id);
+            }
+        }
+        destroy_set(doomed);
+    }
+
+    // e. DEFEAT
     {
         std::unordered_set<ObjectId> doomed;
         for (Coord c : world.all_cells()) {
@@ -193,7 +248,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         destroy_set(doomed);
     }
 
-    // d. OPEN / SHUT
+    // f. OPEN / SHUT
     {
         std::unordered_set<ObjectId> doomed;
         for (Coord c : world.all_cells()) {
@@ -251,6 +306,9 @@ TickReport apply_tick(World& world, Input input) {
             if (try_move(world, yid, step_v, rs, log)) report.moved_count++;
         }
     }
+
+    // Phase 2.5: APPLY_AUTO_MOVE
+    apply_auto_move(world, rs, log);
 
     // Phase 3: PARSE_POST_MOVE
     rs = RuleSet::parse(world);

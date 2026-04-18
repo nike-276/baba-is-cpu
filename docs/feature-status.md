@@ -47,7 +47,7 @@ checklist) and any scenario file that locks the behavior down.
 | `YOU`        | DONE     | Multi-YOU resolved by ascending id. |
 | `PUSH`       | DONE     | Chain walks forward, applies back-to-front. |
 | `STOP`       | DONE     | Blocks the entire chain. |
-| `MOVE`       | PLANNED  | Self-propelled; reverses facing on block. New phase APPLY_AUTO_MOVE before TRANSFORM. |
+| `MOVE`       | DONE     | Self-propelled; reverses facing on block. Phase APPLY_AUTO_MOVE (phase 2.5) runs after APPLY_INPUT using PARSE_INITIAL rules. |
 | `AUTO`       | PLANNED  | Self-propelled but stays put on block (no flip). Same phase as MOVE. |
 | `FALL`       | PLANNED  | Constant downward push every tick. |
 | `FALLUP` / `FALLLEFT` / `FALLRIGHT` | PLANNED | Same as FALL but in their respective directions. |
@@ -79,8 +79,8 @@ Removal precedence inside DESTRUCT (lower = earlier):
 | `MELT`   | DONE     | Destroyed by HOT. |
 | `DEFEAT` | DONE     | Destroys YOU on tile. |
 | `OPEN` / `SHUT` | DONE | Mutual destruction. |
-| `EAT`    | PLANNED  | EAT object on tile with another object (and both are NOT same kind, NOT both EAT) → other object destroyed. |
-| `WEAK`   | PLANNED  | Destroyed by any collision (push, movement onto its tile, etc.). |
+| `EAT`    | DONE     | EAT object on tile with any non-EAT, non-text object → other object destroyed. EAT itself survives. DESTRUCT sub-step (b). |
+| `WEAK`   | DONE     | Destroyed when any object arrives on its tile this tick (determined from Move changes in the log). DESTRUCT sub-step (d). |
 | `MAKE`   | PLANNED  | New phase MAKE post-DESTRUCT: `X IS MAKE Y` spawns a Y on every tile containing X. Idempotent (don't spawn duplicates per tick). |
 | `HAS`    | DEFERRED | `X HAS Y` spawns Y when X is destroyed; needs to hook DESTRUCT. |
 | `BOOM`   | DEFERRED | Destroys self + neighbouring tiles' contents. |
@@ -165,7 +165,7 @@ to keep the engine general:
 | ID | Where | Symptom | Status |
 |----|-------|---------|--------|
 | BUG-1 | `src/sim/simulator.cpp:39-40`, `src/editor/editor.cpp:80-81` | Undo of Destroy spawns a fresh id; subsequent reverse-applied Move records target a now-missing id and the resurrected object lands in the wrong place. | PLANNED fix in Phase B (id-preserving `respawn`). |
-| BUG-2 | `src/app/input_handler.hpp:50-62`, `src/render/renderer.cpp:103,108` | `scroll_x/y` is `int`, so the cursor-anchored zoom math accumulates ½-tile rounding errors → grid shakes on continuous scroll. The `(scroll_x % 1) * tile_px_` grid offset is also dead code (always 0). | PLANNED fix in Phase B (float scroll). |
+| BUG-2 | ~~`src/app/input_handler.hpp`~~ | ~~`scroll_x/y` is `int`, accumulating ½-tile rounding errors on zoom~~ | **FIXED** — `scroll_x/y` changed to `float`; zoom math is now exact; grid offset uses fractional part. |
 | BUG-3 | `src/editor/editor.cpp:81` | Editor's edit-undo also loses original ids (same root cause as BUG-1). | Same fix as BUG-1. |
 
 Add new bugs above this line with the next free ID and the same shape.

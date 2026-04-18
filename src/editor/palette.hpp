@@ -62,6 +62,9 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::P_Melt,   true, "T:melt");
     add(K::P_Open,   true, "T:open");
     add(K::P_Shut,   true, "T:shut");
+    add(K::P_Move,   true, "T:move");
+    add(K::P_Eat,    true, "T:eat");
+    add(K::P_Weak,   true, "T:weak");
 
     return p;
 }

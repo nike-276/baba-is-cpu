@@ -1,0 +1,22 @@
+# Scenario 17: MOVE causes an object to self-propel in its facing direction each tick.
+# Verifies the APPLY_AUTO_MOVE phase: a MOVE-property object advances one tile
+# per tick without any player input (wait tick used here).
+
+[setup]
+version 1
+name "move self-propels in facing direction"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 move
+
+object 5 5 rock right
+
+[inputs]
+input wait
+
+[expected]
+at 6 5 rock
+not_at 5 5 rock
+tick 1
+not_won

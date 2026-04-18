@@ -35,6 +35,9 @@ constexpr std::array kTable = {
     Entry{"melt",   Kind::P_Melt},
     Entry{"open",   Kind::P_Open},
     Entry{"shut",   Kind::P_Shut},
+    Entry{"move",   Kind::P_Move},
+    Entry{"eat",    Kind::P_Eat},
+    Entry{"weak",   Kind::P_Weak},
 };
 
 }  // namespace
