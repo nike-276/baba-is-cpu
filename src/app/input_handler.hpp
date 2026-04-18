@@ -23,7 +23,7 @@ using render::PALETTE_ENTRY_TOP;
 struct InputState {
     float scroll_x{0.0f};
     float scroll_y{0.0f};
-    int   tile_px{48};
+    float tile_px{48.0f};
     int  palette_scroll{0};       // pixel offset into the visible entry list
     bool request_save{false};
     bool request_load{false};
@@ -47,19 +47,19 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         if (GetMouseX() < PALETTE_W) {
             st.palette_scroll = std::max(0, st.palette_scroll - static_cast<int>(wheel * PALETTE_ENTRY_H));
         } else {
-            int old_px = st.tile_px;
-            int new_px = std::clamp(old_px + static_cast<int>(wheel * 4), 8, 128);
+            float old_px = st.tile_px;
+            // Multiplicative zoom: each wheel notch scales by 10%.
+            // Symmetric: N steps in + N steps out = exact original zoom.
+            float new_px = std::clamp(old_px * std::pow(1.1f, wheel), 8.0f, 128.0f);
             if (new_px != old_px) {
-                // Viewport starts at PALETTE_W; compute mouse position within it.
                 float mx = static_cast<float>(GetMouseX() - PALETTE_W);
                 float my = static_cast<float>(GetMouseY());
-                // World tile coordinate under the cursor before zoom.
-                float wx = mx / static_cast<float>(old_px) + st.scroll_x;
-                float wy = my / static_cast<float>(old_px) + st.scroll_y;
+                // World point under cursor is invariant across the zoom.
+                float wx = mx / old_px + st.scroll_x;
+                float wy = my / old_px + st.scroll_y;
                 st.tile_px  = new_px;
-                // Adjust scroll so the same world point stays under the cursor (no truncation).
-                st.scroll_x = wx - mx / static_cast<float>(new_px);
-                st.scroll_y = wy - my / static_cast<float>(new_px);
+                st.scroll_x = wx - mx / new_px;
+                st.scroll_y = wy - my / new_px;
             }
         }
     }

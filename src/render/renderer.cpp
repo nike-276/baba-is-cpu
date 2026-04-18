@@ -11,7 +11,7 @@
 
 namespace baba::render {
 
-Renderer::Renderer(int tile_px) : tile_px_{tile_px} {}
+Renderer::Renderer(float tile_px) : tile_px_{tile_px} {}
 
 Vector2 Renderer::tile_to_screen(int tx, int ty, float scroll_x, float scroll_y) const {
     return {
@@ -32,13 +32,14 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
     TileStyle style = style_for(obj.kind, obj.text);
 
     // Vertical offset when multiple objects share a tile.
-    int offset = (total_layers > 1) ? layer * (tile_px_ / total_layers) : 0;
-    int h = (total_layers > 1) ? tile_px_ / total_layers : tile_px_;
+    float layer_h = tile_px_ / static_cast<float>(total_layers);
+    int offset = (total_layers > 1) ? static_cast<int>(std::roundf(layer * layer_h)) : 0;
+    int h      = (total_layers > 1) ? static_cast<int>(std::roundf(layer_h)) : static_cast<int>(tile_px_);
 
     Rectangle rect{
         static_cast<float>(sx + 1),
         static_cast<float>(sy + offset + 1),
-        static_cast<float>(tile_px_ - 2),
+        tile_px_ - 2.0f,
         static_cast<float>(h - 2)
     };
 
@@ -50,10 +51,10 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
     }
 
     // Label (truncated to fit).
-    int font_size = std::max(8, tile_px_ / 4);
+    int font_size = std::max(8, static_cast<int>(tile_px_) / 4);
     const char* label = style.label;
     int text_w = MeasureText(label, font_size);
-    int tx_pos = sx + (tile_px_ - text_w) / 2;
+    int tx_pos = sx + static_cast<int>((tile_px_ - static_cast<float>(text_w)) / 2.0f);
     int ty_pos = sy + offset + (h - font_size) / 2;
     DrawText(label, tx_pos, ty_pos, font_size, style.text_fg);
 }
@@ -65,9 +66,9 @@ void Renderer::draw_world(core::World const& world,
 
     // Only draw tiles visible in the viewport (plus a 1-tile margin).
     int min_tx = static_cast<int>(scroll_x) - 1;
-    int max_tx = static_cast<int>(scroll_x) + screen_w / tile_px_ + 2;
+    int max_tx = static_cast<int>(scroll_x) + static_cast<int>(screen_w / tile_px_) + 2;
     int min_ty = static_cast<int>(scroll_y) - 1;
-    int max_ty = static_cast<int>(scroll_y) + screen_h / tile_px_ + 2;
+    int max_ty = static_cast<int>(scroll_y) + static_cast<int>(screen_h / tile_px_) + 2;
 
     for (core::Coord c : world.all_cells()) {
         if (c.x < min_tx || c.x > max_tx || c.y < min_ty || c.y > max_ty) continue;
@@ -75,8 +76,9 @@ void Renderer::draw_world(core::World const& world,
         auto const& ids = world.at(c);
         if (ids.empty()) continue;
 
-        int sx = static_cast<int>((c.x - scroll_x) * tile_px_);
-        int sy = static_cast<int>((c.y - scroll_y) * tile_px_);
+        // Use roundf so pixel positions are consistent with the grid lines.
+        int sx = static_cast<int>(std::roundf((c.x - scroll_x) * tile_px_));
+        int sy = static_cast<int>(std::roundf((c.y - scroll_y) * tile_px_));
 
         // Sort objects: non-text first (ascending id), then text (ascending id).
         std::vector<core::ObjectId> sorted = ids;
@@ -100,15 +102,16 @@ void Renderer::draw_grid(int viewport_w, int viewport_h,
                           float scroll_x, float scroll_y) const {
     Color grid_color = {50, 50, 50, 180};
 
-    // Sub-tile fractional offset: aligns grid lines with world-tile boundaries.
-    // floor(scroll) - scroll is in (-1, 0], so * tile_px_ gives first line <= 0.
-    int start_x = static_cast<int>((std::floor(scroll_x) - scroll_x) * tile_px_);
-    for (int x = start_x; x < viewport_w; x += tile_px_) {
-        DrawLine(x, 0, x, viewport_h, grid_color);
+    // Sub-tile fractional offset keeps grid lines pinned to world-tile edges.
+    float start_xf = (std::floor(scroll_x) - scroll_x) * tile_px_;
+    for (float x = start_xf; x < static_cast<float>(viewport_w); x += tile_px_) {
+        int xi = static_cast<int>(std::roundf(x));
+        DrawLine(xi, 0, xi, viewport_h, grid_color);
     }
-    int start_y = static_cast<int>((std::floor(scroll_y) - scroll_y) * tile_px_);
-    for (int y = start_y; y < viewport_h; y += tile_px_) {
-        DrawLine(0, y, viewport_w, y, grid_color);
+    float start_yf = (std::floor(scroll_y) - scroll_y) * tile_px_;
+    for (float y = start_yf; y < static_cast<float>(viewport_h); y += tile_px_) {
+        int yi = static_cast<int>(std::roundf(y));
+        DrawLine(0, yi, viewport_w, yi, grid_color);
     }
 }
 

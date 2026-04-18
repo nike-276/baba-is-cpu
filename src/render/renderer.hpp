@@ -13,7 +13,7 @@ namespace baba::render {
 // Pure consumer of const World& — never mutates simulation state.
 class Renderer {
 public:
-    explicit Renderer(int tile_px = 48);
+    explicit Renderer(float tile_px = 48.0f);
 
     // Draw all objects in the world. scroll_x/scroll_y are in tile units (float for sub-tile precision).
     void draw_world(core::World const& world, float scroll_x, float scroll_y) const;
@@ -43,11 +43,11 @@ public:
     Vector2 tile_to_screen(int tx, int ty, float scroll_x, float scroll_y) const;
     Vector2 screen_to_tile_f(float px, float py, float scroll_x, float scroll_y) const;
 
-    int tile_px() const { return tile_px_; }
-    void set_tile_px(int px) { tile_px_ = std::max(8, std::min(px, 128)); }
+    float tile_px() const { return tile_px_; }
+    void set_tile_px(float px) { tile_px_ = std::max(8.0f, std::min(px, 128.0f)); }
 
 private:
-    int tile_px_;
+    float tile_px_;
 
     void draw_tile(core::Object const& obj, int screen_x, int screen_y,
                    int layer, int total_layers) const;

@@ -30,7 +30,7 @@ int run_gui(std::string const& level_path) {
         }
     }
 
-    render::Renderer renderer(48);
+    render::Renderer renderer(48.0f);
     InputState state;
     state.tile_px = renderer.tile_px();
 
