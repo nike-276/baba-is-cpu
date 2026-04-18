@@ -126,6 +126,18 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
     bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
 
     if (ed.mode() == editor::EditorMode::Edit) {
+        // ── Type-to-search: any printable char (no ctrl) clears + activates search ──
+        if (!ctrl) {
+            int ch = GetCharPressed();
+            if (ch >= 32 && ch < 127) {
+                st.palette_search.clear();
+                st.palette_search += static_cast<char>(ch);
+                st.palette_search_active = true;
+                st.palette_scroll = 0;
+                return;  // don't fire hotkeys on the same keystroke
+            }
+        }
+
         // ── Palette ───────────────────────────────────────────────────────
         if (IsKeyPressed(KEY_E)) ed.palette_next();
         if (IsKeyPressed(KEY_Q)) ed.palette_prev();
