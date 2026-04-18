@@ -1,0 +1,21 @@
+# FALL: rock slides ALL THE WAY downward until blocked (does not push).
+# Rock at (2,0). Rule text tiles at y=5 (text "fall" at (2,5) has PUSH).
+# Rock falls from y=0 and stops at y=4, just above the PUSH text tile.
+
+[setup]
+version 1
+name "fall slides until blocked"
+
+text 0 5 rock
+text 1 5 is
+text 2 5 fall
+
+object 2 0 rock right
+
+[inputs]
+wait
+
+[expected]
+at 2 4 rock
+not_at 2 0 rock
+not_won

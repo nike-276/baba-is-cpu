@@ -49,9 +49,9 @@ checklist) and any scenario file that locks the behavior down.
 | `STOP`       | DONE     | Blocks the entire chain. |
 | `MOVE`       | DONE     | Self-propelled; reverses facing on block. Phase APPLY_AUTO_MOVE (phase 2.5) runs after APPLY_INPUT using PARSE_INITIAL rules. |
 | `AUTO`       | DONE     | Self-propelled but stays put on block (no flip). Same phase as MOVE. |
-| `FALL`       | DONE     | Constant downward push every tick; no facing flip on block. |
-| `FALLUP` / `FALLLEFT` / `FALLRIGHT` | DONE | Same as FALL but in their respective directions. |
-| `UP` / `DOWN` / `LEFT` / `RIGHT` | PLANNED | Per-tick directional impulse on the carrying object — separate phase APPLY_DIRECTIONAL. |
+| `FALL`       | DONE     | Slides downward until blocked in one tick; does NOT push (stops at PUSH or STOP objects). |
+| `FALLUP` / `FALLLEFT` / `FALLRIGHT` | DONE | Same slide semantics as FALL in respective directions. |
+| `UP` / `DOWN` / `LEFT` / `RIGHT` | DONE | Sets object's facing each tick (APPLY_DIRECTIONAL phase 1.5, before APPLY_INPUT). No movement by themselves; combine with MOVE/AUTO for motion. |
 | `SHIFT`      | PLANNED  | Carries any object that ends a tick on top of it one tile in SHIFT's facing direction. |
 | `PULL`       | PLANNED  | Mirror of PUSH on the back of the chain. |
 | `SWAP`       | PLANNED  | Two SWAP-property objects on neighbouring tiles trade places when one moves. |

@@ -1,0 +1,21 @@
+# FALLRIGHT: rock slides right until blocked (does not push).
+# Rule text tiles are along y=0 at x=5,6,7. Rock starts at (0,0).
+# Rock slides right, stops at x=4 just before the PUSH text tile at (5,0).
+
+[setup]
+version 1
+name "fallright slides until blocked"
+
+text 5 0 rock
+text 6 0 is
+text 7 0 fallright
+
+object 0 0 rock down
+
+[inputs]
+wait
+
+[expected]
+at 4 0 rock
+not_at 0 0 rock
+not_won

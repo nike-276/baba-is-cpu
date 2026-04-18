@@ -93,34 +93,68 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
     return true;
 }
 
+// ── APPLY_DIRECTIONAL phase ────────────────────────────────────────────────
+// UP/DOWN/LEFT/RIGHT set the facing of matching objects; no movement.
+
+void apply_directional(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        if      (rs.object_has_property(world, id, Kind::P_Left))  do_face(world, id, Direction::Left,  log);
+        else if (rs.object_has_property(world, id, Kind::P_Right)) do_face(world, id, Direction::Right, log);
+        else if (rs.object_has_property(world, id, Kind::P_Up))    do_face(world, id, Direction::Up,    log);
+        else if (rs.object_has_property(world, id, Kind::P_Down))  do_face(world, id, Direction::Down,  log);
+    }
+}
+
 // ── APPLY_AUTO_MOVE phase ──────────────────────────────────────────────────
 
+// FALL variant: slides until blocked; does NOT push (stops at PUSH or STOP).
+void fall_slide(World& world, ObjectId id, Coord step_v, RuleSet const& rs,
+                std::vector<Change>& log) {
+    for (int i = 0; i < 1024; ++i) {
+        Object const* o = world.get(id);
+        if (!o) return;
+        Coord next = {o->pos.x + step_v.x, o->pos.y + step_v.y};
+        auto const& cell = world.at(next);
+        for (ObjectId other : cell) {
+            if (rs.object_has_property(world, other, Kind::P_Stop)) return;
+            if (rs.object_has_property(world, other, Kind::P_Push)) return;
+        }
+        do_move(world, id, next, log);
+    }
+}
+
 void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) {
-    struct Mover { ObjectId id; Coord step_v; bool flip_on_block; };
+    struct Mover { ObjectId id; Coord step_v; bool slide; bool flip_on_block; };
     std::vector<Mover> movers;
 
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
         if (rs.object_has_property(world, id, Kind::P_Move))
-            movers.push_back({id, step(o->facing), true});
+            movers.push_back({id, step(o->facing), false, true});
         else if (rs.object_has_property(world, id, Kind::P_Auto))
-            movers.push_back({id, step(o->facing), false});
+            movers.push_back({id, step(o->facing), false, false});
         else if (rs.object_has_property(world, id, Kind::P_Fall))
-            movers.push_back({id, step(Direction::Down), false});
+            movers.push_back({id, step(Direction::Down),  true, false});
         else if (rs.object_has_property(world, id, Kind::P_Fallup))
-            movers.push_back({id, step(Direction::Up), false});
+            movers.push_back({id, step(Direction::Up),    true, false});
         else if (rs.object_has_property(world, id, Kind::P_Fallleft))
-            movers.push_back({id, step(Direction::Left), false});
+            movers.push_back({id, step(Direction::Left),  true, false});
         else if (rs.object_has_property(world, id, Kind::P_Fallright))
-            movers.push_back({id, step(Direction::Right), false});
+            movers.push_back({id, step(Direction::Right), true, false});
     }
 
     for (auto const& m : movers) {
         Object const* o = world.get(m.id);
         if (!o) continue;
-        if (!try_move(world, m.id, m.step_v, rs, log)) {
-            if (m.flip_on_block) do_face(world, m.id, opposite(o->facing), log);
+        if (m.slide) {
+            fall_slide(world, m.id, m.step_v, rs, log);
+        } else {
+            if (!try_move(world, m.id, m.step_v, rs, log)) {
+                if (m.flip_on_block) do_face(world, m.id, opposite(o->facing), log);
+            }
         }
     }
 }
@@ -135,15 +169,17 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
     std::vector<Coord> cells = world.all_cells();
     for (auto const& mr : makes) {
         for (Coord c : cells) {
-            bool has_from = false, has_to = false;
+            bool has_to = false;
+            Direction src_facing = Direction::Right;
+            bool has_from = false;
             for (ObjectId id : world.at(c)) {
                 Object const* o = world.get(id);
                 if (!o || o->text) continue;
-                if (o->kind == mr.from) has_from = true;
-                if (o->kind == mr.to)   has_to   = true;
+                if (o->kind == mr.from) { has_from = true; src_facing = o->facing; }
+                if (o->kind == mr.to)   has_to = true;
             }
             if (has_from && !has_to)
-                do_spawn(world, c, mr.to, /*text=*/false, Direction::Right, log);
+                do_spawn(world, c, mr.to, /*text=*/false, src_facing, log);
         }
     }
 }
@@ -328,6 +364,9 @@ TickReport apply_tick(World& world, Input input) {
 
     // Phase 1: PARSE_INITIAL
     RuleSet rs = RuleSet::parse(world);
+
+    // Phase 1.5: APPLY_DIRECTIONAL — set facing of UP/DOWN/LEFT/RIGHT objects
+    apply_directional(world, rs, log);
 
     // Phase 2: APPLY_INPUT
     if (input.kind == InputKind::Move) {

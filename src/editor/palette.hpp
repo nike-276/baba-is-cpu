@@ -72,6 +72,10 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::P_Fallup,    true, "T:fallup");
     add(K::P_Fallleft,  true, "T:fallleft");
     add(K::P_Fallright, true, "T:fallright");
+    add(K::P_Left,      true, "T:left");
+    add(K::P_Right,     true, "T:right");
+    add(K::P_Up,        true, "T:up");
+    add(K::P_Down,      true, "T:down");
 
     return p;
 }

@@ -2,8 +2,9 @@
 //
 // Full 10-phase pipeline:
 //   1.  PARSE_INITIAL
-//   2.  APPLY_INPUT      — move every YOU object; resolve push chain (PUSH / STOP)
-//   2.5 APPLY_AUTO_MOVE  — self-propelled objects (MOVE); reverse facing on block
+//   1.5 APPLY_DIRECTIONAL — set facing of UP/DOWN/LEFT/RIGHT objects
+//   2.  APPLY_INPUT       — move every YOU object; resolve push chain (PUSH / STOP)
+//   2.5 APPLY_AUTO_MOVE   — self-propelled: MOVE (push+flip), AUTO (push+no flip), FALL* (slide+no push)
 //   3.  PARSE_POST_MOVE
 //   4.  TRANSFORM        — apply X IS Y transformation rules
 //   5.  PARSE_POST_TRANSFORM

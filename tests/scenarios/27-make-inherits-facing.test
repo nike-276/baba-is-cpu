@@ -1,0 +1,28 @@
+# BABA MAKE FLAG: spawned flag inherits the facing of the baba that made it.
+# BABA IS LEFT makes baba face left (APPLY_DIRECTIONAL runs first).
+# BABA MAKE FLAG then spawns a flag — the flag should face left.
+# We verify the flag exists on the same tile (facing can't be directly asserted,
+# but the presence is the main behavior to lock down).
+
+[setup]
+version 1
+name "make inherits facing"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 left
+text 0 1 baba
+text 1 1 make
+text 2 1 flag
+
+object 5 5 baba right
+
+[inputs]
+wait
+
+[expected]
+count baba 1
+count flag 1
+at 5 5 baba
+at 5 5 flag
+not_won

@@ -1,0 +1,24 @@
+# BABA IS LEFT: sets baba's facing to Left each tick (APPLY_DIRECTIONAL phase).
+# Baba faces right initially. After one wait tick baba faces left.
+# Combined with MOVE baba then moves left — verify position changed left.
+
+[setup]
+version 1
+name "left sets facing left"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 left
+text 0 1 baba
+text 1 1 is
+text 2 1 move
+
+object 5 5 baba right
+
+[inputs]
+wait
+
+[expected]
+at 4 5 baba
+not_at 5 5 baba
+not_won

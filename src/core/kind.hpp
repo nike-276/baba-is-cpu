@@ -52,6 +52,10 @@ enum class Kind : std::uint16_t {
     P_Fallup,
     P_Fallleft,
     P_Fallright,
+    P_Left,
+    P_Right,
+    P_Up,
+    P_Down,
 
     Count_,
 };
@@ -63,7 +67,7 @@ constexpr bool is_operator(Kind k) {
     return k >= Kind::O_Is && k <= Kind::O_Make;
 }
 constexpr bool is_property(Kind k) {
-    return k >= Kind::P_You && k <= Kind::P_Fallright;
+    return k >= Kind::P_You && k <= Kind::P_Down;
 }
 
 // Lowercase canonical name as it appears in .level / .test files.

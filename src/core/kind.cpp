@@ -45,6 +45,10 @@ constexpr std::array kTable = {
     Entry{"fallup",    Kind::P_Fallup},
     Entry{"fallleft",  Kind::P_Fallleft},
     Entry{"fallright", Kind::P_Fallright},
+    Entry{"left",      Kind::P_Left},
+    Entry{"right",     Kind::P_Right},
+    Entry{"up",        Kind::P_Up},
+    Entry{"down",      Kind::P_Down},
 };
 
 }  // namespace
