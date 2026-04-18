@@ -16,6 +16,11 @@ struct InputState {
     bool request_save{false};
     bool request_load{false};
     bool request_new{false};
+
+    // Track the last tile the mouse placed/deleted on so we only act once per tile
+    // while the button is held (drag-painting without per-frame spam).
+    core::Coord last_place_tile{INT_MIN, INT_MIN};
+    core::Coord last_delete_tile{INT_MIN, INT_MIN};
 };
 
 inline void poll_input(editor::Editor& ed, InputState& st) {
@@ -59,18 +64,34 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_SPACE)) ed.enter_play();
 
         // ── Mouse place / delete ─────────────────────────────────────────
+        // Use tile-tracking: only act when the cursor enters a new tile,
+        // so holding the button down paints one object per tile (no spam).
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             Vector2 mp = GetMousePosition();
-            int tx = static_cast<int>(mp.x) / st.tile_px + st.scroll_x;
-            int ty = static_cast<int>(mp.y) / st.tile_px + st.scroll_y;
-            auto const& sel = ed.selected();
-            ed.place_object({tx, ty}, sel.kind, sel.is_text, sel.default_facing);
+            core::Coord tile{
+                static_cast<int>(mp.x) / st.tile_px + st.scroll_x,
+                static_cast<int>(mp.y) / st.tile_px + st.scroll_y
+            };
+            if (tile.x != st.last_place_tile.x || tile.y != st.last_place_tile.y) {
+                auto const& sel = ed.selected();
+                ed.place_object(tile, sel.kind, sel.is_text, sel.default_facing);
+                st.last_place_tile = tile;
+            }
+        } else {
+            st.last_place_tile = {INT_MIN, INT_MIN};  // reset on button release
         }
-        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
             Vector2 mp = GetMousePosition();
-            int tx = static_cast<int>(mp.x) / st.tile_px + st.scroll_x;
-            int ty = static_cast<int>(mp.y) / st.tile_px + st.scroll_y;
-            ed.delete_all_at({tx, ty});
+            core::Coord tile{
+                static_cast<int>(mp.x) / st.tile_px + st.scroll_x,
+                static_cast<int>(mp.y) / st.tile_px + st.scroll_y
+            };
+            if (tile.x != st.last_delete_tile.x || tile.y != st.last_delete_tile.y) {
+                ed.delete_all_at(tile);
+                st.last_delete_tile = tile;
+            }
+        } else {
+            st.last_delete_tile = {INT_MIN, INT_MIN};
         }
 
     } else {  // Play mode
