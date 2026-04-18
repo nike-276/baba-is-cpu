@@ -5,6 +5,7 @@
 #include "core/object.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <string>
 
@@ -12,17 +13,17 @@ namespace baba::render {
 
 Renderer::Renderer(int tile_px) : tile_px_{tile_px} {}
 
-Vector2 Renderer::tile_to_screen(int tx, int ty, int scroll_x, int scroll_y) const {
+Vector2 Renderer::tile_to_screen(int tx, int ty, float scroll_x, float scroll_y) const {
     return {
-        static_cast<float>((tx - scroll_x) * tile_px_),
-        static_cast<float>((ty - scroll_y) * tile_px_)
+        (tx - scroll_x) * tile_px_,
+        (ty - scroll_y) * tile_px_
     };
 }
 
-Vector2 Renderer::screen_to_tile_f(int px, int py, int scroll_x, int scroll_y) const {
+Vector2 Renderer::screen_to_tile_f(float px, float py, float scroll_x, float scroll_y) const {
     return {
-        static_cast<float>(px) / tile_px_ + scroll_x,
-        static_cast<float>(py) / tile_px_ + scroll_y
+        px / tile_px_ + scroll_x,
+        py / tile_px_ + scroll_y
     };
 }
 
@@ -58,15 +59,15 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
 }
 
 void Renderer::draw_world(core::World const& world,
-                           int scroll_x, int scroll_y) const {
+                           float scroll_x, float scroll_y) const {
     int screen_w = GetScreenWidth();
     int screen_h = GetScreenHeight();
 
     // Only draw tiles visible in the viewport (plus a 1-tile margin).
-    int min_tx = scroll_x - 1;
-    int max_tx = scroll_x + screen_w / tile_px_ + 2;
-    int min_ty = scroll_y - 1;
-    int max_ty = scroll_y + screen_h / tile_px_ + 2;
+    int min_tx = static_cast<int>(scroll_x) - 1;
+    int max_tx = static_cast<int>(scroll_x) + screen_w / tile_px_ + 2;
+    int min_ty = static_cast<int>(scroll_y) - 1;
+    int max_ty = static_cast<int>(scroll_y) + screen_h / tile_px_ + 2;
 
     for (core::Coord c : world.all_cells()) {
         if (c.x < min_tx || c.x > max_tx || c.y < min_ty || c.y > max_ty) continue;
@@ -74,8 +75,8 @@ void Renderer::draw_world(core::World const& world,
         auto const& ids = world.at(c);
         if (ids.empty()) continue;
 
-        int sx = (c.x - scroll_x) * tile_px_;
-        int sy = (c.y - scroll_y) * tile_px_;
+        int sx = static_cast<int>((c.x - scroll_x) * tile_px_);
+        int sy = static_cast<int>((c.y - scroll_y) * tile_px_);
 
         // Sort objects: non-text first (ascending id), then text (ascending id).
         std::vector<core::ObjectId> sorted = ids;
@@ -96,16 +97,16 @@ void Renderer::draw_world(core::World const& world,
 }
 
 void Renderer::draw_grid(int viewport_w, int viewport_h,
-                          int scroll_x, int scroll_y) const {
+                          float scroll_x, float scroll_y) const {
     Color grid_color = {50, 50, 50, 180};
 
-    // Vertical lines.
-    int start_x = -(scroll_x % 1) * tile_px_;
+    // Sub-tile fractional offset: aligns grid lines with world-tile boundaries.
+    // floor(scroll) - scroll is in (-1, 0], so * tile_px_ gives first line <= 0.
+    int start_x = static_cast<int>((std::floor(scroll_x) - scroll_x) * tile_px_);
     for (int x = start_x; x < viewport_w; x += tile_px_) {
         DrawLine(x, 0, x, viewport_h, grid_color);
     }
-    // Horizontal lines.
-    int start_y = -(scroll_y % 1) * tile_px_;
+    int start_y = static_cast<int>((std::floor(scroll_y) - scroll_y) * tile_px_);
     for (int y = start_y; y < viewport_h; y += tile_px_) {
         DrawLine(0, y, viewport_w, y, grid_color);
     }

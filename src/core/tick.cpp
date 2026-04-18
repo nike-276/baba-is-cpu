@@ -60,6 +60,9 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
     if (!mover) return false;
     Coord origin = mover->pos;
 
+    // OPEN chains can bypass SHUT blockers (wiki §OPEN).
+    bool chain_has_open = rs.object_has_property(world, mover_id, Kind::P_Open);
+
     std::vector<ObjectId> chain;
     Coord cursor = {origin.x + step_v.x, origin.y + step_v.y};
 
@@ -71,8 +74,13 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
         for (ObjectId id : cell) {
             bool push = rs.object_has_property(world, id, Kind::P_Push);
             bool stop = rs.object_has_property(world, id, Kind::P_Stop);
-            if (push)       pushables.push_back(id);
-            else if (stop)  any_blocker = true;
+            if (push) {
+                pushables.push_back(id);
+                if (rs.object_has_property(world, id, Kind::P_Open)) chain_has_open = true;
+            } else if (stop) {
+                bool shut = rs.object_has_property(world, id, Kind::P_Shut);
+                if (!(shut && chain_has_open)) any_blocker = true;
+            }
         }
 
         if (any_blocker) return false;

@@ -1,0 +1,35 @@
+# OPEN bypasses SHUT+STOP during movement (wiki: "unlock" overrides STOP obstruction).
+# Baba pushes the key (OPEN+PUSH) into the door (SHUT+STOP).
+# Both key and door are destroyed; baba lands where key was.
+
+[setup]
+version 1
+name "open push through shut stop"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+text 0 1 key
+text 1 1 is
+text 2 1 open
+text 3 1 and
+text 4 1 push
+text 0 2 door
+text 1 2 is
+text 2 2 shut
+text 3 2 and
+text 4 2 stop
+
+object 3 5 baba right
+object 4 5 key  right
+object 5 5 door right
+
+[inputs]
+input right
+
+[expected]
+count key  0
+count door 0
+count baba 1
+at 4 5 baba
+not_won

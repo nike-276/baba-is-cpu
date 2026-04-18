@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <raylib.h>
 #include <string>
 #include <vector>
@@ -20,9 +21,9 @@ using render::PALETTE_ENTRY_TOP;
 // Translates raw raylib input into editor actions each frame.
 // Call poll() once per frame; it mutates the Editor and scroll state in place.
 struct InputState {
-    int  scroll_x{0};
-    int  scroll_y{0};
-    int  tile_px{48};
+    float scroll_x{0.0f};
+    float scroll_y{0.0f};
+    int   tile_px{48};
     int  palette_scroll{0};       // pixel offset into the visible entry list
     bool request_save{false};
     bool request_load{false};
@@ -53,29 +54,29 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
                 float mx = static_cast<float>(GetMouseX() - PALETTE_W);
                 float my = static_cast<float>(GetMouseY());
                 // World tile coordinate under the cursor before zoom.
-                float wx = mx / static_cast<float>(old_px) + static_cast<float>(st.scroll_x);
-                float wy = my / static_cast<float>(old_px) + static_cast<float>(st.scroll_y);
+                float wx = mx / static_cast<float>(old_px) + st.scroll_x;
+                float wy = my / static_cast<float>(old_px) + st.scroll_y;
                 st.tile_px  = new_px;
-                // Adjust scroll so the same world point stays under the cursor.
-                st.scroll_x = static_cast<int>(wx - mx / static_cast<float>(new_px));
-                st.scroll_y = static_cast<int>(wy - my / static_cast<float>(new_px));
+                // Adjust scroll so the same world point stays under the cursor (no truncation).
+                st.scroll_x = wx - mx / static_cast<float>(new_px);
+                st.scroll_y = wy - my / static_cast<float>(new_px);
             }
         }
     }
 
     // ── Scroll (arrow keys — only when search is not focused) ────────────
     if (!st.palette_search_active) {
-        if (IsKeyPressed(KEY_LEFT)  && ed.mode() == editor::EditorMode::Edit) --st.scroll_x;
-        if (IsKeyPressed(KEY_RIGHT) && ed.mode() == editor::EditorMode::Edit) ++st.scroll_x;
-        if (IsKeyPressed(KEY_UP)    && ed.mode() == editor::EditorMode::Edit) --st.scroll_y;
-        if (IsKeyPressed(KEY_DOWN)  && ed.mode() == editor::EditorMode::Edit) ++st.scroll_y;
+        if (IsKeyPressed(KEY_LEFT)  && ed.mode() == editor::EditorMode::Edit) st.scroll_x -= 1.0f;
+        if (IsKeyPressed(KEY_RIGHT) && ed.mode() == editor::EditorMode::Edit) st.scroll_x += 1.0f;
+        if (IsKeyPressed(KEY_UP)    && ed.mode() == editor::EditorMode::Edit) st.scroll_y -= 1.0f;
+        if (IsKeyPressed(KEY_DOWN)  && ed.mode() == editor::EditorMode::Edit) st.scroll_y += 1.0f;
     }
 
     // ── Middle-drag pan ───────────────────────────────────────────────────
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
         Vector2 delta = GetMouseDelta();
-        if (std::abs(delta.x) > 1) st.scroll_x -= static_cast<int>(delta.x) / st.tile_px;
-        if (std::abs(delta.y) > 1) st.scroll_y -= static_cast<int>(delta.y) / st.tile_px;
+        st.scroll_x -= delta.x / static_cast<float>(st.tile_px);
+        st.scroll_y -= delta.y / static_cast<float>(st.tile_px);
     }
 
     // ── Palette panel clicks (both modes) ────────────────────────────────
@@ -150,8 +151,8 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
             GetMouseX() >= PALETTE_W) {
             Vector2 mp = GetMousePosition();
             core::Coord tile{
-                static_cast<int>(mp.x) / st.tile_px + st.scroll_x,
-                static_cast<int>(mp.y) / st.tile_px + st.scroll_y
+                static_cast<int>(std::floor(mp.x / st.tile_px + st.scroll_x)),
+                static_cast<int>(std::floor(mp.y / st.tile_px + st.scroll_y))
             };
             if (tile.x != st.last_place_tile.x || tile.y != st.last_place_tile.y) {
                 auto const& sel = ed.selected();
@@ -165,8 +166,8 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
             GetMouseX() >= PALETTE_W) {
             Vector2 mp = GetMousePosition();
             core::Coord tile{
-                static_cast<int>(mp.x) / st.tile_px + st.scroll_x,
-                static_cast<int>(mp.y) / st.tile_px + st.scroll_y
+                static_cast<int>(std::floor(mp.x / st.tile_px + st.scroll_x)),
+                static_cast<int>(std::floor(mp.y / st.tile_px + st.scroll_y))
             };
             if (tile.x != st.last_delete_tile.x || tile.y != st.last_delete_tile.y) {
                 ed.delete_all_at(tile);
@@ -194,10 +195,10 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
             ed.play_undo();
 
         // ── Pan in play mode ─────────────────────────────────────────────
-        if (IsKeyPressed(KEY_KP_4)) --st.scroll_x;
-        if (IsKeyPressed(KEY_KP_6)) ++st.scroll_x;
-        if (IsKeyPressed(KEY_KP_8)) --st.scroll_y;
-        if (IsKeyPressed(KEY_KP_2)) ++st.scroll_y;
+        if (IsKeyPressed(KEY_KP_4)) st.scroll_x -= 1.0f;
+        if (IsKeyPressed(KEY_KP_6)) st.scroll_x += 1.0f;
+        if (IsKeyPressed(KEY_KP_8)) st.scroll_y -= 1.0f;
+        if (IsKeyPressed(KEY_KP_2)) st.scroll_y += 1.0f;
 
         // ── Return to edit ───────────────────────────────────────────────
         if (IsKeyPressed(KEY_ESCAPE)) ed.enter_edit();

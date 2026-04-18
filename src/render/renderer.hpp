@@ -15,11 +15,11 @@ class Renderer {
 public:
     explicit Renderer(int tile_px = 48);
 
-    // Draw all objects in the world. scroll_x/scroll_y are in tile units.
-    void draw_world(core::World const& world, int scroll_x, int scroll_y) const;
+    // Draw all objects in the world. scroll_x/scroll_y are in tile units (float for sub-tile precision).
+    void draw_world(core::World const& world, float scroll_x, float scroll_y) const;
 
     // Draw a light grid overlay.
-    void draw_grid(int viewport_w, int viewport_h, int scroll_x, int scroll_y) const;
+    void draw_grid(int viewport_w, int viewport_h, float scroll_x, float scroll_y) const;
 
     // Draw active rules as text in a panel at (px, py).
     void draw_rule_panel(core::RuleSet const& rs, int px, int py) const;
@@ -40,8 +40,8 @@ public:
                   int tick, bool won) const;
 
     // Tile-to-screen and screen-to-tile coordinate conversions.
-    Vector2 tile_to_screen(int tx, int ty, int scroll_x, int scroll_y) const;
-    Vector2 screen_to_tile_f(int px, int py, int scroll_x, int scroll_y) const;
+    Vector2 tile_to_screen(int tx, int ty, float scroll_x, float scroll_y) const;
+    Vector2 screen_to_tile_f(float px, float py, float scroll_x, float scroll_y) const;
 
     int tile_px() const { return tile_px_; }
     void set_tile_px(int px) { tile_px_ = std::max(8, std::min(px, 128)); }
