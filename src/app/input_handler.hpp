@@ -13,6 +13,7 @@ struct InputState {
     int  scroll_x{0};
     int  scroll_y{0};
     int  tile_px{48};
+    int  palette_scroll{0};  // pixel offset into the palette list
     bool request_save{false};
     bool request_load{false};
     bool request_new{false};
@@ -24,10 +25,17 @@ struct InputState {
 };
 
 inline void poll_input(editor::Editor& ed, InputState& st) {
-    // ── Zoom (mouse wheel) ────────────────────────────────────────────────
+    // ── Zoom (mouse wheel over viewport) or palette scroll (over palette) ──
     float wheel = GetMouseWheelMove();
     if (wheel != 0.0f) {
-        st.tile_px = std::clamp(st.tile_px + static_cast<int>(wheel * 4), 8, 128);
+        int palette_w = st.tile_px + 8;
+        if (GetMouseX() < palette_w) {
+            // Scroll palette list; max clamped later by renderer when it knows
+            // total entry count, so just accumulate here (min 0).
+            st.palette_scroll = std::max(0, st.palette_scroll - static_cast<int>(wheel * (st.tile_px + 4)));
+        } else {
+            st.tile_px = std::clamp(st.tile_px + static_cast<int>(wheel * 4), 8, 128);
+        }
     }
 
     // ── Scroll (arrow keys in both modes) ────────────────────────────────

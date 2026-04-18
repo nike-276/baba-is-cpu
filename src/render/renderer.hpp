@@ -26,8 +26,11 @@ public:
 
     // Draw the palette selector on the left side.
     // entries: list of display names; selected_idx: highlighted entry.
-    void draw_palette(std::vector<std::string> const& entries,
-                      int selected_idx, int px, int py) const;
+    // scroll_px: vertical pixel offset into the list (from mouse wheel).
+    // Returns the maximum valid scroll_px so the caller can clamp.
+    int draw_palette(std::vector<std::string> const& entries,
+                     int selected_idx, int px, int py,
+                     int scroll_px, int panel_h) const;
 
     // Draw the bottom HUD bar.
     void draw_hud(std::string const& mode_label, std::string const& filename,

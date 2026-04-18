@@ -17,6 +17,7 @@ int run_gui(std::string const& level_path) {
     const int WIN_H = 720;
     InitWindow(WIN_W, WIN_H, "baba-is-true editor");
     SetTargetFPS(60);
+    SetExitKey(0);  // disable ESC=close so ESC can return from play→edit
 
     editor::Editor ed(sim::Simulator(core::World{}));
 
@@ -78,12 +79,16 @@ int run_gui(std::string const& level_path) {
         renderer.draw_grid(WIN_W, WIN_H, state.scroll_x, state.scroll_y);
 
         // Palette panel (left).
+        int palette_panel_h = WIN_H - 24 - 20;  // minus HUD bar and header
         DrawRectangle(0, 0, palette_w - 2, WIN_H - 24, {15, 15, 15, 220});
         {
             std::vector<std::string> names;
             for (auto const& e : ed.palette()) names.push_back(e.display_name);
             int sel = static_cast<int>(&ed.selected() - ed.palette().data());
-            renderer.draw_palette(names, sel, 2, 20);
+            int max_scroll = renderer.draw_palette(names, sel, 2, 20,
+                                                   state.palette_scroll,
+                                                   palette_panel_h);
+            state.palette_scroll = std::min(state.palette_scroll, max_scroll);
         }
 
         // Rules panel (right).

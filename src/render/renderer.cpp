@@ -134,15 +134,24 @@ void Renderer::draw_rule_panel(core::RuleSet const& rs, int px, int py) const {
     }
 }
 
-void Renderer::draw_palette(std::vector<std::string> const& entries,
-                             int selected_idx, int px, int py) const {
+int Renderer::draw_palette(std::vector<std::string> const& entries,
+                            int selected_idx, int px, int py,
+                            int scroll_px, int panel_h) const {
     int entry_h   = tile_px_ + 4;
     int font_size = std::max(8, tile_px_ / 5);
 
     DrawText("PALETTE", px, py - 18, 12, LIGHTGRAY);
 
+    int total_h   = static_cast<int>(entries.size()) * entry_h;
+    int max_scroll = std::max(0, total_h - panel_h);
+
+    // Clip drawing to the palette panel so entries don't bleed into HUD.
+    BeginScissorMode(px, py, tile_px_ + 4, panel_h);
+
     for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
-        int ey = py + i * entry_h;
+        int ey = py + i * entry_h - scroll_px;
+        if (ey + entry_h < py || ey > py + panel_h) continue;  // culled
+
         Rectangle bg{static_cast<float>(px), static_cast<float>(ey),
                      static_cast<float>(tile_px_ + 4), static_cast<float>(tile_px_ + 2)};
 
@@ -157,6 +166,9 @@ void Renderer::draw_palette(std::vector<std::string> const& entries,
         DrawText(entries[i].c_str(), px + 2, ey + (tile_px_ - font_size) / 2,
                  font_size, text_col);
     }
+
+    EndScissorMode();
+    return max_scroll;
 }
 
 void Renderer::draw_hud(std::string const& mode_label, std::string const& filename,
