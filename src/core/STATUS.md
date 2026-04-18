@@ -1,64 +1,64 @@
 # src/core/ — implementation status (rule engine)
 
 Co-located mirror of [docs/feature-status.md](../../docs/feature-status.md).
-This file is the one to update when you touch the rule engine; the docs
-file is the authoritative master checklist.
+Update this file whenever you touch the rule engine; the docs file is the
+authoritative master checklist.
 
 ## Properties recognized by `Kind`
 
-| Property      | In `Kind` enum? | In `kTable` (`is_property`)? | Has tick-phase consumer? |
-|---------------|-----------------|------------------------------|--------------------------|
-| YOU           | yes             | yes                          | APPLY_INPUT              |
-| PUSH          | yes             | yes                          | push-chain walker        |
-| STOP          | yes             | yes                          | push-chain walker        |
-| WIN           | yes             | yes                          | CHECK_WIN                |
-| DEFEAT        | yes             | yes                          | DESTRUCT step c          |
-| SINK          | yes             | yes                          | DESTRUCT step a          |
-| HOT / MELT    | yes             | yes                          | DESTRUCT step b          |
-| OPEN / SHUT   | yes             | yes                          | DESTRUCT step d          |
-| MOVE          | **no**          | —                            | **planned** APPLY_AUTO_MOVE |
-| AUTO          | **no**          | —                            | **planned** APPLY_AUTO_MOVE |
-| FALL / FALLUP / FALLLEFT / FALLRIGHT | **no** | — | **planned** APPLY_AUTO_MOVE |
-| UP / DOWN / LEFT / RIGHT | **no** | —                            | **planned** APPLY_DIRECTIONAL |
-| WEAK          | **no**          | —                            | **planned** DESTRUCT step inserted before DEFEAT |
-| EAT           | **no**          | —                            | **planned** DESTRUCT step inserted after SINK |
-| MAKE          | **no**          | —                            | **planned** new MAKE phase |
-| TEXT (predicate) | **no**       | —                            | **planned** TRANSFORM extension |
-| SHIFT / PULL / SWAP | **no**    | —                            | **planned** push-chain hook |
-| ON (operator) | **no**          | —                            | **planned** RuleSet rewrite (per-object) |
+| Property      | In `Kind` enum? | In `kTable`? | Has tick-phase consumer? |
+|---------------|-----------------|--------------|--------------------------|
+| YOU           | yes             | yes          | APPLY_INPUT              |
+| PUSH          | yes             | yes          | push-chain walker        |
+| STOP          | yes             | yes          | push-chain walker        |
+| WIN           | yes             | yes          | CHECK_WIN                |
+| DEFEAT        | yes             | yes          | DESTRUCT step e          |
+| SINK          | yes             | yes          | DESTRUCT step a          |
+| HOT / MELT    | yes             | yes          | DESTRUCT step c          |
+| OPEN / SHUT   | yes             | yes          | try_move unlock + DESTRUCT step f |
+| EAT           | yes             | yes          | DESTRUCT step b          |
+| WEAK          | yes             | yes          | DESTRUCT step d          |
+| MOVE          | yes             | yes          | APPLY_AUTO_MOVE (push + flip on block) |
+| AUTO          | yes             | yes          | APPLY_AUTO_MOVE (push + no flip) |
+| FALL / FALLUP / FALLLEFT / FALLRIGHT | yes | yes | APPLY_AUTO_MOVE (slide, no push) |
+| LEFT / RIGHT / UP / DOWN | yes | yes     | APPLY_DIRECTIONAL (facing only) |
+| MAKE          | O_Make operator | yes (operator) | APPLY_MAKE phase       |
+| TEXT (predicate) | N_Text noun   | yes          | base rule TEXT IS PUSH; transform planned |
+| SHIFT / PULL / SWAP | no      | —            | deferred                 |
 
 ## Operators recognized
 
-| Token | In `Kind` enum? |
-|-------|-----------------|
-| IS    | yes             |
-| AND   | yes             |
-| NOT   | yes (predicate-side only) |
-| ON    | **no** — planned |
-| NEAR / FACING / LONELY | deferred |
+| Token | In `Kind` enum? | Notes |
+|-------|-----------------|-------|
+| IS    | yes (O_Is)      | main predicate operator |
+| AND   | yes (O_And)     | subject + predicate distribution |
+| NOT   | yes (O_Not)     | predicate-side cancellation (DONE); subject-side planned |
+| ON    | yes (O_On)      | conditional rule NOUN ON NOUN IS PROPERTY (DONE) |
+| MAKE  | yes (O_Make)    | NOUN MAKE NOUN spawning (DONE) |
+| NEAR / FACING / LONELY | deferred | |
 
 ## Tick-phase pipeline
 
 ```
 PARSE_INITIAL
   ↓
-APPLY_DIRECTIONAL          ← planned (UP/DOWN/LEFT/RIGHT)
+APPLY_DIRECTIONAL          ← DONE (UP/DOWN/LEFT/RIGHT set facing)
   ↓
-APPLY_INPUT                ← done (push chain, STOP, multi-YOU by id)
+APPLY_INPUT                ← DONE (push chain, STOP, multi-YOU by id,
+                                    OPEN unlocks SHUT+STOP)
   ↓
-APPLY_AUTO_MOVE            ← planned (MOVE/AUTO/FALL*)
+APPLY_AUTO_MOVE            ← DONE (MOVE/AUTO one-tile; FALL* slide-to-block)
   ↓
 PARSE_POST_MOVE
   ↓
-TRANSFORM                  ← done (X IS Y, X IS X protection, duplication)
-                              planned: X IS TEXT
+TRANSFORM                  ← DONE (X IS Y, X IS X protection, duplication)
+                              PLANNED: X IS TEXT
   ↓
 PARSE_POST_TRANSFORM
   ↓
-DESTRUCT                   ← done (SINK, HOT/MELT, DEFEAT, OPEN/SHUT)
-                              planned: EAT (after SINK), WEAK (before DEFEAT)
+DESTRUCT                   ← DONE (SINK, EAT, HOT/MELT, WEAK, DEFEAT, OPEN/SHUT)
   ↓
-MAKE                       ← planned (X IS MAKE Y → spawn Y on X-tiles)
+APPLY_MAKE                 ← DONE (NOUN MAKE NOUN spawns target, idempotent)
   ↓
 PARSE_POST_DESTRUCT
   ↓
@@ -67,21 +67,18 @@ CHECK_WIN
 COMMIT
 ```
 
-## Architectural debts (must land before per-property work)
+## Open architectural debts
 
-- `RuleSet::object_has_property` keys on `Kind` only → blocks `ON` and
-  every other condition. Refactor to per-object derivation.
-- `World` lacks `respawn(id, ...)` → blocks correct undo of Destroy
-  (BUG-1, BUG-3 in feature-status §9).
-- Tick pipeline has no extension points for the three new phases →
-  refactor `apply_tick` to call a series of phase functions instead of
-  inlined blocks.
+- `World::respawn(id, ...)` exists but undo of Destroy in the editor
+  uses a fresh id (BUG-1, BUG-3 in feature-status §9). Fix is to call
+  `respawn` instead of `spawn` in `sim/simulator.cpp` step_back and
+  `editor/editor.cpp` undo_edit.
+- NOT subject-side (`NOT X IS P` → applies P to everything except X)
+  is parsed but not resolved.
+- X IS TEXT predicate transform is unimplemented.
 
 ## See also
 
-- [../../docs/rule-engine-spec.md](../../docs/rule-engine-spec.md) —
-  semantic source of truth.
-- [../../docs/feature-status.md](../../docs/feature-status.md) —
-  full Baba Is You catalog.
-- [../../babaiswiki_pages_current.xml](../../babaiswiki_pages_current.xml)
-  — wiki dump (canonical).
+- [../../docs/rule-engine-spec.md](../../docs/rule-engine-spec.md) — semantic source of truth.
+- [../../docs/feature-status.md](../../docs/feature-status.md) — full Baba Is You catalog.
+- [../../babaiswiki_pages_current.xml](../../babaiswiki_pages_current.xml) — wiki dump (canonical).
