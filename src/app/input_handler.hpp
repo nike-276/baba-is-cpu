@@ -46,7 +46,20 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         if (GetMouseX() < PALETTE_W) {
             st.palette_scroll = std::max(0, st.palette_scroll - static_cast<int>(wheel * PALETTE_ENTRY_H));
         } else {
-            st.tile_px = std::clamp(st.tile_px + static_cast<int>(wheel * 4), 8, 128);
+            int old_px = st.tile_px;
+            int new_px = std::clamp(old_px + static_cast<int>(wheel * 4), 8, 128);
+            if (new_px != old_px) {
+                // Viewport starts at PALETTE_W; compute mouse position within it.
+                float mx = static_cast<float>(GetMouseX() - PALETTE_W);
+                float my = static_cast<float>(GetMouseY());
+                // World tile coordinate under the cursor before zoom.
+                float wx = mx / static_cast<float>(old_px) + static_cast<float>(st.scroll_x);
+                float wy = my / static_cast<float>(old_px) + static_cast<float>(st.scroll_y);
+                st.tile_px  = new_px;
+                // Adjust scroll so the same world point stays under the cursor.
+                st.scroll_x = static_cast<int>(wx - mx / static_cast<float>(new_px));
+                st.scroll_y = static_cast<int>(wy - my / static_cast<float>(new_px));
+            }
         }
     }
 
