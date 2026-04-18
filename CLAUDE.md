@@ -1,71 +1,109 @@
 # baba-is-true — Claude session guide
 
-A from-scratch Baba Is You simulator in C++. Long-term goal: Build the Baba Is You simulator and ensure that it works properly. This file orients new Claude sessions; nested CLAUDE.md files
-exist in every meaningful subdirectory and go deeper.
+A from-scratch Baba Is You simulator in C++. Long-term goal: a complete,
+deterministic simulator that supports the full Baba rule catalog and can
+be authored + played from the bundled raylib editor. This file orients
+new Claude sessions; nested `CLAUDE.md` files exist in every meaningful
+subdirectory and go deeper.
 
 ## Where we are
 
-Phase 1 is done: deterministic tick engine, sparse spatial index, rule
-parser, .level + .test loaders, scenario runner, unit harness.
-Phase 2 (raylib GUI + sprites recreated from the wiki) is next.
+Phase 1 (headless engine) is GREEN: deterministic 9-phase tick pipeline,
+sparse spatial index, rule parser with `NOT`/`AND` resolution + `X IS X`
+protection + `X IS Y` transforms, .level/.test loaders, scenario runner,
+in-tree unit harness. 14 scenarios + 35 unit tests pass.
 
-Ground truth specs live in `docs/`:
+Phase 2 (raylib GUI editor + play loop) is **in progress**. CMake build
+exists; `babaiwt --edit` / `--play` work; palette + search + zoom are
+wired. Two known bugs (BUG-1 undo of destroyed objects, BUG-2 zoom
+shake) are tracked in
+[docs/feature-status.md §9](docs/feature-status.md#9-known-bugs-open).
 
-- [docs/architecture.md](docs/architecture.md) — module layout, tick
-  pipeline, determinism rules.
-- [docs/rule-engine-spec.md](docs/rule-engine-spec.md) — what each
-  property means, parse grammar, edge cases.
-- [docs/file-format-v1.md](docs/file-format-v1.md) — `.level` and
-  `.test` text formats.
+## Source-of-truth docs (`docs/`)
+
+- [architecture.md](docs/architecture.md) — module layout, tick
+  pipeline, determinism rules, layer enforcement.
+- [rule-engine-spec.md](docs/rule-engine-spec.md) — what each property
+  means, parse grammar, edge cases.
+- [file-format-v1.md](docs/file-format-v1.md) — `.level` and `.test`
+  text formats.
+- [feature-status.md](docs/feature-status.md) — **master checklist of
+  every Baba construct** with implementation status + known bugs.
+- [gui-guide.md](docs/gui-guide.md) — build, run, controls, modes.
+- [src/core/STATUS.md](src/core/STATUS.md) — co-located mirror of the
+  rule-engine portion of feature-status (update this when you touch
+  the rule engine).
 
 If you change behavior, update the spec docs in the same commit.
 
 ## Build / run
 
-Plain `Makefile` (clang++, C++20, `-Wall -Wextra -Wpedantic -Wshadow
--Werror=return-type`). CMake is deferred to Phase 2 with raylib.
+Two parallel build systems on purpose:
 
 ```sh
-make            # builds babaiwt + unit_tests into build/
+# Headless (Phase 1) — plain Makefile, stdlib only, no raylib.
+make            # → build/babaiwt + build/unit_tests
 make test       # runs every tests/scenarios/*.test through babaiwt
-make check      # unit tests + scenario tests
+make check      # unit + scenario tests
 make clean
+
+# GUI (Phase 2) — CMake + FetchContent raylib 5.0.
+cmake -S . -B build-cmake
+cmake --build build-cmake -j
+./build-cmake/babaiwt --edit [file.level]
+./build-cmake/babaiwt --play file.level
+./build-cmake/babaiwt --test scenario.test
 ```
 
-`build/` and `*.o` are gitignored.
+`build/` and `build-cmake/` are gitignored.
 
 ## Layout
 
 ```
 src/
-  core/    pure simulation (no I/O, no GUI). The thing other phases plug into.
-  cli/     scenario runner — comparing simulator output to .test expectations.
-  app/     entry point (`babaiwt`).
+  core/    pure simulation (no I/O, no GUI).
+  sim/     Simulator + UndoBuffer wrapping core/.
+  render/  raylib drawing (consumes World + RuleSet, never mutates).
+  editor/  palette, place/delete, play↔edit toggle, dual undo.
+  cli/     scenario runner.
+  app/     entry point (`babaiwt`); GUI loop or headless stub.
 tests/
   scenarios/  human-readable .test files (the behavior contract).
   unit/       C++ unit tests with the in-tree harness (tests/unit/check.hpp).
-docs/      v1 specs (architecture + rule engine + file format).
+docs/      v1 specs + status + GUI guide.
 ```
 
 Each of those directories has its own CLAUDE.md.
 
 ## How we work here
 
-- TDD: write failing test (RED, commit), implement to pass (GREEN, commit),
-  optional refactor (commit). The skill `tdd-workflow` formalizes this and
-  the user has authorized commits per checkpoint.
-- Determinism is non-negotiable. See `docs/architecture.md §5` for the
-  ordering rules (ascending object id, ascending (y, x), etc.).
-- Phase 1 keeps everything in plain Makefile + stdlib only — no external
-  deps yet. Resist adding any until Phase 2.
-- Phase 2 GUI: recreate sprites from `babaiswiki_pages_current.xml` and the
-  Baba Is You wiki itself. Static pixel sprites, not the animated
-  multi-frame originals.
+- **TDD always.** Write failing test (RED, commit), implement to pass
+  (GREEN, commit), optional refactor (commit). The `tdd-workflow`
+  skill formalises this; commits per checkpoint are pre-authorised.
+- **Determinism is non-negotiable.** See
+  [architecture.md §5](docs/architecture.md#5-determinism-contract)
+  for the ordering rules (ascending object id, ascending (y, x), no
+  RNG, no hash-iteration leakage).
+- **Engine generality > narrow implementation.** The rule engine
+  must architecturally accommodate the entire Baba catalog
+  (`docs/feature-status.md`) even if only a subset is currently
+  wired. New properties = new rows in `kTable` + a tick-phase hook.
+- **Spec deviations are explicit.** Marked `[DEVIATION]` in
+  rule-engine-spec.md with rationale. Current notable deviation:
+  undo of `Destroy` will preserve the original object id (spec §6
+  said fresh id; preserving avoids a chained-Move bug — see BUG-1).
+- **Wiki is reference, not contract.** `babaiswiki_pages_current.xml`
+  lives in repo root; consult it before guessing semantics.
 
 ## What's next
 
-1. Phase 2 scaffold: CMakeLists, raylib dependency, sprite atlas pipeline.
-2. Implement remaining tick phases (defeat/sink/melt/open-shut, undo
-   stack) with the same TDD loop.
-3. Once the simulator is feature-complete enough for "WALL IS PUSH" /
-   transformations, try to make the simulator robust enough for a user to create a level.
+1. **Phase B — Bug fixes** (TDD). BUG-1 (id-preserving respawn for
+   undo); BUG-2 (float scroll for zoom).
+2. **Phase C — Rule engine extensions** (TDD per group). Order:
+   per-object property derivation → directional → MOVE/AUTO/FALL →
+   WEAK → PULL/SHIFT/SWAP → EAT → MAKE → TEXT predicate → ON
+   condition. Status tracked in `docs/feature-status.md` and
+   `src/core/STATUS.md`.
+3. **Phase D — Sprite atlas** recreated from the wiki (static pixel
+   sprites, not animated). Replaces the placeholder coloured tiles
+   in `render/tile_colors.hpp`.

@@ -27,17 +27,36 @@ References: `babaiswiki_pages_current.xml` — pages *Order of Operations*, *Rul
 **Base rules** (always active, not parseable):
 - `TEXT IS PUSH`
 
-### 1.2 Deferred (post-v1)
+### 1.2 Planned (Phase 2 / next pass)
 
-`MOVE`, `AUTO`, `CHILL`, `SHIFT`, `FEAR`, `FALL*`, `NUDGE*`, `WEAK`, `BOOM`,
-`EAT`, `MAKE`, `HAS`, `SAFE`, `FLOAT`, `PHANTOM`, `HOLD`, `SELECT`, `REVERT`,
-`WRITE`, `MIMIC`, `LOCKED*`, `MORE`, `DONE`, `PLAY`, `BONUS`, `END`, `BACK`,
-`TELE`, `FOLLOW`, `SWAP`, `PULL`, `YOU2`, `3D`, conditions (`ON`, `NEAR`,
-`FACING`, `LONELY`, `POWERED`, etc.), `LEVEL` semantics, stack limits (6),
-`TOO COMPLEX` / `INFINITE LOOP` overflow.
+The following are **scoped for the upcoming implementation pass**. They
+must fit the v1 architecture without rework — see
+[feature-status.md §8](feature-status.md#8-engine-architecture-notes-gating-implementation)
+for the structural changes that gate them.
 
-These can all be added incrementally without changing the v1 architecture if we
-follow the phased structure below.
+- Movement properties: `MOVE`, `AUTO`, `FALL` / `FALLUP` / `FALLLEFT` /
+  `FALLRIGHT`, directional `UP` / `DOWN` / `LEFT` / `RIGHT`,
+  `SHIFT`, `PULL`, `SWAP`.
+- Removal properties: `WEAK`, `EAT`.
+- Spawn properties: `MAKE` (new tick phase post-DESTRUCT).
+- Transform properties: `TEXT` as a predicate (`X IS TEXT` swaps the
+  object's text-twin in place).
+- Conditional operator: `ON` (`X ON Y IS P`). Forces per-object property
+  derivation in the resolver.
+- Subject-side `NOT` (`NOT X IS P`).
+
+### 1.3 Deferred (post-Phase 2)
+
+`CHILL`, `FEAR`, `NUDGE*`, `BOOM`, `HAS`, `SAFE`, `FLOAT`, `PHANTOM`,
+`HOLD`, `SELECT`, `REVERT`, `WRITE`, `MIMIC`, `LOCKED*`, `MORE`, `DONE`,
+`PLAY`, `BONUS`, `END`, `BACK`, `TELE`, `FOLLOW`, `YOU2`, `3D`,
+conditions other than `ON` (`NEAR`, `FACING`, `LONELY`, `POWERED`, …),
+`LEVEL` semantics, stack limits (6), `TOO COMPLEX` / `INFINITE LOOP`
+overflow.
+
+These can all be added incrementally without changing the architecture
+if we follow the phased structure below. The full catalog with status
+flags lives in [feature-status.md](feature-status.md).
 
 ---
 
@@ -286,12 +305,18 @@ but doesn't itself block — wiki-consistent: "PUSH" is a movability property).
 
 YOU objects are processed in ascending **object-id order**. The id corresponds
 to insertion order: on level load, ids are assigned column-major top-to-bottom;
-on spawn, ids are assigned in append order; on undo of destruction, the
-destroyed object is re-inserted with a *fresh* id at the end of the list. (Wiki
-behavior matches.)
+on spawn, ids are assigned in append order.
 
-This means undoing changes the future-tick movement order. This is intentional
-and matches the original game.
+**[DEVIATION]** On undo of a destruction, the destroyed object is
+re-inserted with its **original id**, not a fresh one. The wiki (and
+the original v1 of this spec) called for a fresh id, but that breaks
+chained reverse-application of `Move` records that target the same id
+within the same tick (e.g., a tick that moves an object and then
+destroys it — the inverse is "respawn, then unmove", which fails if
+the respawn allocates a different id). The user has explicitly chosen
+this deviation. Implementation: `World::respawn(id, pos, kind, text,
+facing)` is the only way to reuse an id; `spawn` always allocates a
+fresh one.
 
 ---
 
