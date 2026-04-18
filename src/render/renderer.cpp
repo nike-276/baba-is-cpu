@@ -136,24 +136,42 @@ void Renderer::draw_rule_panel(core::RuleSet const& rs, int px, int py) const {
 
 int Renderer::draw_palette(std::vector<std::string> const& entries,
                             int selected_idx, int px, int py,
-                            int scroll_px, int panel_h) const {
+                            int scroll_px, int panel_h,
+                            std::string const& search_text, bool search_active) const {
+    constexpr int SEARCH_H = 22;
     int entry_h   = tile_px_ + 4;
     int font_size = std::max(8, tile_px_ / 5);
+    int panel_w   = tile_px_ + 4;
 
     DrawText("PALETTE", px, py - 18, 12, LIGHTGRAY);
 
-    int total_h   = static_cast<int>(entries.size()) * entry_h;
-    int max_scroll = std::max(0, total_h - panel_h);
+    // ── Search box ────────────────────────────────────────────────────────
+    Rectangle sb{static_cast<float>(px), static_cast<float>(py),
+                 static_cast<float>(panel_w), static_cast<float>(SEARCH_H)};
+    DrawRectangleRec(sb, search_active ? WHITE : Color{40, 40, 40, 255});
+    DrawRectangleLinesEx(sb, 1, search_active ? YELLOW : GRAY);
 
-    // Clip drawing to the palette panel so entries don't bleed into HUD.
-    BeginScissorMode(px, py, tile_px_ + 4, panel_h);
+    // Blinking cursor when active.
+    bool show_cursor = search_active && (static_cast<int>(GetTime() * 2) % 2 == 0);
+    std::string display = search_text + (show_cursor ? "|" : "");
+    if (display.empty() && !search_active) display = "search...";
+    Color text_col = search_active ? BLACK : (search_text.empty() ? DARKGRAY : LIGHTGRAY);
+    DrawText(display.c_str(), px + 4, py + (SEARCH_H - 12) / 2, 12, text_col);
+
+    // ── Entry list ────────────────────────────────────────────────────────
+    int entry_start = py + SEARCH_H + 4;
+    int visible_h   = panel_h - SEARCH_H - 4;
+    int total_h     = static_cast<int>(entries.size()) * entry_h;
+    int max_scroll  = std::max(0, total_h - visible_h);
+
+    BeginScissorMode(px, entry_start, panel_w, visible_h);
 
     for (int i = 0; i < static_cast<int>(entries.size()); ++i) {
-        int ey = py + i * entry_h - scroll_px;
-        if (ey + entry_h < py || ey > py + panel_h) continue;  // culled
+        int ey = entry_start + i * entry_h - scroll_px;
+        if (ey + entry_h < entry_start || ey > entry_start + visible_h) continue;
 
         Rectangle bg{static_cast<float>(px), static_cast<float>(ey),
-                     static_cast<float>(tile_px_ + 4), static_cast<float>(tile_px_ + 2)};
+                     static_cast<float>(panel_w), static_cast<float>(tile_px_ + 2)};
 
         if (i == selected_idx) {
             DrawRectangleRec(bg, WHITE);
@@ -162,9 +180,8 @@ int Renderer::draw_palette(std::vector<std::string> const& entries,
             DrawRectangleRec(bg, DARKGRAY);
         }
 
-        Color text_col = (i == selected_idx) ? BLACK : LIGHTGRAY;
-        DrawText(entries[i].c_str(), px + 2, ey + (tile_px_ - font_size) / 2,
-                 font_size, text_col);
+        Color tc = (i == selected_idx) ? BLACK : LIGHTGRAY;
+        DrawText(entries[i].c_str(), px + 2, ey + (tile_px_ - font_size) / 2, font_size, tc);
     }
 
     EndScissorMode();

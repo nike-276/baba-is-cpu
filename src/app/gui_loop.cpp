@@ -5,6 +5,8 @@
 #include "render/renderer.hpp"
 #include "sim/simulator.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
 #include <fstream>
 #include <string>
@@ -40,6 +42,24 @@ int run_gui(std::string const& level_path) {
         state.request_load = false;
         state.request_new  = false;
         renderer.set_tile_px(state.tile_px);
+
+        // ── Compute filtered palette indices (case-insensitive substring) ─
+        {
+            std::string q = state.palette_search;
+            for (char& c : q) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+            state.palette_filtered.clear();
+            auto const& pal = ed.palette();
+            for (int i = 0; i < static_cast<int>(pal.size()); ++i) {
+                if (q.empty()) {
+                    state.palette_filtered.push_back(i);
+                } else {
+                    std::string name = pal[i].display_name;
+                    for (char& c : name) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+                    if (name.find(q) != std::string::npos)
+                        state.palette_filtered.push_back(i);
+                }
+            }
+        }
 
         poll_input(ed, state);
 
@@ -82,12 +102,23 @@ int run_gui(std::string const& level_path) {
         int palette_panel_h = WIN_H - 24 - 20;  // minus HUD bar and header
         DrawRectangle(0, 0, palette_w - 2, WIN_H - 24, {15, 15, 15, 220});
         {
+            auto const& pal = ed.palette();
+            int actual_sel  = static_cast<int>(&ed.selected() - pal.data());
+
+            // Build filtered display names; find selected's position in filtered list.
             std::vector<std::string> names;
-            for (auto const& e : ed.palette()) names.push_back(e.display_name);
-            int sel = static_cast<int>(&ed.selected() - ed.palette().data());
-            int max_scroll = renderer.draw_palette(names, sel, 2, 20,
+            int filtered_sel = -1;
+            for (int i = 0; i < static_cast<int>(state.palette_filtered.size()); ++i) {
+                int idx = state.palette_filtered[i];
+                names.push_back(pal[idx].display_name);
+                if (idx == actual_sel) filtered_sel = i;
+            }
+
+            int max_scroll = renderer.draw_palette(names, filtered_sel, 2, 20,
                                                    state.palette_scroll,
-                                                   palette_panel_h);
+                                                   palette_panel_h,
+                                                   state.palette_search,
+                                                   state.palette_search_active);
             state.palette_scroll = std::min(state.palette_scroll, max_scroll);
         }
 

@@ -3,9 +3,16 @@
 #include "core/direction.hpp"
 #include "editor/editor.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <raylib.h>
+#include <string>
+#include <vector>
 
 namespace baba::app {
+
+static constexpr int PALETTE_SEARCH_H  = 22;  // search box pixel height
+static constexpr int PALETTE_ENTRY_TOP = 20 + PALETTE_SEARCH_H + 4;  // entries start y
 
 // Translates raw raylib input into editor actions each frame.
 // Call poll() once per frame; it mutates the Editor and scroll state in place.
@@ -13,10 +20,15 @@ struct InputState {
     int  scroll_x{0};
     int  scroll_y{0};
     int  tile_px{48};
-    int  palette_scroll{0};  // pixel offset into the palette list
+    int  palette_scroll{0};       // pixel offset into the visible entry list
     bool request_save{false};
     bool request_load{false};
     bool request_new{false};
+
+    std::string palette_search{};
+    bool        palette_search_active{false};
+    // Filtered palette indices — recomputed by gui_loop each frame before poll_input.
+    std::vector<int> palette_filtered{};
 
     // Track the last tile the mouse placed/deleted on so we only act once per tile
     // while the button is held (drag-painting without per-frame spam).
@@ -30,19 +42,19 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
     if (wheel != 0.0f) {
         int palette_w = st.tile_px + 8;
         if (GetMouseX() < palette_w) {
-            // Scroll palette list; max clamped later by renderer when it knows
-            // total entry count, so just accumulate here (min 0).
             st.palette_scroll = std::max(0, st.palette_scroll - static_cast<int>(wheel * (st.tile_px + 4)));
         } else {
             st.tile_px = std::clamp(st.tile_px + static_cast<int>(wheel * 4), 8, 128);
         }
     }
 
-    // ── Scroll (arrow keys in both modes) ────────────────────────────────
-    if (IsKeyPressed(KEY_LEFT)  && ed.mode() == editor::EditorMode::Edit) --st.scroll_x;
-    if (IsKeyPressed(KEY_RIGHT) && ed.mode() == editor::EditorMode::Edit) ++st.scroll_x;
-    if (IsKeyPressed(KEY_UP)    && ed.mode() == editor::EditorMode::Edit) --st.scroll_y;
-    if (IsKeyPressed(KEY_DOWN)  && ed.mode() == editor::EditorMode::Edit) ++st.scroll_y;
+    // ── Scroll (arrow keys — only when search is not focused) ────────────
+    if (!st.palette_search_active) {
+        if (IsKeyPressed(KEY_LEFT)  && ed.mode() == editor::EditorMode::Edit) --st.scroll_x;
+        if (IsKeyPressed(KEY_RIGHT) && ed.mode() == editor::EditorMode::Edit) ++st.scroll_x;
+        if (IsKeyPressed(KEY_UP)    && ed.mode() == editor::EditorMode::Edit) --st.scroll_y;
+        if (IsKeyPressed(KEY_DOWN)  && ed.mode() == editor::EditorMode::Edit) ++st.scroll_y;
+    }
 
     // ── Middle-drag pan ───────────────────────────────────────────────────
     if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
@@ -51,19 +63,56 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         if (std::abs(delta.y) > 1) st.scroll_y -= static_cast<int>(delta.y) / st.tile_px;
     }
 
-    bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
-
-    // ── Palette click (left panel, both modes) ───────────────────────────
+    // ── Palette panel clicks (both modes) ────────────────────────────────
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         int palette_w = st.tile_px + 8;
-        int entry_h   = st.tile_px + 4;
-        Vector2 mp = GetMousePosition();
-        if (static_cast<int>(mp.x) < palette_w) {
-            int palette_top = 20;  // matches draw_palette py
-            int clicked = (static_cast<int>(mp.y) - palette_top + st.palette_scroll) / entry_h;
-            ed.palette_select(clicked);
+        Vector2 mp    = GetMousePosition();
+        int mx = static_cast<int>(mp.x);
+        int my = static_cast<int>(mp.y);
+
+        if (mx < palette_w) {
+            int search_top = 20;
+            int entry_h    = st.tile_px + 4;
+
+            if (my >= search_top && my < search_top + PALETTE_SEARCH_H) {
+                // Clicked the search box.
+                st.palette_search_active = true;
+            } else if (my >= PALETTE_ENTRY_TOP) {
+                // Clicked an entry.
+                st.palette_search_active = false;
+                int clicked = (my - PALETTE_ENTRY_TOP + st.palette_scroll) / entry_h;
+                if (clicked >= 0 && clicked < static_cast<int>(st.palette_filtered.size())) {
+                    ed.palette_select(st.palette_filtered[clicked]);
+                }
+            }
+        } else {
+            // Clicked outside palette — deactivate search.
+            st.palette_search_active = false;
         }
     }
+
+    // ── Search box text input ─────────────────────────────────────────────
+    if (st.palette_search_active) {
+        int ch;
+        while ((ch = GetCharPressed()) != 0) {
+            if (ch >= 32 && ch < 127) {
+                std::string prev = st.palette_search;
+                st.palette_search += static_cast<char>(ch);
+                st.palette_scroll = 0;  // reset scroll on query change
+            }
+        }
+        if (IsKeyPressed(KEY_BACKSPACE) && !st.palette_search.empty()) {
+            st.palette_search.pop_back();
+            st.palette_scroll = 0;
+        }
+        if (IsKeyPressed(KEY_ESCAPE)) {
+            st.palette_search_active = false;
+        }
+        // Don't process any other keyboard controls while typing in the search box.
+        return;
+    }
+
+    bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
 
     if (ed.mode() == editor::EditorMode::Edit) {
         // ── Palette ───────────────────────────────────────────────────────

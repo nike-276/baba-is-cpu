@@ -25,12 +25,15 @@ public:
     void draw_rule_panel(core::RuleSet const& rs, int px, int py) const;
 
     // Draw the palette selector on the left side.
-    // entries: list of display names; selected_idx: highlighted entry.
-    // scroll_px: vertical pixel offset into the list (from mouse wheel).
+    // entries: filtered display names (already filtered by caller).
+    // selected_idx: index within `entries` that is currently selected (-1 = none visible).
+    // scroll_px: vertical pixel offset into the entry list.
+    // search_text / search_active: for rendering the search box at the top.
     // Returns the maximum valid scroll_px so the caller can clamp.
     int draw_palette(std::vector<std::string> const& entries,
                      int selected_idx, int px, int py,
-                     int scroll_px, int panel_h) const;
+                     int scroll_px, int panel_h,
+                     std::string const& search_text, bool search_active) const;
 
     // Draw the bottom HUD bar.
     void draw_hud(std::string const& mode_label, std::string const& filename,
