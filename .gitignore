@@ -1,6 +1,7 @@
 .claude
 babaiswiki_pages_current.xml
 build/
+build_cmake/
 *.o
 *.green
 .DS_Store
