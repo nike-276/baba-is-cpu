@@ -2,6 +2,7 @@
 
 #include "../core/loader.hpp"
 #include "../core/tick.hpp"
+#include "../sim/simulator.hpp"
 
 #include <cstdio>
 #include <sstream>
@@ -111,18 +112,17 @@ TestResult run_test_file(std::string const& path) {
     auto& sc = std::get<TestScenario>(loaded);
     r.scenario_name = sc.setup.name;
 
-    // We mutate the world in `sc.setup`; that's fine because `sc` is local.
-    World& world = sc.setup.world;
+    baba::sim::Simulator sim(std::move(sc.setup.world));
 
-    bool won_ever = false;
+    bool won_ever      = false;
     int  forward_ticks = 0;
 
     for (auto const& act : sc.inputs) {
         if (act.kind == TestActionKind::Undo) {
-            // Phase 1: undo not implemented. Skip without consuming a forward tick.
+            sim.step_back();  // undo step; does not count as a forward tick
             continue;
         }
-        TickReport rep = apply_tick(world, action_to_input(act.kind));
+        TickReport rep = sim.step_forward(action_to_input(act.kind));
         ++forward_ticks;
         if (rep.won) won_ever = true;
     }
@@ -131,7 +131,7 @@ TestResult run_test_file(std::string const& path) {
     r.assertions_total = static_cast<int>(sc.expected.size());
     for (auto const& a : sc.expected) {
         std::string detail;
-        if (!eval_assertion(a, world, forward_ticks, won_ever, detail)) {
+        if (!eval_assertion(a, sim.world(), forward_ticks, won_ever, detail)) {
             r.failures.push_back({a.line, assertion_text(a) + " — " + detail});
             ++r.assertions_failed;
         }

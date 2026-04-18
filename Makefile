@@ -21,11 +21,15 @@ TESTS    := tests
 SCEN     := $(TESTS)/scenarios
 
 CORE_SRC := $(wildcard $(SRC)/core/*.cpp)
+SIM_SRC  := $(wildcard $(SRC)/sim/*.cpp)
 CLI_SRC  := $(wildcard $(SRC)/cli/*.cpp)
-APP_SRC  := $(wildcard $(SRC)/app/*.cpp)
+# app/gui_loop.cpp requires raylib — excluded from Makefile build (CMake only).
+# gui_stub.cpp provides a no-op run_gui() so the linker is happy.
+APP_SRC  := $(SRC)/app/main.cpp $(SRC)/app/gui_stub.cpp
 UNIT_SRC := $(wildcard $(TESTS)/unit/*.cpp)
 
 CORE_OBJ := $(patsubst $(SRC)/%.cpp,$(BUILD)/%.o,$(CORE_SRC))
+SIM_OBJ  := $(patsubst $(SRC)/%.cpp,$(BUILD)/%.o,$(SIM_SRC))
 CLI_OBJ  := $(patsubst $(SRC)/%.cpp,$(BUILD)/%.o,$(CLI_SRC))
 APP_OBJ  := $(patsubst $(SRC)/%.cpp,$(BUILD)/%.o,$(APP_SRC))
 UNIT_OBJ := $(patsubst $(TESTS)/%.cpp,$(BUILD)/tests/%.o,$(UNIT_SRC))
@@ -41,7 +45,7 @@ all: babaiwt unit
 babaiwt: $(BIN_BABA)
 unit:    $(BIN_UNIT)
 
-$(BIN_BABA): $(CORE_OBJ) $(CLI_OBJ) $(APP_OBJ)
+$(BIN_BABA): $(CORE_OBJ) $(SIM_OBJ) $(CLI_OBJ) $(APP_OBJ)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
@@ -58,7 +62,7 @@ $(BUILD)/tests/%.o: $(TESTS)/%.cpp
 	$(CXX) $(CXXFLAGS) -I$(SRC) -MMD -MP -c -o $@ $<
 
 # Pull in auto-generated header dependencies.
--include $(CORE_OBJ:.o=.d) $(CLI_OBJ:.o=.d) $(APP_OBJ:.o=.d) $(UNIT_OBJ:.o=.d)
+-include $(CORE_OBJ:.o=.d) $(SIM_OBJ:.o=.d) $(CLI_OBJ:.o=.d) $(APP_OBJ:.o=.d) $(UNIT_OBJ:.o=.d)
 
 test: $(BIN_BABA)
 	@if [ -z "$(SCENARIOS)" ]; then echo "no .test files in $(SCEN)"; exit 1; fi
