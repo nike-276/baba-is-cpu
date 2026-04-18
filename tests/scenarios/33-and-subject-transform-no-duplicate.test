@@ -1,0 +1,26 @@
+# BABA AND ROCK IS FLAG: both baba and rock transform into flag, yielding
+# exactly 2 flags total. The bug this guards against: scanning from ROCK as a
+# second starting position would add ROCK IS FLAG twice, causing rock to spawn
+# two flags (3 flags total) instead of one.
+
+[setup]
+version 1
+name "and in subject transform: exactly two flags, no duplicates"
+
+text 0 0 baba
+text 1 0 and
+text 2 0 rock
+text 3 0 is
+text 4 0 flag
+
+object 5 5 baba right
+object 6 5 rock right
+
+[inputs]
+input right
+
+[expected]
+count baba 0
+count rock 0
+count flag 2
+not_won

@@ -1,0 +1,25 @@
+# BABA NOT ON SKULL IS YOU: baba has YOU when NOT sharing a tile with skull.
+# Baba starts alone (no skull on its tile), so the NOT ON condition is met
+# and baba has YOU — it moves right.
+
+[setup]
+version 1
+name "not-on: baba alone has YOU and moves"
+
+text 0 0 baba
+text 1 0 not
+text 2 0 on
+text 3 0 skull
+text 4 0 is
+text 5 0 you
+
+object 5 5 baba right
+object 8 8 skull right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 6 5 baba
+not_won

@@ -1,0 +1,37 @@
+# Complex mix: ROCK MAKE WALL AND FLAG, BABA ON FLAG IS WIN, BABA IS YOU.
+# Tick 1: baba (YOU) moves right onto rock's tile.
+#   APPLY_MAKE: rock spawns wall and flag at (5,5).
+#   PARSE_POST_DESTRUCT: flag now exists at (5,5); BABA ON FLAG IS WIN triggers.
+#   CHECK_WIN: baba (YOU) shares tile with flag (WIN via ON) → won.
+
+[setup]
+version 1
+name "make-and-predicate + on-conditional win"
+
+text 0 0 rock
+text 1 0 make
+text 2 0 wall
+text 3 0 and
+text 4 0 flag
+text 0 1 baba
+text 1 1 on
+text 2 1 flag
+text 3 1 is
+text 4 1 win
+text 0 2 baba
+text 1 2 is
+text 2 2 you
+
+object 4 4 baba right
+object 5 4 rock right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 5 4 baba
+at 5 4 rock
+at 5 4 wall
+at 5 4 flag
+won

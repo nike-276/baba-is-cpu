@@ -31,10 +31,11 @@ authoritative master checklist.
 | Token | In `Kind` enum? | Notes |
 |-------|-----------------|-------|
 | IS    | yes (O_Is)      | main predicate operator |
-| AND   | yes (O_And)     | subject + predicate distribution |
+| AND   | yes (O_And)     | subject + predicate distribution (subjects, properties, nouns, MAKE/EAT targets) |
 | NOT   | yes (O_Not)     | predicate-side cancellation (DONE); subject-side planned |
-| ON    | yes (O_On)      | conditional rule NOUN ON NOUN IS PROPERTY (DONE) |
-| MAKE  | yes (O_Make)    | NOUN MAKE NOUN spawning (DONE) |
+| ON    | yes (O_On)      | conditional rule NOUN ON NOUN IS P/NOUN (DONE); also NOT ON variant (DONE) |
+| MAKE  | yes (O_Make)    | NOUN MAKE NOUN [AND NOUN]* spawning (DONE) |
+| EAT   | yes (O_Eat)     | NOUN EAT NOUN [AND NOUN]* destruction (DONE) |
 | NEAR / FACING / LONELY | deferred | |
 
 ## Tick-phase pipeline

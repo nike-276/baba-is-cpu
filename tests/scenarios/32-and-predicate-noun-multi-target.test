@@ -1,0 +1,26 @@
+# BABA IS WALL AND ROCK: predicate nounphrase with AND should produce two
+# transform targets. Baba is destroyed and replaced by one wall AND one rock
+# on the same tile. No YOU rule so baba cannot move before transforming.
+
+[setup]
+version 1
+name "and in noun predicate: baba becomes wall and rock"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 wall
+text 3 0 and
+text 4 0 rock
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+count baba 0
+count wall 1
+count rock 1
+at 5 5 wall
+at 5 5 rock
+not_won

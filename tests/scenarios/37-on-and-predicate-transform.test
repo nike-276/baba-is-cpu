@@ -1,0 +1,29 @@
+# BABA ON KEY IS WALL AND ROCK: conditional transform with AND in noun predicate.
+# Baba shares tile with key → baba destroyed and replaced by wall + rock.
+# No YOU rule so baba cannot move. Transform fires in TRANSFORM phase.
+
+[setup]
+version 1
+name "on conditional transform with and predicate"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 key
+text 3 0 is
+text 4 0 wall
+text 5 0 and
+text 6 0 rock
+
+object 3 3 baba right
+object 3 3 key right
+
+[inputs]
+input right
+
+[expected]
+count baba 0
+count wall 1
+count rock 1
+at 3 3 wall
+at 3 3 rock
+not_won

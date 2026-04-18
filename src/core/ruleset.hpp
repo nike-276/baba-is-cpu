@@ -36,12 +36,29 @@ struct MakeRule {
     Kind to;
 };
 
+// NOUN EAT NOUN: when a non-text `subject` shares a tile with a non-text `target`,
+// the target is destroyed; the subject survives.
+struct EatRule {
+    Kind subject;
+    Kind target;
+};
+
 // NOUN ON NOUN IS PROPERTY: `subject` has `property` only when sharing a tile
 // with a non-text object of kind `condition_noun`.
 struct ConditionalPropertyRule {
     Kind subject;
     Kind condition_noun;
     Kind property;
+    bool negated_condition{false};  // true for NOT ON: property applies when condition_noun is ABSENT
+};
+
+// NOUN ON NOUN IS NOUN: `subject` transforms into `target` when sharing a tile
+// with a non-text object of kind `condition_noun`.
+struct ConditionalTransformRule {
+    Kind subject;
+    Kind condition_noun;
+    Kind target;
+    bool negated_condition{false};  // true for NOT ON
 };
 
 class RuleSet {
@@ -62,13 +79,17 @@ public:
     std::vector<PropertyRule>            const& property_rules()    const { return rules_; }
     std::vector<TransformRule>           const& transform_rules()  const { return transforms_; }
     std::vector<MakeRule>                const& make_rules()       const { return makes_; }
-    std::vector<ConditionalPropertyRule> const& conditional_rules() const { return cond_rules_; }
+    std::vector<EatRule>                 const& eat_rules()               const { return eats_; }
+    std::vector<ConditionalPropertyRule> const& conditional_rules()        const { return cond_rules_; }
+    std::vector<ConditionalTransformRule>const& conditional_transform_rules() const { return cond_transforms_; }
 
 private:
     std::vector<PropertyRule>            rules_;
     std::vector<TransformRule>           transforms_;
     std::vector<MakeRule>                makes_;
+    std::vector<EatRule>                 eats_;
     std::vector<ConditionalPropertyRule> cond_rules_;
+    std::vector<ConditionalTransformRule>cond_transforms_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 

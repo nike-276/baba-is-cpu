@@ -1,0 +1,25 @@
+# BABA ON KEY IS ROCK: baba transforms into rock (same tile, same facing) when
+# sharing a tile with a non-text key. No YOU rule so baba cannot move;
+# the transform fires in TRANSFORM phase after PARSE_INITIAL sees the condition met.
+
+[setup]
+version 1
+name "on conditional transform baba on key is rock"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 key
+text 3 0 is
+text 4 0 rock
+
+object 3 3 baba right
+object 3 3 key right
+
+[inputs]
+input right
+
+[expected]
+count baba 0
+count rock 1
+at 3 3 rock
+not_won

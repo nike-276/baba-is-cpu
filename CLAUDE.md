@@ -9,15 +9,20 @@ subdirectory and go deeper.
 ## Where we are
 
 Phase 1 (headless engine) is GREEN: deterministic 9-phase tick pipeline,
-sparse spatial index, rule parser with `NOT`/`AND` resolution + `X IS X`
-protection + `X IS Y` transforms, .level/.test loaders, scenario runner,
-in-tree unit harness. 14 scenarios + 35 unit tests pass.
+sparse spatial index, rule parser with `NOT`/`AND`/`ON`/`NOT ON`/`MAKE`/`EAT`
+resolution + `X IS X` protection + `X IS Y` conditional/unconditional transforms,
+.level/.test loaders, scenario runner, in-tree unit harness.
+44 scenarios + 39 unit tests pass.
+
+Noun catalog: `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`,
+`KEY`, `DOOR`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`,
+`PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND`, `TEXT`.
 
 Phase 2 (raylib GUI editor + play loop) is **in progress**. CMake build
 exists; `babaiwt --edit` / `--play` work; palette + search + zoom are
-wired. Two known bugs (BUG-1 undo of destroyed objects, BUG-2 zoom
-shake) are tracked in
+wired. One known bug (BUG-1 undo of destroyed objects) is tracked in
 [docs/feature-status.md §9](docs/feature-status.md#9-known-bugs-open).
+BUG-2 (zoom shake) is **FIXED**.
 
 ## Source-of-truth docs (`docs/`)
 

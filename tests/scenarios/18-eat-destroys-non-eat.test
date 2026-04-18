@@ -1,18 +1,18 @@
-# Scenario 18: EAT destroys any non-EAT object on the same tile; the EAT object survives.
-# Verifies DESTRUCT sub-step (b): when baba (YOU) moves onto a water (EAT) tile,
-# baba is destroyed and water remains.
+# Scenario 18: EAT is a verb operator (NOUN EAT NOUN), not a property.
+# WATER EAT BABA: when water and baba share a tile, baba is destroyed; water survives.
+# Baba (YOU) steps right onto water's tile → DESTRUCT sub-step (b) destroys baba.
 
 [setup]
 version 1
-name "eat destroys non-eat on contact"
+name "eat destroys target on contact"
 
 text 0 0 baba
 text 1 0 is
 text 2 0 you
 
 text 0 1 water
-text 1 1 is
-text 2 1 eat
+text 1 1 eat
+text 2 1 baba
 
 object 5 5 baba right
 object 6 5 water right

@@ -23,8 +23,20 @@ inline const char* object_label(core::Kind k) {
         case K::N_Lava:  return "LAVA";
         case K::N_Skull: return "SKUL";
         case K::N_Door:  return "DOOR";
-        case K::N_Key:   return "KEY";
-        default:         return "???";
+        case K::N_Key:    return "KEY";
+        case K::N_Me:     return "ME";
+        case K::N_Box:    return "BOX";
+        case K::N_Leaf:   return "LEAF";
+        case K::N_Cloud:  return "CLUD";
+        case K::N_Sun:    return "SUN";
+        case K::N_Moon:   return "MOON";
+        case K::N_Star:   return "STAR";
+        case K::N_Planet: return "PLNT";
+        case K::N_Bolt:   return "BOLT";
+        case K::N_Love:   return "LOVE";
+        case K::N_Bomb:   return "BOMB";
+        case K::N_Wind:   return "WIND";
+        default:          return "???";
     }
 }
 
@@ -42,8 +54,20 @@ inline TileStyle style_for(core::Kind k, bool is_text) {
             case K::N_Lava:  return {ORANGE,                      BLACK, object_label(k)};
             case K::N_Skull: return {{60,60,60,255},               WHITE, object_label(k)};
             case K::N_Door:  return {{100,60,20,255},              WHITE, object_label(k)};
-            case K::N_Key:   return {GOLD,                        BLACK, object_label(k)};
-            default:         return {{80,80,80,255},               WHITE, "???"};
+            case K::N_Key:    return {GOLD,                         BLACK, object_label(k)};
+            case K::N_Me:     return {{180,140,255,255},            BLACK, object_label(k)};
+            case K::N_Box:    return {{160,110,60,255},             WHITE, object_label(k)};
+            case K::N_Leaf:   return {{80,180,60,255},              BLACK, object_label(k)};
+            case K::N_Cloud:  return {{200,220,255,255},            BLACK, object_label(k)};
+            case K::N_Sun:    return {{255,220,0,255},              BLACK, object_label(k)};
+            case K::N_Moon:   return {{200,200,140,255},            BLACK, object_label(k)};
+            case K::N_Star:   return {{255,240,80,255},             BLACK, object_label(k)};
+            case K::N_Planet: return {{80,160,200,255},             BLACK, object_label(k)};
+            case K::N_Bolt:   return {{255,200,0,255},              BLACK, object_label(k)};
+            case K::N_Love:   return {{255,80,120,255},             WHITE, object_label(k)};
+            case K::N_Bomb:   return {{40,40,40,255},               WHITE, object_label(k)};
+            case K::N_Wind:   return {{160,220,240,255},            BLACK, object_label(k)};
+            default:          return {{80,80,80,255},               WHITE, "???"};
         }
     }
 

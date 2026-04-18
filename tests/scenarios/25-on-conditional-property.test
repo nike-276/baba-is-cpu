@@ -1,6 +1,9 @@
 # BABA ON ROCK IS YOU: baba has YOU only while sharing a tile with rock.
 # Baba and rock share (2,2). No standalone BABA IS YOU rule.
-# FLAG IS WIN. Player input right → baba moves to flag at (3,2) → won.
+# FLAG IS WIN. Player input right → baba moves to (3,2) because it had YOU during
+# PARSE_INITIAL (on rock), but after moving it is no longer on the rock so loses YOU.
+# Rock does NOT move — it was never independently YOU.
+# At CHECK_WIN time (PARSE_POST_DESTRUCT) there is no YOU → not_won.
 
 [setup]
 version 1
@@ -25,4 +28,5 @@ input right
 [expected]
 count baba 1
 at 3 2 baba
-won
+at 2 2 rock
+not_won

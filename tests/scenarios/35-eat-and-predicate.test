@@ -1,0 +1,29 @@
+# BABA EAT ROCK AND FLAG: baba should eat both kinds in the same DESTRUCT step.
+# Baba (YOU) moves right onto a tile containing a rock and a flag; both eaten.
+
+[setup]
+version 1
+name "eat with and predicate destroys both targets"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+text 0 1 baba
+text 1 1 eat
+text 2 1 rock
+text 3 1 and
+text 4 1 flag
+
+object 5 5 baba right
+object 6 5 rock right
+object 6 5 flag right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+count rock 0
+count flag 0
+at 6 5 baba
+not_won

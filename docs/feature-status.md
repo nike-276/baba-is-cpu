@@ -19,9 +19,12 @@ checklist) and any scenario file that locks the behavior down.
 | Token | Status | Notes |
 |-------|--------|-------|
 | `IS`     | DONE     | Property + transform + identity (`X IS X`). |
-| `AND`    | DONE     | Subject and predicate distribution. |
+| `AND`    | DONE     | Subject and predicate distribution (subjects, properties, nouns, MAKE/EAT targets). |
 | `NOT`    | DONE (predicate side) | Cancels positive of same property; negative-only is a no-op. **PLANNED**: subject side (`NOT X IS P`). |
-| `ON`     | DONE     | `X ON Y IS P`: X has P only when sharing a tile with a non-text Y. Checked per-object in `object_has_property`. |
+| `ON`     | DONE     | `X ON Y IS P`: X has P only when sharing a tile with a non-text Y. `X ON Y IS Z`: conditional transform. Checked per-object in `object_has_property` / TRANSFORM phase. |
+| `NOT ON` | DONE     | `X NOT ON Y IS P`: X has P when NOT sharing a tile with Y. `X NOT ON Y IS Z`: conditional transform (negated condition). |
+| `MAKE`   | DONE     | `X MAKE Y [AND Z]*`: operator (not a property). Spawns targets each tick post-DESTRUCT. Idempotent. |
+| `EAT`    | DONE     | `X EAT Y [AND Z]*`: operator (not a property). Subject destroys listed targets on contact in DESTRUCT. |
 | `NEAR`   | DEFERRED | Same shape as `ON` but uses 8-neighborhood. |
 | `FACING` | DEFERRED | Subject must be facing a tile containing the noun. |
 | `LONELY` | DEFERRED | Subject must be the only object on its tile (or in 4-neighborhood per wiki variant). |
@@ -32,8 +35,9 @@ checklist) and any scenario file that locks the behavior down.
 
 | Token | Status | Notes |
 |-------|--------|-------|
-| Object kinds present in palette (`BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`, `DOOR`) | DONE | See `src/core/kind.cpp` `kTable`. |
-| `KEKE`, `ME`              | PLANNED | Required for transform/duplicate scenarios. |
+| `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`, `DOOR` | DONE | Original palette objects. |
+| `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
+| `KEKE`                    | PLANNED | Required for transform/duplicate scenarios. |
 | `TEXT` (meta-noun)        | PARTIAL | Recognized in rule grammar (base rule `TEXT IS PUSH`). PLANNED: as predicate (`X IS TEXT` transforms X into its text twin). |
 | `EMPTY`                   | PLANNED | As subject = "empty tiles"; as predicate = self-destruct. Currently neither is wired. |
 | `ALL`                     | DEFERRED | Distribution-over-everything semantics. |
@@ -65,9 +69,9 @@ Removal precedence inside DESTRUCT (lower = earlier):
 
 ```
 1. SINK
-2. EAT      ← PLANNED (inserted between SINK and HOT)
+2. EAT      (DONE)
 3. HOT/MELT
-4. WEAK     ← PLANNED (any movement of WEAK + collision destroys WEAK)
+4. WEAK     (DONE)
 5. DEFEAT
 6. OPEN/SHUT
 ```
@@ -79,9 +83,9 @@ Removal precedence inside DESTRUCT (lower = earlier):
 | `MELT`   | DONE     | Destroyed by HOT. |
 | `DEFEAT` | DONE     | Destroys YOU on tile. |
 | `OPEN` / `SHUT` | DONE | Mutual destruction. |
-| `EAT`    | DONE     | EAT object on tile with any non-EAT, non-text object → other object destroyed. EAT itself survives. DESTRUCT sub-step (b). |
+| `EAT`    | DONE     | `X EAT Y [AND Z]*` (EAT is an operator, not a property). Subject destroys listed target kinds on contact. Supports AND for multiple targets. DESTRUCT sub-step (b). |
 | `WEAK`   | DONE     | Destroyed when any object arrives on its tile this tick (determined from Move changes in the log). DESTRUCT sub-step (d). |
-| `MAKE`   | DONE     | `X MAKE Y` (MAKE is an operator, not a property). Phase APPLY_MAKE post-DESTRUCT: spawns a Y on every tile containing X. Idempotent (skips if Y already present). |
+| `MAKE`   | DONE     | `X MAKE Y [AND Z]*` (MAKE is an operator, not a property). Phase APPLY_MAKE post-DESTRUCT: spawns all targets on every tile containing X. Idempotent (skips if target already present). Supports AND for multiple targets. |
 | `HAS`    | DEFERRED | `X HAS Y` spawns Y when X is destroyed; needs to hook DESTRUCT. |
 | `BOOM`   | DEFERRED | Destroys self + neighbouring tiles' contents. |
 | `SAFE`   | DEFERRED | Immune to DEFEAT/SINK/MELT/etc. |

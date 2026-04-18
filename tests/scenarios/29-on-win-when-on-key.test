@@ -1,0 +1,28 @@
+# BABA ON KEY IS WIN: baba has WIN only while sharing a tile with a key.
+# BABA IS YOU (unconditional). Baba steps right onto a key tile.
+# At CHECK_WIN (PARSE_POST_DESTRUCT): baba is YOU and baba is WIN → won.
+
+[setup]
+version 1
+name "on conditional win"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+text 0 1 baba
+text 1 1 on
+text 2 1 key
+text 3 1 is
+text 4 1 win
+
+object 2 3 baba right
+object 3 3 key right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 3 3 baba
+at 3 3 key
+won

@@ -116,27 +116,57 @@ void Renderer::draw_grid(int viewport_w, int viewport_h,
 }
 
 void Renderer::draw_rule_panel(core::RuleSet const& rs, int px, int py) const {
-    int font_size = 14;
-    int line_h    = font_size + 4;
+    int font_size = 13;
+    int line_h    = font_size + 3;
     int y         = py;
+    int max_y     = GetScreenHeight() - 20;
 
     DrawText("ACTIVE RULES", px, y, font_size, RAYWHITE);
     y += line_h + 4;
 
-    auto const& rules = rs.property_rules();
-    if (rules.empty()) {
-        DrawText("(none)", px, y, font_size, GRAY);
-        return;
-    }
-
-    for (auto const& r : rules) {
-        // Skip the base TEXT IS PUSH display clutter unless it's a real rule.
-        std::string line = std::string(core::kind_name(r.subject)) + " IS "
-                         + std::string(core::kind_name(r.property));
+    auto draw_line = [&](std::string const& line) -> bool {
+        if (y > max_y) return false;
         DrawText(line.c_str(), px, y, font_size, RAYWHITE);
         y += line_h;
-        if (y > GetScreenHeight() - 20) break;  // don't overflow
+        return true;
+    };
+
+    bool any = false;
+    for (auto const& r : rs.property_rules()) {
+        any = true;
+        if (!draw_line(std::string(core::kind_name(r.subject)) + " IS "
+                       + std::string(core::kind_name(r.property)))) return;
     }
+    for (auto const& tr : rs.transform_rules()) {
+        any = true;
+        if (!draw_line(std::string(core::kind_name(tr.from)) + " IS "
+                       + std::string(core::kind_name(tr.to)))) return;
+    }
+    for (auto const& cr : rs.conditional_rules()) {
+        any = true;
+        if (!draw_line(std::string(core::kind_name(cr.subject))
+                       + (cr.negated_condition ? " NOT ON " : " ON ")
+                       + std::string(core::kind_name(cr.condition_noun)) + " IS "
+                       + std::string(core::kind_name(cr.property)))) return;
+    }
+    for (auto const& ct : rs.conditional_transform_rules()) {
+        any = true;
+        if (!draw_line(std::string(core::kind_name(ct.subject))
+                       + (ct.negated_condition ? " NOT ON " : " ON ")
+                       + std::string(core::kind_name(ct.condition_noun)) + " IS "
+                       + std::string(core::kind_name(ct.target)))) return;
+    }
+    for (auto const& mr : rs.make_rules()) {
+        any = true;
+        if (!draw_line(std::string(core::kind_name(mr.from)) + " MAKE "
+                       + std::string(core::kind_name(mr.to)))) return;
+    }
+    for (auto const& er : rs.eat_rules()) {
+        any = true;
+        if (!draw_line(std::string(core::kind_name(er.subject)) + " EAT "
+                       + std::string(core::kind_name(er.target)))) return;
+    }
+    if (!any) DrawText("(none)", px, y, font_size, GRAY);
 }
 
 int Renderer::draw_palette(std::vector<std::string> const& entries,

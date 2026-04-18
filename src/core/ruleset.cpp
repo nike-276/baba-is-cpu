@@ -1,6 +1,7 @@
 #include "ruleset.hpp"
 
 #include <algorithm>
+#include <set>
 #include <unordered_set>
 
 namespace baba::core {
@@ -31,9 +32,16 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<PropertyRule>& prop_out,
                 std::vector<TransformRule>& xform_out,
                 std::vector<MakeRule>& make_out,
-                std::vector<ConditionalPropertyRule>& cond_out) {
+                std::vector<EatRule>& eat_out,
+                std::vector<ConditionalPropertyRule>& cond_out,
+                std::vector<ConditionalTransformRule>& cond_xform_out) {
     auto at = [&](Coord c) { return text_kind_at(world, c); };
     auto adv = [&](Coord c) -> Coord { return {c.x + step_dir.x, c.y + step_dir.y}; };
+
+    // If the cell immediately before start (against step_dir) is O_On, then start
+    // is the condition noun of an ON rule — not a new rule subject. Skip it.
+    Coord prev = {start.x - step_dir.x, start.y - step_dir.y};
+    if (auto p = at(prev); p && *p == Kind::O_On) return;
 
     Coord cursor = start;
     auto first = at(cursor);
@@ -58,12 +66,50 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
     auto op_tok = at(cursor);
     if (!op_tok) return;
 
-    // ── NOUN MAKE NOUN ──────────────────────────────────────────────────────
+    // ── NOUN MAKE NOUN [AND NOUN]* ──────────────────────────────────────────
     if (*op_tok == Kind::O_Make) {
         cursor = adv(cursor);
         auto target = at(cursor);
         if (target && is_noun(*target)) {
-            for (Kind n : subjects) make_out.push_back({n, *target});
+            std::vector<Kind> targets;
+            targets.push_back(*target);
+            cursor = adv(cursor);
+            while (true) {
+                auto k = at(cursor);
+                if (!k || *k != Kind::O_And) break;
+                Coord next = adv(cursor);
+                auto nt = at(next);
+                if (!nt || !is_noun(*nt)) break;
+                targets.push_back(*nt);
+                cursor = adv(next);
+            }
+            for (Kind n : subjects)
+                for (Kind t : targets)
+                    make_out.push_back({n, t});
+        }
+        return;
+    }
+
+    // ── NOUN EAT NOUN [AND NOUN]* ───────────────────────────────────────────
+    if (*op_tok == Kind::O_Eat) {
+        cursor = adv(cursor);
+        auto target = at(cursor);
+        if (target && is_noun(*target)) {
+            std::vector<Kind> targets;
+            targets.push_back(*target);
+            cursor = adv(cursor);
+            while (true) {
+                auto k = at(cursor);
+                if (!k || *k != Kind::O_And) break;
+                Coord next = adv(cursor);
+                auto nt = at(next);
+                if (!nt || !is_noun(*nt)) break;
+                targets.push_back(*nt);
+                cursor = adv(next);
+            }
+            for (Kind n : subjects)
+                for (Kind t : targets)
+                    eat_out.push_back({n, t});
         }
         return;
     }
@@ -78,6 +124,30 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         auto is_tok2 = at(cursor);
         if (!is_tok2 || *is_tok2 != Kind::O_Is) return;
         cursor = adv(cursor);
+
+        // Conditional transform: NOUN ON NOUN IS NOUN [AND NOUN]*
+        {
+            auto pred = at(cursor);
+            if (pred && is_noun(*pred)) {
+                std::vector<Kind> targets;
+                targets.push_back(*pred);
+                cursor = adv(cursor);
+                while (true) {
+                    auto k = at(cursor);
+                    if (!k || *k != Kind::O_And) break;
+                    Coord next = adv(cursor);
+                    auto nt = at(next);
+                    if (!nt || !is_noun(*nt)) break;
+                    targets.push_back(*nt);
+                    cursor = adv(next);
+                }
+                for (Kind n : subjects)
+                    for (Kind t : targets)
+                        if (n != t)  // X ON Y IS X is a no-op (self-protection)
+                            cond_xform_out.push_back({n, condition, t});
+                return;
+            }
+        }
 
         struct PropEntry { Kind prop; bool neg; };
         std::vector<PropEntry> props;
@@ -111,6 +181,77 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         return;
     }
 
+    // ── NOUN NOT ON NOUN IS PREDICATE ──────────────────────────────────────
+    // Handles "X NOT ON Y IS P": X has P when NOT sharing a tile with Y.
+    // Also handles "X NOT ON Y IS Z": conditional transform (negated).
+    if (*op_tok == Kind::O_Not) {
+        cursor = adv(cursor);
+        auto on_check = at(cursor);
+        if (!on_check || *on_check != Kind::O_On) return;
+        cursor = adv(cursor);
+        auto cond_n = at(cursor);
+        if (!cond_n || !is_noun(*cond_n)) return;
+        Kind condition = *cond_n;
+        cursor = adv(cursor);
+        auto is_tok2 = at(cursor);
+        if (!is_tok2 || *is_tok2 != Kind::O_Is) return;
+        cursor = adv(cursor);
+
+        // Negated conditional transform: NOUN NOT ON NOUN IS NOUN [AND NOUN]*
+        {
+            auto pred = at(cursor);
+            if (pred && is_noun(*pred)) {
+                std::vector<Kind> targets;
+                targets.push_back(*pred);
+                cursor = adv(cursor);
+                while (true) {
+                    auto k = at(cursor);
+                    if (!k || *k != Kind::O_And) break;
+                    Coord nxt = adv(cursor);
+                    auto nt = at(nxt);
+                    if (!nt || !is_noun(*nt)) break;
+                    targets.push_back(*nt);
+                    cursor = adv(nxt);
+                }
+                for (Kind n : subjects)
+                    for (Kind t : targets)
+                        if (n != t)
+                            cond_xform_out.push_back({n, condition, t, /*negated=*/true});
+                return;
+            }
+        }
+
+        // Negated conditional property: NOUN NOT ON NOUN IS [NOT] PROPERTY [AND …]
+        struct PropEntryN { Kind prop; bool neg; };
+        std::vector<PropEntryN> props;
+        auto parse_prop_neg = [&]() -> bool {
+            auto k = at(cursor);
+            if (!k) return false;
+            bool neg = false;
+            if (*k == Kind::O_Not) {
+                neg = true;
+                cursor = adv(cursor);
+                k = at(cursor);
+                if (!k || !is_property(*k)) return false;
+            }
+            if (!is_property(*k)) return false;
+            props.push_back({*k, neg});
+            cursor = adv(cursor);
+            return true;
+        };
+        if (!parse_prop_neg()) return;
+        while (true) {
+            auto k = at(cursor);
+            if (!k || *k != Kind::O_And) break;
+            cursor = adv(cursor);
+            if (!parse_prop_neg()) { cursor = {cursor.x - step_dir.x, cursor.y - step_dir.y}; break; }
+        }
+        for (Kind n : subjects)
+            for (auto const& pe : props)
+                if (!pe.neg) cond_out.push_back({n, condition, pe.prop, /*negated=*/true});
+        return;
+    }
+
     // Must be IS.
     if (*op_tok != Kind::O_Is) return;
     cursor = adv(cursor);
@@ -119,9 +260,23 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
     auto pred0 = at(cursor);
     if (!pred0) return;
 
-    // Check for NOUN IS NOUN (transform).
+    // Check for NOUN IS NOUN [AND NOUN]* (transform, possibly multi-target).
     if (is_noun(*pred0)) {
-        for (Kind n : subjects) xform_out.push_back({n, *pred0});
+        std::vector<Kind> targets;
+        targets.push_back(*pred0);
+        cursor = adv(cursor);
+        while (true) {
+            auto k = at(cursor);
+            if (!k || *k != Kind::O_And) break;
+            Coord next = adv(cursor);
+            auto nt = at(next);
+            if (!nt || !is_noun(*nt)) break;
+            targets.push_back(*nt);
+            cursor = adv(next);
+        }
+        for (Kind n : subjects)
+            for (Kind t : targets)
+                xform_out.push_back({n, t});
         return;
     }
 
@@ -178,8 +333,35 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.cond_rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.cond_rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_);
+    }
+
+    // Deduplicate verb-operator rules before further processing.
+    // Multiple scan starting positions can produce the same rule (e.g. scanning
+    // from ROCK in "BABA AND ROCK IS FLAG" duplicates the ROCK IS FLAG entry).
+    // Property-rule duplicates are harmless (index deduplicates lookups), but
+    // transform duplicates would cause xmap to contain the same target twice,
+    // leading to objects being spawned multiple times.
+    {
+        std::set<std::pair<uint16_t,uint16_t>> seen;
+        std::vector<TransformRule> deduped;
+        for (auto const& tr : rs.transforms_) {
+            auto key2 = std::make_pair(static_cast<uint16_t>(tr.from),
+                                       static_cast<uint16_t>(tr.to));
+            if (seen.insert(key2).second) deduped.push_back(tr);
+        }
+        rs.transforms_ = std::move(deduped);
+    }
+    {
+        std::set<std::pair<uint16_t,uint16_t>> seen;
+        std::vector<EatRule> deduped;
+        for (auto const& er : rs.eats_) {
+            auto key2 = std::make_pair(static_cast<uint16_t>(er.subject),
+                                       static_cast<uint16_t>(er.target));
+            if (seen.insert(key2).second) deduped.push_back(er);
+        }
+        rs.eats_ = std::move(deduped);
     }
 
     // Base rule: TEXT IS PUSH (always, treated as positive non-cancellable).
@@ -230,15 +412,18 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
     Kind noun = o->text ? Kind::N_Text : o->kind;
     if (index_.count(key_(noun, property))) return true;
 
-    // Check conditional rules (NOUN ON NOUN IS PROPERTY).
+    // Check conditional rules (NOUN ON/NOT ON NOUN IS PROPERTY).
     if (!o->text) {
         for (auto const& cr : cond_rules_) {
             if (cr.subject != o->kind || cr.property != property) continue;
+            bool found = false;
             for (ObjectId other : world.at(o->pos)) {
                 if (other == id) continue;
                 Object const* ob = world.get(other);
-                if (ob && !ob->text && ob->kind == cr.condition_noun) return true;
+                if (ob && !ob->text && ob->kind == cr.condition_noun) { found = true; break; }
             }
+            bool condition_met = cr.negated_condition ? !found : found;
+            if (condition_met) return true;
         }
     }
     return false;

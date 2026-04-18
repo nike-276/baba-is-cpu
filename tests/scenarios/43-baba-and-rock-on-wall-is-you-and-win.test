@@ -1,0 +1,34 @@
+# BABA AND ROCK ON WALL IS YOU AND WIN: subject-AND cross-product with ON and
+# predicate-property-AND.  Produces four conditional rules:
+#   BABA ON WALL IS YOU,  BABA ON WALL IS WIN,
+#   ROCK ON WALL IS YOU,  ROCK ON WALL IS WIN.
+#
+# Two non-text walls at (3,3) and (4,3).  Baba starts on the left wall: has
+# YOU (from ON WALL) and moves right onto the right wall.  At CHECK_WIN baba
+# is still on a wall → still has both YOU and WIN → won.
+
+[setup]
+version 1
+name "subject-and + on + property-and: baba steps wall-to-wall and wins"
+
+text 0 0 baba
+text 1 0 and
+text 2 0 rock
+text 3 0 on
+text 4 0 wall
+text 5 0 is
+text 6 0 you
+text 7 0 and
+text 8 0 win
+
+object 3 3 baba right
+object 3 3 wall right
+object 4 3 wall right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 4 3 baba
+won

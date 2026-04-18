@@ -196,7 +196,7 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
 
 void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log) {
     auto const& transforms = rs.transform_rules();
-    if (transforms.empty()) return;
+    if (transforms.empty() && rs.conditional_transform_rules().empty()) return;
 
     std::map<Kind, std::vector<Kind>> xmap;
     for (auto const& tr : transforms) {
@@ -210,7 +210,7 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
         if (self) it = xmap.erase(it);
         else      ++it;
     }
-    if (xmap.empty()) return;
+    if (xmap.empty() && rs.conditional_transform_rules().empty()) return;
 
     struct XEntry { ObjectId id; Coord pos; Direction facing; std::vector<Kind> targets; };
     std::vector<XEntry> pending;
@@ -220,6 +220,36 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
         auto it = xmap.find(o->kind);
         if (it != xmap.end()) {
             pending.push_back({id, o->pos, o->facing, it->second});
+        }
+    }
+
+    // Conditional transforms (NOUN ON NOUN IS NOUN [AND NOUN]*): check per-object.
+    // Collect ALL matching targets per object into one map entry so they are
+    // applied atomically (like unconditional multi-target transforms), preventing
+    // sequential single-target retypes from overwriting each other.
+    {
+        std::map<ObjectId, std::vector<Kind>> cond_targets;
+        for (ObjectId id : world.all_ids()) {
+            Object const* o = world.get(id);
+            if (!o || o->text) continue;
+            for (auto const& ctr : rs.conditional_transform_rules()) {
+                if (ctr.subject != o->kind) continue;
+                bool found = false;
+                for (ObjectId other : world.at(o->pos)) {
+                    if (other == id) continue;
+                    Object const* ob = world.get(other);
+                    if (ob && !ob->text && ob->kind == ctr.condition_noun) { found = true; break; }
+                }
+                bool condition_met = ctr.negated_condition ? !found : found;
+                if (condition_met) cond_targets[id].push_back(ctr.target);
+            }
+        }
+        for (auto& [id, targets] : cond_targets) {
+            // Sort + dedup handles duplicates from multiple scan starting positions.
+            std::sort(targets.begin(), targets.end());
+            targets.erase(std::unique(targets.begin(), targets.end()), targets.end());
+            Object const* o = world.get(id);
+            if (o) pending.push_back({id, o->pos, o->facing, targets});
         }
     }
 
@@ -267,19 +297,22 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         destroy_set(doomed);
     }
 
-    // b. EAT — an EAT object destroys all non-EAT, non-text objects on the same tile.
+    // b. EAT — NOUN EAT NOUN: for each rule, destroy target-kind objects on tiles
+    //    that also contain a subject-kind object. Subject survives.
     {
         std::unordered_set<ObjectId> doomed;
-        for (Coord c : world.all_cells()) {
-            auto const& cell = world.at(c);
-            bool any_eat = false;
-            for (ObjectId id : cell)
-                if (rs.object_has_property(world, id, Kind::P_Eat)) { any_eat = true; break; }
-            if (!any_eat) continue;
-            for (ObjectId id : cell) {
-                Object const* o = world.get(id);
-                if (!o || o->text) continue;
-                if (!rs.object_has_property(world, id, Kind::P_Eat)) doomed.insert(id);
+        for (auto const& er : rs.eat_rules()) {
+            for (Coord c : world.all_cells()) {
+                bool has_eater = false;
+                for (ObjectId id : world.at(c)) {
+                    Object const* o = world.get(id);
+                    if (o && !o->text && o->kind == er.subject) { has_eater = true; break; }
+                }
+                if (!has_eater) continue;
+                for (ObjectId id : world.at(c)) {
+                    Object const* o = world.get(id);
+                    if (o && !o->text && o->kind == er.target) doomed.insert(id);
+                }
             }
         }
         destroy_set(doomed);

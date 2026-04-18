@@ -1,0 +1,26 @@
+# BABA NOT ON KEY IS ROCK: baba transforms to rock when NOT sharing a tile
+# with a key.  Baba starts alone (condition met) → transforms in TRANSFORM phase.
+# No YOU rule so baba cannot move before transforming.
+
+[setup]
+version 1
+name "not-on conditional transform: baba becomes rock when not on key"
+
+text 0 0 baba
+text 1 0 not
+text 2 0 on
+text 3 0 key
+text 4 0 is
+text 5 0 rock
+
+object 3 3 baba right
+object 7 7 key right
+
+[inputs]
+input right
+
+[expected]
+count baba 0
+count rock 1
+at 3 3 rock
+not_won

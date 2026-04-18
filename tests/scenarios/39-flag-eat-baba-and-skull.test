@@ -1,0 +1,30 @@
+# FLAG EAT BABA AND SKULL: flag eats both baba and skull on the same tile.
+# BABA IS YOU so baba can move onto the flag+skull tile.
+# After the move, DESTRUCT fires both EatRules; flag survives, both eaten.
+
+[setup]
+version 1
+name "flag eat baba and skull: both kinds eaten in one destruct step"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+text 0 1 flag
+text 1 1 eat
+text 2 1 baba
+text 3 1 and
+text 4 1 skull
+
+object 5 5 baba right
+object 6 5 flag right
+object 6 5 skull right
+
+[inputs]
+input right
+
+[expected]
+count baba 0
+count skull 0
+count flag 1
+at 6 5 flag
+not_won

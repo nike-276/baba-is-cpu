@@ -15,11 +15,11 @@ References: `babaiswiki_pages_current.xml` — pages *Order of Operations*, *Rul
 
 ### 1.1 In-scope (v1 / MVP)
 
-**Operators**: `IS`, `NOT`, `AND`
+**Operators**: `IS`, `NOT`, `AND`, `ON`, `NOT ON`, `MAKE`, `EAT`
 
-**Nouns**: object kinds present in the level (e.g. `BABA`, `WALL`, `ROCK`,
-`FLAG`, `WATER`, `LAVA`, `KEY`, `DOOR`, `BOX`). Plus reserved `TEXT`, `EMPTY`,
-`ALL`.
+**Nouns**: `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`,
+`DOOR`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`,
+`LOVE`, `BOMB`, `WIND`. Plus reserved `TEXT`, `EMPTY`, `ALL`.
 
 **Properties**: `YOU`, `PUSH`, `STOP`, `WIN`, `DEFEAT`, `SINK`, `HOT`, `MELT`,
 `OPEN`, `SHUT`.
@@ -34,16 +34,11 @@ must fit the v1 architecture without rework — see
 [feature-status.md §8](feature-status.md#8-engine-architecture-notes-gating-implementation)
 for the structural changes that gate them.
 
-- Movement properties: `MOVE`, `AUTO`, `FALL` / `FALLUP` / `FALLLEFT` /
-  `FALLRIGHT`, directional `UP` / `DOWN` / `LEFT` / `RIGHT`,
-  `SHIFT`, `PULL`, `SWAP`.
-- Removal properties: `WEAK`, `EAT`.
-- Spawn properties: `MAKE` (new tick phase post-DESTRUCT).
+- Movement properties: `SHIFT`, `PULL`, `SWAP`.
 - Transform properties: `TEXT` as a predicate (`X IS TEXT` swaps the
   object's text-twin in place).
-- Conditional operator: `ON` (`X ON Y IS P`). Forces per-object property
-  derivation in the resolver.
 - Subject-side `NOT` (`NOT X IS P`).
+- Compound conditions (`X ON Y AND ON Z IS P`).
 
 ### 1.3 Deferred (post-Phase 2)
 
@@ -93,15 +88,27 @@ never persisted, never undoable.
 ### 3.1 Grammar (v1)
 
 ```
-rule       := subject IS predicate
-subject    := nounphrase
-predicate  := propertyphrase | nounphrase
-nounphrase := [NOT] noun (AND [NOT] noun)*
+rule           := subject verb
+subject        := nounphrase
+verb           := IS predicate
+               | ON noun IS predicate
+               | NOT ON noun IS predicate
+               | MAKE nounlist
+               | EAT nounlist
+predicate      := propertyphrase | nounlist
+nounphrase     := noun (AND noun)*
+nounlist       := noun (AND noun)*
 propertyphrase := [NOT] property (AND [NOT] property)*
-noun       := <object kind> | TEXT | EMPTY | ALL
-property   := YOU | PUSH | STOP | WIN | DEFEAT | SINK
-            | HOT | MELT | OPEN | SHUT
+noun           := <object kind> | TEXT | EMPTY | ALL
+property       := YOU | PUSH | STOP | WIN | DEFEAT | SINK
+               | HOT | MELT | OPEN | SHUT | WEAK | MOVE | AUTO
+               | FALL | FALLUP | FALLLEFT | FALLRIGHT
+               | LEFT | RIGHT | UP | DOWN
 ```
+
+`ON` and `NOT ON` are conditional operators; the predicate is checked per-object
+at every PARSE phase. `MAKE` and `EAT` are unconditional verb operators; they
+produce `MakeRule` and `EatRule` entries (not `PropertyRule` entries).
 
 ### 3.2 Parsing procedure
 

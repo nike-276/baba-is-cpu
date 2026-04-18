@@ -1,0 +1,30 @@
+# BABA NOT ON ROCK AND ON WALL IS YOU: compound ON conditions are DEFERRED.
+# The NOT ON ROCK part parses but then sees AND (not IS), so the whole strip
+# fails and produces no rules.  Baba has no YOU and cannot move even though
+# it is on neither rock nor wall.
+# This test locks down the current (no-rule) behaviour so we know when
+# compound conditions are eventually implemented.
+
+[setup]
+version 1
+name "compound not-on+and-on condition: deferred, produces no rule"
+
+text 0 0 baba
+text 1 0 not
+text 2 0 on
+text 3 0 rock
+text 4 0 and
+text 5 0 on
+text 6 0 wall
+text 7 0 is
+text 8 0 you
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 5 5 baba
+not_won

@@ -1,0 +1,26 @@
+# BABA MAKE ROCK AND FLAG: make should produce both targets each tick.
+# No YOU rule so baba cannot move. MAKE fires in APPLY_MAKE phase.
+
+[setup]
+version 1
+name "make with and predicate spawns both targets"
+
+text 0 0 baba
+text 1 0 make
+text 2 0 rock
+text 3 0 and
+text 4 0 flag
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+count rock 1
+count flag 1
+at 5 5 baba
+at 5 5 rock
+at 5 5 flag
+not_won

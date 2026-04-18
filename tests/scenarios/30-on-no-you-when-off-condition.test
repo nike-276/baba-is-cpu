@@ -1,0 +1,24 @@
+# BABA ON ROCK IS YOU: baba only has YOU while on a rock.
+# Baba starts NOT on a rock — no YOU, so input right produces no movement.
+
+[setup]
+version 1
+name "on conditional you absent when off rock"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 rock
+text 3 0 is
+text 4 0 you
+
+object 2 2 baba right
+object 5 2 rock right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 2 2 baba
+not_at 3 2 baba
+not_won

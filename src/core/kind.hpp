@@ -24,6 +24,18 @@ enum class Kind : std::uint16_t {
     N_Skull,
     N_Door,
     N_Key,
+    N_Me,
+    N_Box,
+    N_Leaf,
+    N_Cloud,
+    N_Sun,
+    N_Moon,
+    N_Star,
+    N_Planet,
+    N_Bolt,
+    N_Love,
+    N_Bomb,
+    N_Wind,
     N_Text,   // the abstract noun "TEXT" (matches every text object)
 
     // ---- Operators (text-only) ----
@@ -32,6 +44,7 @@ enum class Kind : std::uint16_t {
     O_Not,
     O_On,
     O_Make,
+    O_Eat,   // NOUN EAT NOUN: subject destroys target on contact
 
     // ---- Properties (text-only) ----
     P_You,
@@ -45,7 +58,6 @@ enum class Kind : std::uint16_t {
     P_Open,
     P_Shut,
     P_Move,
-    P_Eat,
     P_Weak,
     P_Auto,
     P_Fall,
@@ -64,7 +76,7 @@ constexpr bool is_noun(Kind k) {
     return k >= Kind::N_Baba && k <= Kind::N_Text;
 }
 constexpr bool is_operator(Kind k) {
-    return k >= Kind::O_Is && k <= Kind::O_Make;
+    return k >= Kind::O_Is && k <= Kind::O_Eat;
 }
 constexpr bool is_property(Kind k) {
     return k >= Kind::P_You && k <= Kind::P_Down;

@@ -1,0 +1,32 @@
+# Strip: BABA ON WALL AND ROCK MAKE KEY
+# The ON branch expects IS after the condition noun but finds AND instead, so
+# the BABA ON WALL portion fails entirely.  The scanner starting at ROCK sees
+# ROCK MAKE KEY as a complete rule.  Only MakeRule{ROCK,KEY} is produced.
+# Baba shares a tile with wall but gets no property from the broken strip.
+
+[setup]
+version 1
+name "on-strip with and breaks: only submatch rock make key fires"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 wall
+text 3 0 and
+text 4 0 rock
+text 5 0 make
+text 6 0 key
+
+object 2 3 baba right
+object 2 3 wall right
+object 5 3 rock right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 2 3 baba
+at 5 3 rock
+at 5 3 key
+count key 1
+not_won
