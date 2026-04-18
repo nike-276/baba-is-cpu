@@ -1,0 +1,35 @@
+# Scenario 16: Undo after DEFEAT correctly restores YOU to its pre-tick position.
+#
+# Same root cause as scenario 15: undo of Destroy allocates a fresh id, so the
+# paired reverse-Move for the original id silently fails, leaving the object at
+# the defeat tile instead of its true starting position.
+#
+# Setup: baba at (5,5), skull at (6,5). Rules: BABA IS YOU, SKULL IS DEFEAT.
+# Tick 1: baba moves right → (6,5) → DEFEAT kills baba; skull survives.
+# Undo:   baba must be at (5,5), NOT at (6,5). Skull stays at (6,5).
+
+[setup]
+version 1
+name "undo after defeat"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 skull
+text 1 1 is
+text 2 1 defeat
+
+object 5 5 baba right
+object 6 5 skull right
+
+[inputs]
+input right
+input undo
+
+[expected]
+at 5 5 baba
+not_at 6 5 baba
+at 6 5 skull
+tick 1
+not_won

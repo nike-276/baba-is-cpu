@@ -1,0 +1,36 @@
+# Scenario 15: Undo after SINK correctly restores objects to their pre-tick positions.
+#
+# Bug being locked down: undo of a Destroy record was allocating a fresh object id.
+# Because the same tick also produced a Move record for the original id, reversing
+# that Move targeted a now-missing id and the object landed at the sink tile instead
+# of its true pre-move position.
+#
+# Setup: baba at (5,5), water at (6,5). Rules: BABA IS YOU, WATER IS SINK.
+# Tick 1: baba moves right → (6,5) → SINK triggers → both destroyed.
+# Undo:   both must reappear; baba must be at (5,5), NOT at (6,5).
+
+[setup]
+version 1
+name "undo after sink"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 water
+text 1 1 is
+text 2 1 sink
+
+object 5 5 baba right
+object 6 5 water right
+
+[inputs]
+input right
+input undo
+
+[expected]
+at 5 5 baba
+not_at 6 5 baba
+at 6 5 water
+tick 1
+not_won
