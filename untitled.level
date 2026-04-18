@@ -1,0 +1,35 @@
+version 1
+name "untitled.level"
+
+text 4 3 is
+text 5 3 auto
+text 2 3 and
+text 1 3 baba
+text 3 3 skull
+text 1 5 baba
+text 3 5 key
+text 4 5 is
+text 5 5 skull
+text 1 6 skull
+text 4 6 is
+text 3 6 key
+text 2 5 on
+text 2 6 on
+text 1 1 water
+text 1 2 lava
+text 2 1 make
+text 2 2 make
+text 3 1 baba
+text 3 2 skull
+object 9 4 water right
+text 5 6 baba
+text 1 8 flag
+text 2 8 eat
+text 3 8 baba
+text 4 8 and
+text 5 8 skull
+object 17 4 flag right
+object 11 6 key right
+text 1 10 key
+text 3 10 you
+text 2 10 is
