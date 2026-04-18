@@ -35,6 +35,7 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::N_Door,   false, "door");
     add(K::N_Key,    false, "key");
     add(K::N_Keke,   false, "keke");
+    add(K::N_Fofo,   false, "fofo");
     add(K::N_Me,     false, "me");
     add(K::N_Box,    false, "box");
     add(K::N_Leaf,   false, "leaf");
@@ -59,6 +60,7 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::N_Door,   true, "T:door");
     add(K::N_Key,    true, "T:key");
     add(K::N_Keke,   true, "T:keke");
+    add(K::N_Fofo,   true, "T:fofo");
     add(K::N_Me,     true, "T:me");
     add(K::N_Box,    true, "T:box");
     add(K::N_Leaf,   true, "T:leaf");

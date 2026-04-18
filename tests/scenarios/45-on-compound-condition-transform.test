@@ -1,0 +1,30 @@
+# BABA ON BABA AND BOX IS KEKE: compound ON condition (all nouns must be present).
+# A baba sharing a tile with BOTH another baba AND a box transforms to keke.
+# Two babas + one box at (5,5); each baba sees a baba and a box → both become keke.
+# BOX IS KEKE must NOT be parsed as an unconditional rule (BOX is in condition list).
+
+[setup]
+version 1
+name "compound ON condition: baba on baba and box becomes keke"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 baba
+text 3 0 and
+text 4 0 box
+text 5 0 is
+text 6 0 keke
+
+object 5 5 baba right
+object 5 5 baba right
+object 5 5 box right
+
+[inputs]
+input right
+
+[expected]
+count baba 0
+count box 1
+count keke 2
+at 5 5 keke
+not_won

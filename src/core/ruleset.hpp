@@ -43,22 +43,29 @@ struct EatRule {
     Kind target;
 };
 
-// NOUN ON NOUN IS PROPERTY: `subject` has `property` only when sharing a tile
-// with a non-text object of kind `condition_noun`.
+// NOUN ON NOUN [AND NOUN]* IS PROPERTY: `subject` has `property` only when
+// sharing a tile with ALL of the condition_nouns (or NONE if negated).
 struct ConditionalPropertyRule {
     Kind subject;
-    Kind condition_noun;
+    std::vector<Kind> condition_nouns;  // ALL must be present (or absent if negated)
     Kind property;
-    bool negated_condition{false};  // true for NOT ON: property applies when condition_noun is ABSENT
+    bool negated_condition{false};
 };
 
-// NOUN ON NOUN IS NOUN: `subject` transforms into `target` when sharing a tile
-// with a non-text object of kind `condition_noun`.
+// NOUN ON NOUN [AND NOUN]* IS NOUN: conditional transform.
 struct ConditionalTransformRule {
     Kind subject;
-    Kind condition_noun;
+    std::vector<Kind> condition_nouns;
     Kind target;
-    bool negated_condition{false};  // true for NOT ON
+    bool negated_condition{false};
+};
+
+// NOUN ON NOUN [AND NOUN]* MAKE NOUN: conditional spawn.
+struct ConditionalMakeRule {
+    Kind subject;
+    std::vector<Kind> condition_nouns;
+    Kind target;
+    bool negated_condition{false};
 };
 
 class RuleSet {
@@ -80,16 +87,18 @@ public:
     std::vector<TransformRule>           const& transform_rules()  const { return transforms_; }
     std::vector<MakeRule>                const& make_rules()       const { return makes_; }
     std::vector<EatRule>                 const& eat_rules()               const { return eats_; }
-    std::vector<ConditionalPropertyRule> const& conditional_rules()        const { return cond_rules_; }
-    std::vector<ConditionalTransformRule>const& conditional_transform_rules() const { return cond_transforms_; }
+    std::vector<ConditionalPropertyRule>  const& conditional_rules()           const { return cond_rules_; }
+    std::vector<ConditionalTransformRule> const& conditional_transform_rules() const { return cond_transforms_; }
+    std::vector<ConditionalMakeRule>      const& conditional_make_rules()      const { return cond_makes_; }
 
 private:
     std::vector<PropertyRule>            rules_;
     std::vector<TransformRule>           transforms_;
     std::vector<MakeRule>                makes_;
     std::vector<EatRule>                 eats_;
-    std::vector<ConditionalPropertyRule> cond_rules_;
-    std::vector<ConditionalTransformRule>cond_transforms_;
+    std::vector<ConditionalPropertyRule>  cond_rules_;
+    std::vector<ConditionalTransformRule> cond_transforms_;
+    std::vector<ConditionalMakeRule>      cond_makes_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 

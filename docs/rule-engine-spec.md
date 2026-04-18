@@ -18,8 +18,8 @@ References: `babaiswiki_pages_current.xml` — pages *Order of Operations*, *Rul
 **Operators**: `IS`, `NOT`, `AND`, `ON`, `NOT ON`, `MAKE`, `EAT`
 
 **Nouns**: `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`,
-`DOOR`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`,
-`LOVE`, `BOMB`, `WIND`. Plus reserved `TEXT`, `EMPTY`, `ALL`.
+`DOOR`, `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`,
+`PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND`. Plus reserved `TEXT`, `EMPTY`, `ALL`.
 
 **Properties**: `YOU`, `PUSH`, `STOP`, `WIN`, `DEFEAT`, `SINK`, `HOT`, `MELT`,
 `OPEN`, `SHUT`.

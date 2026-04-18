@@ -33,8 +33,8 @@ authoritative master checklist.
 | IS    | yes (O_Is)      | main predicate operator |
 | AND   | yes (O_And)     | subject + predicate distribution (subjects, properties, nouns, MAKE/EAT targets) |
 | NOT   | yes (O_Not)     | predicate-side cancellation (DONE); subject-side planned |
-| ON    | yes (O_On)      | conditional rule NOUN ON NOUN IS P/NOUN (DONE); also NOT ON variant (DONE) |
-| MAKE  | yes (O_Make)    | NOUN MAKE NOUN [AND NOUN]* spawning (DONE) |
+| ON    | yes (O_On)      | `NOUN ON NOUN [AND NOUN]* IS/MAKE P/NOUN` — compound condition (all must be present). NOT ON variant also DONE. |
+| MAKE  | yes (O_Make)    | Unconditional `NOUN MAKE NOUN [AND NOUN]*` + conditional `NOUN ON/NOT ON … MAKE NOUN` (DONE) |
 | EAT   | yes (O_Eat)     | NOUN EAT NOUN [AND NOUN]* destruction (DONE) |
 | NEAR / FACING / LONELY | deferred | |
 

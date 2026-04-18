@@ -21,9 +21,9 @@ checklist) and any scenario file that locks the behavior down.
 | `IS`     | DONE     | Property + transform + identity (`X IS X`). |
 | `AND`    | DONE     | Subject and predicate distribution (subjects, properties, nouns, MAKE/EAT targets). |
 | `NOT`    | DONE (predicate side) | Cancels positive of same property; negative-only is a no-op. **PLANNED**: subject side (`NOT X IS P`). |
-| `ON`     | DONE     | `X ON Y IS P`: X has P only when sharing a tile with a non-text Y. `X ON Y IS Z`: conditional transform. Checked per-object in `object_has_property` / TRANSFORM phase. |
-| `NOT ON` | DONE     | `X NOT ON Y IS P`: X has P when NOT sharing a tile with Y. `X NOT ON Y IS Z`: conditional transform (negated condition). |
-| `MAKE`   | DONE     | `X MAKE Y [AND Z]*`: operator (not a property). Spawns targets each tick post-DESTRUCT. Idempotent. |
+| `ON`     | DONE     | `X ON Y [AND Z]* IS P/NOUN`: compound condition — all listed nouns must be co-located. Also `X ON Y [AND Z]* MAKE NOUN`. Checked per-object in `object_has_property` / TRANSFORM / MAKE phases. |
+| `NOT ON` | DONE     | `X NOT ON Y [AND Z]* IS P/NOUN/MAKE NOUN`: condition met when ALL listed nouns are absent. |
+| `MAKE`   | DONE     | `X MAKE Y [AND Z]*`: unconditional. `X ON … MAKE Y` / `X NOT ON … MAKE Y`: conditional. Spawns targets post-DESTRUCT. Idempotent. |
 | `EAT`    | DONE     | `X EAT Y [AND Z]*`: operator (not a property). Subject destroys listed targets on contact in DESTRUCT. |
 | `NEAR`   | DEFERRED | Same shape as `ON` but uses 8-neighborhood. |
 | `FACING` | DEFERRED | Subject must be facing a tile containing the noun. |
@@ -36,7 +36,7 @@ checklist) and any scenario file that locks the behavior down.
 | Token | Status | Notes |
 |-------|--------|-------|
 | `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`, `DOOR` | DONE | Original palette objects. |
-| `KEKE`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
+| `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
 | `TEXT` (meta-noun)        | PARTIAL | Recognized in rule grammar (base rule `TEXT IS PUSH`). PLANNED: as predicate (`X IS TEXT` transforms X into its text twin). |
 | `EMPTY`                   | PLANNED | As subject = "empty tiles"; as predicate = self-destruct. Currently neither is wired. |
 | `ALL`                     | DEFERRED | Distribution-over-everything semantics. |
@@ -127,7 +127,7 @@ Removal precedence inside DESTRUCT (lower = earlier):
 | Stack limit (6 text per tile)          | N/A  | We forbid >1 text per tile entirely. |
 | `TOO COMPLEX` / `INFINITE LOOP`        | N/A  | We allow arbitrary chains. |
 | Stacked-text-on-tile parsing           | N/A  | Out of scope. |
-| Conditions composition (`ON Y AND Z`)  | DEFERRED | Comes with the per-object property refactor. |
+| Conditions composition (`ON Y AND Z`)  | DONE | `ON Y AND Z` (and `NOT ON Y AND Z`) fully supported; all listed nouns must be present (or absent). |
 
 ---
 

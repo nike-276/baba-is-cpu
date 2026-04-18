@@ -1,0 +1,34 @@
+# BABA ON WALL AND ROCK MAKE KEY: compound ON condition with MAKE.
+# Baba makes key only when sharing a tile with BOTH a wall AND a rock.
+# The AND after WALL is now parsed as a condition conjunction, so ROCK is
+# a condition noun (not a new rule subject) — no spurious ROCK MAKE KEY rule.
+#
+# Baba at (2,3) is on wall but NOT on rock → condition not met → no key.
+# Rock at (5,3) is alone → no unconditional make rule fires.
+
+[setup]
+version 1
+name "compound ON+MAKE: baba on wall and rock makes key; neither alone qualifies"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 wall
+text 3 0 and
+text 4 0 rock
+text 5 0 make
+text 6 0 key
+
+object 2 3 baba right
+object 2 3 wall right
+object 5 3 rock right
+
+[inputs]
+input right
+
+[expected]
+count baba 1
+at 2 3 baba
+at 2 3 wall
+at 5 3 rock
+count key 0
+not_won

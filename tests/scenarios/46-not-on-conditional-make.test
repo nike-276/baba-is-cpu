@@ -1,0 +1,31 @@
+# BOX NOT ON BABA MAKE KEKE: conditional make with NOT ON.
+# Box spawns keke unless a baba shares its tile.
+# Box at (3,3) is alone → condition met → keke spawned there.
+# Box at (7,7) shares tile with baba → condition NOT met → no keke.
+
+[setup]
+version 1
+name "NOT ON conditional make: box makes keke only when no baba present"
+
+text 0 0 box
+text 1 0 not
+text 2 0 on
+text 3 0 baba
+text 4 0 make
+text 5 0 keke
+
+object 3 3 box right
+object 7 7 box right
+object 7 7 baba right
+
+[inputs]
+input right
+
+[expected]
+count box 2
+count baba 1
+count keke 1
+at 3 3 keke
+at 7 7 box
+at 7 7 baba
+not_won

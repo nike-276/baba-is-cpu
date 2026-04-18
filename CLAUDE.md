@@ -15,8 +15,8 @@ resolution + `X IS X` protection + `X IS Y` conditional/unconditional transforms
 44 scenarios + 39 unit tests pass.
 
 Noun catalog: `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`,
-`KEY`, `DOOR`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`,
-`PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND`, `TEXT`.
+`KEY`, `DOOR`, `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`,
+`STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND`, `TEXT`.
 
 Phase 2 (raylib GUI editor + play loop) is **in progress**. CMake build
 exists; `babaiwt --edit` / `--play` work; palette + search + zoom are

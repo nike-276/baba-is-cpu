@@ -142,19 +142,34 @@ void Renderer::draw_rule_panel(core::RuleSet const& rs, int px, int py) const {
         if (!draw_line(std::string(core::kind_name(tr.from)) + " IS "
                        + std::string(core::kind_name(tr.to)))) return;
     }
+    auto join_nouns = [](std::vector<core::Kind> const& nouns) -> std::string {
+        std::string s;
+        for (auto const& n : nouns) {
+            if (!s.empty()) s += " AND ";
+            s += std::string(core::kind_name(n));
+        }
+        return s;
+    };
     for (auto const& cr : rs.conditional_rules()) {
         any = true;
         if (!draw_line(std::string(core::kind_name(cr.subject))
                        + (cr.negated_condition ? " NOT ON " : " ON ")
-                       + std::string(core::kind_name(cr.condition_noun)) + " IS "
+                       + join_nouns(cr.condition_nouns) + " IS "
                        + std::string(core::kind_name(cr.property)))) return;
     }
     for (auto const& ct : rs.conditional_transform_rules()) {
         any = true;
         if (!draw_line(std::string(core::kind_name(ct.subject))
                        + (ct.negated_condition ? " NOT ON " : " ON ")
-                       + std::string(core::kind_name(ct.condition_noun)) + " IS "
+                       + join_nouns(ct.condition_nouns) + " IS "
                        + std::string(core::kind_name(ct.target)))) return;
+    }
+    for (auto const& cm : rs.conditional_make_rules()) {
+        any = true;
+        if (!draw_line(std::string(core::kind_name(cm.subject))
+                       + (cm.negated_condition ? " NOT ON " : " ON ")
+                       + join_nouns(cm.condition_nouns) + " MAKE "
+                       + std::string(core::kind_name(cm.target)))) return;
     }
     for (auto const& mr : rs.make_rules()) {
         any = true;
