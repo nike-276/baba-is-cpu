@@ -53,6 +53,18 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
 
     bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
 
+    // ── Palette click (left panel, both modes) ───────────────────────────
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        int palette_w = st.tile_px + 8;
+        int entry_h   = st.tile_px + 4;
+        Vector2 mp = GetMousePosition();
+        if (static_cast<int>(mp.x) < palette_w) {
+            int palette_top = 20;  // matches draw_palette py
+            int clicked = (static_cast<int>(mp.y) - palette_top + st.palette_scroll) / entry_h;
+            ed.palette_select(clicked);
+        }
+    }
+
     if (ed.mode() == editor::EditorMode::Edit) {
         // ── Palette ───────────────────────────────────────────────────────
         if (IsKeyPressed(KEY_E)) ed.palette_next();
@@ -74,7 +86,10 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         // ── Mouse place / delete ─────────────────────────────────────────
         // Use tile-tracking: only act when the cursor enters a new tile,
         // so holding the button down paints one object per tile (no spam).
-        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        // Skip when mouse is over the palette panel.
+        int palette_w_guard = st.tile_px + 8;
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) &&
+            GetMouseX() >= palette_w_guard) {
             Vector2 mp = GetMousePosition();
             core::Coord tile{
                 static_cast<int>(mp.x) / st.tile_px + st.scroll_x,
@@ -88,7 +103,8 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         } else {
             st.last_place_tile = {INT_MIN, INT_MIN};  // reset on button release
         }
-        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) &&
+            GetMouseX() >= palette_w_guard) {
             Vector2 mp = GetMousePosition();
             core::Coord tile{
                 static_cast<int>(mp.x) / st.tile_px + st.scroll_x,

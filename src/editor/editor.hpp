@@ -45,6 +45,7 @@ public:
     PaletteEntry const& selected() const { return palette_[palette_idx_]; }
     void palette_next();
     void palette_prev();
+    void palette_select(int idx);  // direct selection by index (clamped)
     void toggle_text_variant();
     void rotate_facing();
 

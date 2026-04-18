@@ -104,6 +104,11 @@ void Editor::palette_prev() {
                    % static_cast<int>(palette_.size());
 }
 
+void Editor::palette_select(int idx) {
+    int n = static_cast<int>(palette_.size());
+    palette_idx_ = std::clamp(idx, 0, n - 1);
+}
+
 void Editor::toggle_text_variant() {
     auto& e = palette_[palette_idx_];
     if (!is_noun(e.kind)) return;  // operators/properties have no object twin
