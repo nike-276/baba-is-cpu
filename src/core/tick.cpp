@@ -11,70 +11,108 @@ namespace baba::core {
 
 namespace {
 
-// Try to move a single YOU object `mover_id` by `step_v`. Returns true on
-// success. Push chain rules:
-//   * Walk forward from mover; collect every PUSH-property object in the way.
-//   * Stop when a tile has no PUSH-property objects on it.
-//   * If that resting tile contains a non-PUSH STOP-property object, the
-//     entire move is aborted.
-//   * Otherwise, slide every collected pushable forward by `step_v`, then
-//     move the YOU object itself.
-bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs) {
+// ── World mutator wrappers that also record a Change ──────────────────────
+
+void do_move(World& world, ObjectId id, Coord new_pos, std::vector<Change>& log) {
+    Object const* o = world.get(id);
+    if (!o) return;
+    Coord old_pos = o->pos;
+    if (old_pos == new_pos) return;
+    world.move(id, new_pos);
+    log.push_back(Change::move(id, old_pos, new_pos));
+}
+
+void do_face(World& world, ObjectId id, Direction d, std::vector<Change>& log) {
+    Object const* o = world.get(id);
+    if (!o) return;
+    Direction old_dir = o->facing;
+    world.face(id, d);
+    if (old_dir != d) log.push_back(Change::face(id, old_dir, d));
+}
+
+ObjectId do_spawn(World& world, Coord pos, Kind kind, bool text, Direction facing,
+                  std::vector<Change>& log) {
+    ObjectId id = world.spawn(pos, kind, text, facing);
+    log.push_back(Change::spawn(id));
+    return id;
+}
+
+void do_destroy(World& world, ObjectId id, std::vector<Change>& log) {
+    Object const* o = world.get(id);
+    if (!o) return;
+    log.push_back(Change::destroy(id, o->pos, o->kind, o->text, o->facing));
+    world.destroy(id);
+}
+
+void do_retype(World& world, ObjectId id, Kind new_kind, std::vector<Change>& log) {
+    Object const* o = world.get(id);
+    if (!o) return;
+    Kind old_kind = o->kind;
+    world.retype(id, new_kind);
+    if (old_kind != new_kind) log.push_back(Change::retype(id, old_kind, new_kind));
+}
+
+// ── APPLY_INPUT helpers ────────────────────────────────────────────────────
+
+bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
+              std::vector<Change>& log) {
     Object const* mover = world.get(mover_id);
     if (!mover) return false;
     Coord origin = mover->pos;
 
-    // Walk forward collecting pushables.
     std::vector<ObjectId> chain;
     Coord cursor = {origin.x + step_v.x, origin.y + step_v.y};
 
     while (true) {
         auto const& cell = world.at(cursor);
 
-        // Identify pushables and blockers in this tile.
         std::vector<ObjectId> pushables;
         bool any_blocker = false;
         for (ObjectId id : cell) {
             bool push = rs.object_has_property(world, id, Kind::P_Push);
             bool stop = rs.object_has_property(world, id, Kind::P_Stop);
-            if (push) pushables.push_back(id);
-            else if (stop) any_blocker = true;
+            if (push)       pushables.push_back(id);
+            else if (stop)  any_blocker = true;
         }
 
-        if (any_blocker) return false;          // blocked, no move
-        if (pushables.empty()) break;            // open tile, chain ends
+        if (any_blocker) return false;
+        if (pushables.empty()) break;
 
-        // Sort for determinism (ascending id).
         std::sort(pushables.begin(), pushables.end());
         for (ObjectId pid : pushables) chain.push_back(pid);
-
         cursor.x += step_v.x;
         cursor.y += step_v.y;
     }
 
-    // Move the chain back-to-front so we never collide with ourselves.
     for (auto it = chain.rbegin(); it != chain.rend(); ++it) {
         Object const* o = world.get(*it);
         if (!o) continue;
-        world.move(*it, {o->pos.x + step_v.x, o->pos.y + step_v.y});
+        do_move(world, *it, {o->pos.x + step_v.x, o->pos.y + step_v.y}, log);
     }
-    world.move(mover_id, {origin.x + step_v.x, origin.y + step_v.y});
+    do_move(world, mover_id, {origin.x + step_v.x, origin.y + step_v.y}, log);
     return true;
 }
 
-// Phase 4: apply NOUN IS NOUN transformation rules simultaneously.
-// Single-target: retype in place (preserves id). Multi-target: destroy + spawn.
-void apply_transforms(World& world, RuleSet const& rs) {
+// ── TRANSFORM phase ────────────────────────────────────────────────────────
+
+void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log) {
     auto const& transforms = rs.transform_rules();
     if (transforms.empty()) return;
 
-    // Build from-kind → [to-kinds] map (using sorted vector for determinism).
     std::map<Kind, std::vector<Kind>> xmap;
     for (auto const& tr : transforms) {
         xmap[tr.from].push_back(tr.to);
     }
 
-    // Snapshot objects to transform against pre-transform state.
+    // X IS X protection: remove any entry where the source has a self-transform.
+    for (auto it = xmap.begin(); it != xmap.end(); ) {
+        bool self = false;
+        for (Kind t : it->second) if (t == it->first) { self = true; break; }
+        if (self) it = xmap.erase(it);
+        else      ++it;
+    }
+    if (xmap.empty()) return;
+
     struct XEntry { ObjectId id; Coord pos; Direction facing; std::vector<Kind> targets; };
     std::vector<XEntry> pending;
     for (ObjectId id : world.all_ids()) {
@@ -87,26 +125,25 @@ void apply_transforms(World& world, RuleSet const& rs) {
     }
 
     for (auto const& e : pending) {
-        if (!world.get(e.id)) continue;  // already destroyed this tick
+        if (!world.get(e.id)) continue;
         if (e.targets.size() == 1) {
-            world.retype(e.id, e.targets[0]);
+            do_retype(world, e.id, e.targets[0], log);
         } else {
-            world.destroy(e.id);
+            do_destroy(world, e.id, log);
             for (Kind target : e.targets) {
-                world.spawn(e.pos, target, /*text=*/false, e.facing);
+                do_spawn(world, e.pos, target, /*text=*/false, e.facing, log);
             }
         }
     }
 }
 
-// Phase 6: apply DEFEAT / SINK / HOT+MELT / OPEN+SHUT in precedence order.
-// Within each sub-step, all destructions are gathered simultaneously, then applied.
-void apply_destructions(World& world, RuleSet const& rs) {
+// ── DESTRUCT phase ─────────────────────────────────────────────────────────
+
+void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& log) {
     auto destroy_set = [&](std::unordered_set<ObjectId> const& ids) {
-        // Apply in ascending id order for determinism.
         std::vector<ObjectId> sorted(ids.begin(), ids.end());
         std::sort(sorted.begin(), sorted.end());
-        for (ObjectId id : sorted) world.destroy(id);
+        for (ObjectId id : sorted) do_destroy(world, id, log);
     };
 
     // a. SINK
@@ -116,12 +153,10 @@ void apply_destructions(World& world, RuleSet const& rs) {
             auto const& cell = world.at(c);
             if (cell.size() < 2) continue;
             bool any_sink = false;
-            for (ObjectId id : cell) {
+            for (ObjectId id : cell)
                 if (rs.object_has_property(world, id, Kind::P_Sink)) { any_sink = true; break; }
-            }
-            if (any_sink) {
+            if (any_sink)
                 for (ObjectId id : cell) doomed.insert(id);
-            }
         }
         destroy_set(doomed);
     }
@@ -136,11 +171,9 @@ void apply_destructions(World& world, RuleSet const& rs) {
                 if (rs.object_has_property(world, id, Kind::P_Hot))  any_hot  = true;
                 if (rs.object_has_property(world, id, Kind::P_Melt)) any_melt = true;
             }
-            if (any_hot && any_melt) {
-                for (ObjectId id : cell) {
+            if (any_hot && any_melt)
+                for (ObjectId id : cell)
                     if (rs.object_has_property(world, id, Kind::P_Melt)) doomed.insert(id);
-                }
-            }
         }
         destroy_set(doomed);
     }
@@ -151,14 +184,11 @@ void apply_destructions(World& world, RuleSet const& rs) {
         for (Coord c : world.all_cells()) {
             auto const& cell = world.at(c);
             bool any_defeat = false;
-            for (ObjectId id : cell) {
+            for (ObjectId id : cell)
                 if (rs.object_has_property(world, id, Kind::P_Defeat)) { any_defeat = true; break; }
-            }
-            if (any_defeat) {
-                for (ObjectId id : cell) {
+            if (any_defeat)
+                for (ObjectId id : cell)
                     if (rs.object_has_property(world, id, Kind::P_You)) doomed.insert(id);
-                }
-            }
         }
         destroy_set(doomed);
     }
@@ -173,16 +203,16 @@ void apply_destructions(World& world, RuleSet const& rs) {
                 if (rs.object_has_property(world, id, Kind::P_Open)) any_open = true;
                 if (rs.object_has_property(world, id, Kind::P_Shut)) any_shut = true;
             }
-            if (any_open && any_shut) {
-                for (ObjectId id : cell) {
+            if (any_open && any_shut)
+                for (ObjectId id : cell)
                     if (rs.object_has_property(world, id, Kind::P_Open) ||
                         rs.object_has_property(world, id, Kind::P_Shut)) doomed.insert(id);
-                }
-            }
         }
         destroy_set(doomed);
     }
 }
+
+// ── CHECK_WIN ──────────────────────────────────────────────────────────────
 
 bool check_win(World const& world, RuleSet const& rs) {
     for (Coord c : world.all_cells()) {
@@ -199,8 +229,11 @@ bool check_win(World const& world, RuleSet const& rs) {
 
 }  // namespace
 
+// ── apply_tick (9-phase pipeline) ─────────────────────────────────────────
+
 TickReport apply_tick(World& world, Input input) {
     TickReport report;
+    std::vector<Change>& log = report.changes;
 
     // Phase 1: PARSE_INITIAL
     RuleSet rs = RuleSet::parse(world);
@@ -210,15 +243,12 @@ TickReport apply_tick(World& world, Input input) {
         Coord step_v = step(input.dir);
 
         std::vector<ObjectId> you_ids;
-        for (ObjectId id : world.all_ids()) {
+        for (ObjectId id : world.all_ids())
             if (rs.object_has_property(world, id, Kind::P_You)) you_ids.push_back(id);
-        }
 
         for (ObjectId yid : you_ids) {
-            world.face(yid, input.dir);
-            if (try_move(world, yid, step_v, rs)) {
-                report.moved_count++;
-            }
+            do_face(world, yid, input.dir, log);
+            if (try_move(world, yid, step_v, rs, log)) report.moved_count++;
         }
     }
 
@@ -226,19 +256,21 @@ TickReport apply_tick(World& world, Input input) {
     rs = RuleSet::parse(world);
 
     // Phase 4: TRANSFORM
-    apply_transforms(world, rs);
+    apply_transforms(world, rs, log);
 
     // Phase 5: PARSE_POST_TRANSFORM
     rs = RuleSet::parse(world);
 
     // Phase 6: DESTRUCT
-    apply_destructions(world, rs);
+    apply_destructions(world, rs, log);
 
     // Phase 7: PARSE_POST_DESTRUCT
     rs = RuleSet::parse(world);
 
     // Phase 8: CHECK_WIN
     report.won = check_win(world, rs);
+
+    // Phase 9: COMMIT — changes are already in report.changes; caller pushes to undo stack
 
     return report;
 }

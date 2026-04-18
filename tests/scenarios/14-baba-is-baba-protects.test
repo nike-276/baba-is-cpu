@@ -1,0 +1,31 @@
+# Scenario 14: BABA IS BABA protects against BABA IS WALL transformation.
+# When BABA IS BABA is active, all BABA IS <other noun> transforms are suppressed.
+# Baba should remain baba (and still be movable as YOU).
+
+[setup]
+version 1
+name "baba is baba protects"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 baba
+text 1 1 is
+text 2 1 baba
+
+text 0 2 baba
+text 1 2 is
+text 2 2 wall
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+count baba 1
+count wall 0
+tick 1
+not_won

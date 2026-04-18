@@ -1,0 +1,27 @@
+# Scenario 13: BABA IS YOU + BABA IS NOT YOU — contradiction cancels both.
+# When a positive and negative form of the same rule coexist, neither applies.
+# Baba should not move (has no YOU property).
+
+[setup]
+version 1
+name "not cancels you"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 baba
+text 1 1 is
+text 2 1 not
+text 3 1 you
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+at 5 5 baba
+not_at 6 5 baba
+tick 1
+not_won

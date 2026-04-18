@@ -1,0 +1,23 @@
+# Scenario 12: Undo restores baba to its position before the move.
+# Verifies that `undo` after a single move step returns the world to its
+# pre-tick state — baba at origin, not at the moved position.
+
+[setup]
+version 1
+name "undo restores move"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+object 5 5 baba right
+
+[inputs]
+input right
+input undo
+
+[expected]
+at 5 5 baba
+not_at 6 5 baba
+tick 1
+not_won

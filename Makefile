@@ -51,11 +51,14 @@ $(BIN_UNIT): $(CORE_OBJ) $(UNIT_OBJ)
 
 $(BUILD)/%.o: $(SRC)/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -I$(SRC) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(SRC) -MMD -MP -c -o $@ $<
 
 $(BUILD)/tests/%.o: $(TESTS)/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -I$(SRC) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -I$(SRC) -MMD -MP -c -o $@ $<
+
+# Pull in auto-generated header dependencies.
+-include $(CORE_OBJ:.o=.d) $(CLI_OBJ:.o=.d) $(APP_OBJ:.o=.d) $(UNIT_OBJ:.o=.d)
 
 test: $(BIN_BABA)
 	@if [ -z "$(SCENARIOS)" ]; then echo "no .test files in $(SCEN)"; exit 1; fi

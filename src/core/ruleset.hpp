@@ -20,6 +20,7 @@ namespace baba::core {
 struct PropertyRule {
     Kind subject;   // a noun kind (or Kind::N_Text for the abstract noun)
     Kind property;  // a P_* kind
+    bool negated{false};  // true for "X IS NOT P" (cancels matching positive rule)
 };
 
 // NOUN IS NOUN transformation: every non-text object of kind `from` becomes `to`.
