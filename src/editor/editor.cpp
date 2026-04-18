@@ -2,6 +2,7 @@
 
 #include "core/loader.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -123,6 +124,151 @@ void Editor::rotate_facing() {
         case Direction::Left:  e.default_facing = Direction::Down;  break;
         case Direction::Down:  e.default_facing = Direction::Right; break;
     }
+}
+
+void Editor::copy_rect(Coord a, Coord b) {
+    Coord lo{std::min(a.x, b.x), std::min(a.y, b.y)};
+    Coord hi{std::max(a.x, b.x), std::max(a.y, b.y)};
+
+    clipboard_world_ = World{};
+    has_clipboard_ = false;
+
+    for (int y = lo.y; y <= hi.y; ++y) {
+        for (int x = lo.x; x <= hi.x; ++x) {
+            Coord pos{x, y};
+            for (ObjectId id : sim_.world().at(pos)) {
+                Object const* o = sim_.world().get(id);
+                if (!o) continue;
+                // Store offset from lo corner.
+                clipboard_world_.spawn({x - lo.x, y - lo.y}, o->kind, o->text, o->facing);
+                has_clipboard_ = true;
+            }
+        }
+    }
+}
+
+void Editor::cut_rect(Coord a, Coord b) {
+    copy_rect(a, b);
+    if (!has_clipboard_) return;
+
+    Coord lo{std::min(a.x, b.x), std::min(a.y, b.y)};
+    Coord hi{std::max(a.x, b.x), std::max(a.y, b.y)};
+
+    std::vector<Change> changes;
+    for (int y = lo.y; y <= hi.y; ++y) {
+        for (int x = lo.x; x <= hi.x; ++x) {
+            Coord pos{x, y};
+            auto const& ids = sim_.world().at(pos);
+            if (ids.empty()) continue;
+            std::vector<ObjectId> to_delete{ids.begin(), ids.end()};
+            for (ObjectId id : to_delete) {
+                Object const* o = sim_.world().get(id);
+                if (o) changes.push_back(Change::destroy(id, o->pos, o->kind, o->text, o->facing));
+            }
+            for (ObjectId id : to_delete) sim_.world().destroy(id);
+        }
+    }
+    if (!changes.empty()) {
+        edit_undo_.push(std::move(changes));
+        dirty_ = true;
+    }
+}
+
+void Editor::paste_at(Coord target) {
+    if (!has_clipboard_) return;
+
+    std::vector<Change> changes;
+    for (ObjectId id : clipboard_world_.all_ids()) {
+        Object const* o = clipboard_world_.get(id);
+        if (!o) continue;
+        Coord dest{target.x + o->pos.x, target.y + o->pos.y};
+        if (o->text) {
+            bool has_text = false;
+            for (ObjectId eid : sim_.world().at(dest)) {
+                Object const* ex = sim_.world().get(eid);
+                if (ex && ex->text) { has_text = true; break; }
+            }
+            if (has_text) continue;
+        }
+        ObjectId new_id = sim_.world().spawn(dest, o->kind, o->text, o->facing);
+        changes.push_back(Change::spawn(new_id));
+    }
+    if (!changes.empty()) {
+        edit_undo_.push(std::move(changes));
+        dirty_ = true;
+    }
+}
+
+bool Editor::save_selection_as_schem(Coord a, Coord b,
+                                      std::vector<Coord> const& input_tags,
+                                      std::vector<Coord> const& output_tags,
+                                      std::string const& path) {
+    Coord lo{std::min(a.x, b.x), std::min(a.y, b.y)};
+    Coord hi{std::max(a.x, b.x), std::max(a.y, b.y)};
+
+    Schematic schem;
+    schem.name   = path;
+    schem.origin = lo;
+
+    for (int y = lo.y; y <= hi.y; ++y) {
+        for (int x = lo.x; x <= hi.x; ++x) {
+            Coord pos{x, y};
+            for (ObjectId id : sim_.world().at(pos)) {
+                Object const* o = sim_.world().get(id);
+                if (!o) continue;
+                schem.world.spawn(o->pos, o->kind, o->text, o->facing);
+            }
+        }
+    }
+
+    for (Coord c : input_tags)  schem.tags.push_back({c, SchemTag::Type::Input});
+    for (Coord c : output_tags) schem.tags.push_back({c, SchemTag::Type::Output});
+
+    std::ofstream out(path);
+    if (!out) return false;
+    out << serialize_schematic(schem);
+    return out.good();
+}
+
+bool Editor::paste_schematic(Schematic const& schem, Coord target, int rotation_cw) {
+    // Record this placement for global abstract-view rendering.
+    schem_placements_.push_back({schem, target, rotation_cw});
+
+    Schematic rotated = rotate_schematic(schem, rotation_cw);
+    int32_t ox = rotated.origin.x;
+    int32_t oy = rotated.origin.y;
+
+    std::vector<Change> changes;
+    for (ObjectId id : rotated.world.all_ids()) {
+        Object const* o = rotated.world.get(id);
+        if (!o) continue;
+        Coord dest{target.x + (o->pos.x - ox), target.y + (o->pos.y - oy)};
+        if (o->text) {
+            bool has_text = false;
+            for (ObjectId eid : sim_.world().at(dest)) {
+                Object const* ex = sim_.world().get(eid);
+                if (ex && ex->text) { has_text = true; break; }
+            }
+            if (has_text) continue;
+        }
+        ObjectId new_id = sim_.world().spawn(dest, o->kind, o->text, o->facing);
+        changes.push_back(Change::spawn(new_id));
+    }
+    if (!changes.empty()) {
+        edit_undo_.push(std::move(changes));
+        dirty_ = true;
+    }
+
+    // Recursively paste nested schematics.
+    for (auto const& ref : rotated.nested) {
+        auto result = load_schematic_file(ref.path);
+        if (std::holds_alternative<Schematic>(result)) {
+            Coord nested_target{target.x + (ref.pos.x - ox), target.y + (ref.pos.y - oy)};
+            paste_schematic(std::get<Schematic>(result), nested_target, rotation_cw);
+        }
+    }
+
+    return true;
 }
 
 std::string Editor::serialize() const {

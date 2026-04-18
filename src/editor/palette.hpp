@@ -48,6 +48,8 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::N_Love,   false, "love");
     add(K::N_Bomb,   false, "bomb");
     add(K::N_Wind,   false, "wind");
+    add(K::N_Track,  false, "track");
+    add(K::N_Belt,   false, "belt");
 
     // Text: nouns
     add(K::N_Baba,   true, "T:baba");
@@ -73,6 +75,8 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::N_Love,   true, "T:love");
     add(K::N_Bomb,   true, "T:bomb");
     add(K::N_Wind,   true, "T:wind");
+    add(K::N_Track,  true, "T:track");
+    add(K::N_Belt,   true, "T:belt");
 
     // Text: operators
     add(K::O_Is,   true, "T:is");

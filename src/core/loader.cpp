@@ -329,4 +329,111 @@ std::string serialize_level(LoadedLevel const& level) {
     return os.str();
 }
 
+// ----- load_schematic -----
+
+std::variant<Schematic, ParseError> load_schematic(std::istream& in, std::string const& path) {
+    LoadedLevel level_part;  // reuse try_body_record for object/text/version/name records
+    Schematic   schem;
+    bool seen_version{false}, seen_name{false}, seen_origin{false};
+    std::string raw;
+    int line_no = 0;
+    std::optional<ParseError> error;
+
+    while (std::getline(in, raw)) {
+        ++line_no;
+        std::string_view line = trim(raw);
+        if (line.empty() || line.front() == '#') continue;
+
+        auto tok = tokenize(line);
+        if (tok.empty()) continue;
+
+        auto const& kw = tok[0];
+
+        if (kw == "origin") {
+            if (seen_origin) return err(path, line_no, "record origin: duplicate");
+            seen_origin = true;
+            if (tok.size() != 3) return err(path, line_no, "record origin: expected `origin <x> <y>`");
+            std::int32_t x, y;
+            if (!parse_int32(tok[1], x)) return err(path, line_no, "coord x: not an integer");
+            if (!parse_int32(tok[2], y)) return err(path, line_no, "coord y: not an integer");
+            schem.origin = {x, y};
+            continue;
+        }
+
+        if (kw == "tag") {
+            if (tok.size() != 4) return err(path, line_no, "record tag: expected `tag <x> <y> input|output`");
+            std::int32_t x, y;
+            if (!parse_int32(tok[1], x)) return err(path, line_no, "coord x: not an integer");
+            if (!parse_int32(tok[2], y)) return err(path, line_no, "coord y: not an integer");
+            SchemTag::Type type;
+            if      (tok[3] == "input")  type = SchemTag::Type::Input;
+            else if (tok[3] == "output") type = SchemTag::Type::Output;
+            else return err(path, line_no, "field tag: expected input or output");
+            schem.tags.push_back({{x, y}, type});
+            continue;
+        }
+
+        if (kw == "schem") {
+            if (tok.size() != 4) return err(path, line_no, "record schem: expected `schem <x> <y> \"<path>\"`");
+            std::int32_t x, y;
+            if (!parse_int32(tok[1], x)) return err(path, line_no, "coord x: not an integer");
+            if (!parse_int32(tok[2], y)) return err(path, line_no, "coord y: not an integer");
+            schem.nested.push_back({{x, y}, tok[3]});
+            continue;
+        }
+
+        if (try_body_record(tok, level_part, seen_version, seen_name, path, line_no, error)) {
+            if (error) return *error;
+            continue;
+        }
+
+        return err(path, line_no, "record " + tok[0] + ": unknown keyword");
+    }
+
+    if (!seen_version) return err(path, line_no, "record version: required header missing");
+    if (!seen_name)    return err(path, line_no, "record name: required header missing");
+    if (!seen_origin)  return err(path, line_no, "record origin: required header missing");
+
+    schem.name  = std::move(level_part.name);
+    schem.world = std::move(level_part.world);
+    return schem;
+}
+
+std::variant<Schematic, ParseError> load_schematic_file(std::string const& path) {
+    std::ifstream f(path);
+    if (!f) return err(path, 0, "file: cannot open");
+    return load_schematic(f, path);
+}
+
+std::string serialize_schematic(Schematic const& schem) {
+    std::ostringstream os;
+    os << "version 1\n";
+    os << "name \"" << schem.name << "\"\n";
+    os << "origin " << schem.origin.x << " " << schem.origin.y << "\n";
+    if (schem.world.object_count() > 0 || !schem.tags.empty() || !schem.nested.empty())
+        os << "\n";
+
+    for (ObjectId id : schem.world.all_ids()) {
+        Object const* o = schem.world.get(id);
+        if (!o) continue;
+        if (o->text) {
+            os << "text " << o->pos.x << " " << o->pos.y << " " << kind_name(o->kind) << "\n";
+        } else {
+            os << "object " << o->pos.x << " " << o->pos.y << " "
+               << kind_name(o->kind) << " " << direction_name(o->facing) << "\n";
+        }
+    }
+
+    for (auto const& tag : schem.tags) {
+        os << "tag " << tag.pos.x << " " << tag.pos.y << " "
+           << (tag.type == SchemTag::Type::Input ? "input" : "output") << "\n";
+    }
+
+    for (auto const& ref : schem.nested) {
+        os << "schem " << ref.pos.x << " " << ref.pos.y << " \"" << ref.path << "\"\n";
+    }
+
+    return os.str();
+}
+
 }  // namespace baba::core

@@ -4,6 +4,7 @@
 #include "sim/simulator.hpp"
 #include "sim/undo_buffer.hpp"
 #include "core/loader.hpp"
+#include "core/schematic.hpp"
 
 #include <istream>
 #include <string>
@@ -57,6 +58,22 @@ public:
     void set_path(std::string p) { path_ = std::move(p); }
     void mark_clean() { dirty_ = false; }
 
+    // Clipboard: copy/cut selected rect, paste at target tile.
+    // clipboard_world() has objects with positions normalized to (0,0)-based offset.
+    void copy_rect(core::Coord a, core::Coord b);
+    void cut_rect (core::Coord a, core::Coord b);
+    void paste_at (core::Coord target);
+    bool has_clipboard() const { return has_clipboard_; }
+    core::World const& clipboard_world() const { return clipboard_world_; }
+
+    // Schematics: save selection as .schem; paste a loaded schematic.
+    bool save_selection_as_schem(core::Coord a, core::Coord b,
+                                 std::vector<core::Coord> const& input_tags,
+                                 std::vector<core::Coord> const& output_tags,
+                                 std::string const& path);
+
+    bool paste_schematic(core::Schematic const& schem, core::Coord target, int rotation_cw);
+
 private:
     EditorMode      mode_{EditorMode::Edit};
     sim::Simulator  sim_;
@@ -70,6 +87,24 @@ private:
 
     std::string path_{};
     bool        dirty_{false};
+
+    core::World clipboard_world_{};
+    bool        has_clipboard_{false};
+
+public:
+    // Schematic placements: tracked for global abstract-view rendering.
+    struct SchematicPlacement {
+        core::Schematic schem;
+        core::Coord     target;
+        int             rotation_cw;
+    };
+    std::vector<SchematicPlacement> const& schem_placements() const { return schem_placements_; }
+    void record_schem_placement(core::Schematic const& schem, core::Coord target, int rotation_cw) {
+        schem_placements_.push_back({schem, target, rotation_cw});
+    }
+
+private:
+    std::vector<SchematicPlacement> schem_placements_{};
 };
 
 }  // namespace baba::editor

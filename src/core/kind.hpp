@@ -38,6 +38,8 @@ enum class Kind : std::uint16_t {
     N_Love,
     N_Bomb,
     N_Wind,
+    N_Track,
+    N_Belt,
     N_Text,   // the abstract noun "TEXT" (matches every text object)
 
     // ---- Operators (text-only) ----

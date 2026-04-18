@@ -97,7 +97,7 @@ object 10 5 flag right
 
 ## 5. `.schem` File (Schematic)
 
-A reusable fragment, paste-anywhere. Same record grammar as `.level` with three differences.
+A reusable fragment, paste-anywhere. Same record grammar as `.level` with additional header and body records.
 
 ### 5.1 Header
 
@@ -105,22 +105,50 @@ A reusable fragment, paste-anywhere. Same record grammar as `.level` with three 
 |-----------|-----------------------|----------------------------------------------------|
 | `version` | `version <int>`       | Required. Same versioning as `.level`.             |
 | `name`    | `name "<string>"`     | Required.                                          |
-| `origin`  | `origin <x> <y>`      | Required. Coordinates in the file are subtracted by origin on paste, then offset by paste target. |
+| `origin`  | `origin <x> <y>`      | Required. Reference point for paste offset math.   |
 
-### 5.2 Body
+### 5.2 Body records
 
-Same `object` and `text` records as `.level`. Coordinates are stored as authored — they are NOT pre-normalized to the origin.
+```
+object <x> <y> <kind> <facing>   — same as .level
+text   <x> <y> <kind>            — same as .level
+tag    <x> <y> input|output      — mark a tile as an I/O port (visual only)
+schem  <x> <y> "<rel-path>"      — embed a nested schematic at this position
+```
+
+- `tag` records mark tiles as **input** (shown blue) or **output** (shown red) in the
+  abstracted preview. Tags are visual metadata only; they do not affect simulation.
+- `schem` records reference another `.schem` file by path. On paste, the referenced
+  schematic is loaded and stamped recursively at `(tx + (x - ox), ty + (y - oy))`.
+  Sub-schematics are rotated by the same amount as the parent when the user rotates
+  the schematic before stamping.
+
+Coordinates are stored as authored — they are NOT pre-normalized to the origin.
 
 ### 5.3 Paste semantics
 
 Given a schematic with `origin (ox, oy)` and a body record `object x y kind facing`, pasting at target `(tx, ty)` places the object at `(tx + (x - ox), ty + (y - oy))`.
 
-### 5.4 Overlap policy on paste
+### 5.4 Rotation semantics
 
-The schematic engine asks the rule engine if each placed object can coexist with whatever is already on the destination tile:
+Rotating N × 90° CW in screen space (y-down): each tile's relative position
+`(dx, dy) = (x - ox, y - oy)` transforms as `(dx, dy) → (-dy, dx)` per step.
+Facing direction per step: Right → Down → Left → Up → Right.
 
-- An `object` record may stamp onto a tile already holding `object`s (e.g. `baba` onto `flag`).
-- A `text` record stamps successfully only if the destination tile holds no other `text`. Otherwise the paste fails for that tile and the editor surfaces the conflict; the partial paste is rolled back as a single undo unit.
+### 5.5 Abstracted view
+
+The editor can toggle between a **normal** preview (actual tiles at 50% alpha) and an
+**abstracted** preview:
+- A conforming outline traced along tile grid edges where occupied meets unoccupied.
+- All occupied tiles filled gray.
+- Input-tagged tiles filled blue; output-tagged tiles filled red.
+- Schematic name centered in the bounding box.
+
+### 5.6 Overlap policy on paste
+
+- An `object` record may stamp onto a tile already holding `object`s.
+- A `text` record stamps only if the destination tile holds no other `text`.
+  Conflicts on `text` records are silently skipped (partial paste continues).
 
 ## 6. `.test` File (Test Scenario)
 

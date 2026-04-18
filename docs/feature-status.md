@@ -37,6 +37,7 @@ checklist) and any scenario file that locks the behavior down.
 |-------|--------|-------|
 | `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`, `DOOR` | DONE | Original palette objects. |
 | `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
+| `TRACK`, `BELT` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
 | `TEXT` (meta-noun)        | PARTIAL | Recognized in rule grammar (base rule `TEXT IS PUSH`). PLANNED: as predicate (`X IS TEXT` transforms X into its text twin). |
 | `EMPTY`                   | PLANNED | As subject = "empty tiles"; as predicate = self-destruct. Currently neither is wired. |
 | `ALL`                     | DEFERRED | Distribution-over-everything semantics. |
@@ -172,3 +173,43 @@ to keep the engine general:
 | BUG-3 | ~~`src/editor/editor.cpp:81`~~ | ~~Editor's edit-undo also loses original ids (same root cause as BUG-1).~~ | **FIXED** — same `respawn` fix as BUG-1. |
 
 Add new bugs above this line with the next free ID and the same shape.
+
+---
+
+## 10. GUI editor features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Viewport zoom (mouse wheel, cursor-anchored) | DONE | Float `tile_px`; multiplicative factor; scroll anchored to cursor pixel. |
+| Middle-drag pan | DONE | |
+| Arrow-key pan (edit mode) | DONE | |
+| Object placement (LMB drag) | DONE | One object per tile per drag; coexistence policed for text tiles. |
+| Object deletion (RMB drag) | DONE | Deletes all objects on the tile. |
+| Edit-mode undo (`Ctrl+Z`) | DONE | Separate from play undo; ring buffer of 500 groups. |
+| Palette: search box (click or type) | DONE | Type any char to activate; ESC closes; substring match, case-insensitive. |
+| Palette: scroll (mouse wheel over panel) | DONE | |
+| Palette: Ctrl+E / Ctrl+Q | DONE | Next / previous entry. |
+| Palette: Ctrl+Tab | DONE | Toggle text-twin of selected noun. |
+| Palette: Ctrl+R | DONE | Rotate selected entry's default facing; shows direction triangle on tile edge. |
+| Orientation triangle | DONE | Small triangle drawn at the facing edge of non-text tiles (hidden below 16 px tile size). |
+| Box selection (Shift+drag) | DONE | Inclusive rect in world tile coords; displayed as blue rectangle. |
+| Clipboard copy / cut / paste | DONE | `Ctrl+C` / `Ctrl+X` / `Ctrl+V`; paste enters hover mode, LMB to stamp; coexistence checked. |
+| File: new level (`Ctrl+N`) | DONE | |
+| File: save (`Ctrl+S`) | DONE | Prompts for path if unsaved. |
+| File: save-as (`Ctrl+Shift+S`) | DONE | Always prompts. |
+| File: open (`Ctrl+O`) | DONE | Modal text-input dialog. |
+| Schematics: save (`Ctrl+Shift+E`) | DONE | Saves selection to `schematics/<name>.schem`; tagging mode: LMB=input, RMB=output, Enter=save. |
+| Schematics: import (`Ctrl+I`) | DONE | Fuzzy picker over `schematics/`; Up/Down + Enter to load. |
+| Schematics: paste preview | DONE | Normal (semi-transparent tiles) or abstract (Ctrl+B to toggle). |
+| Schematics: rotate on paste (`Ctrl+R`) | DONE | 90° CW per press; object positions + facings rotated. |
+| Schematics: abstract view (`Ctrl+B`) | DONE | Conforming outline + gray fill + blue (input) / red (output) tile highlight + centered name label. Global toggle for all placed schematics. |
+| Schematics: nested refs | DONE | `schem` records in `.schem` files; recursively pasted at placement time. |
+| Schematics: auto-abstract after creation | DONE | After saving, schematic is immediately recorded as a placed schematic and abstract view is enabled. |
+| Play mode: arrow / WASD movement | DONE | |
+| Play mode: Space = wait | DONE | |
+| Play mode: `Z` / `Ctrl+Z` = tick undo | DONE | |
+| Play mode: auto-tick (`P` / `F5`) | DONE | Toggleable timed auto-advance; HUD shows `AUTO:Nms` or `AUTO:MAX`. |
+| Play mode: auto-tick speed (`+` / `-`) | DONE | ±50 ms per press; clamped 50 ms – 5000 ms. |
+| Play mode: auto-tick max speed (`0`) | DONE | One tick per frame. |
+| Rule panel (right side) | DONE | Lists all active property, transform, conditional, EAT, and MAKE rules. |
+| HUD bar (bottom) | DONE | Mode, filename (with `*` dirty flag), tick counter, auto-tick label, keyboard hint. |

@@ -16,13 +16,13 @@ resolution + `X IS X` protection + `X IS Y` conditional/unconditional transforms
 
 Noun catalog: `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`,
 `KEY`, `DOOR`, `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`,
-`STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND`, `TEXT`.
+`STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND`, `TRACK`, `BELT`, `TEXT`.
 
 Phase 2 (raylib GUI editor + play loop) is **in progress**. CMake build
-exists; `babaiwt --edit` / `--play` work; palette + search + zoom are
-wired. One known bug (BUG-1 undo of destroyed objects) is tracked in
-[docs/feature-status.md §9](docs/feature-status.md#9-known-bugs-open).
-BUG-2 (zoom shake) is **FIXED**.
+exists; `babaiwt --edit` / `--play` work. Box select, clipboard, schematics
+(with I/O tagging + fuzzy import + abstract view), auto-tick, orientation
+triangles, Ctrl-key palette hotkeys, and file dialogs are all wired.
+BUG-1/BUG-2/BUG-3 are **FIXED**.
 
 ## Source-of-truth docs (`docs/`)
 

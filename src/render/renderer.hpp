@@ -1,10 +1,12 @@
 #pragma once
 
 #include "core/ruleset.hpp"
+#include "core/schematic.hpp"
 #include "core/world.hpp"
 
 #include <raylib.h>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace baba::render {
@@ -18,8 +20,24 @@ public:
     // Draw all objects in the world. scroll_x/scroll_y are in tile units (float for sub-tile precision).
     void draw_world(core::World const& world, float scroll_x, float scroll_y) const;
 
+    // Draw world at a tile offset with reduced alpha (for clipboard paste preview).
+    void draw_world_at(core::World const& world, core::Coord offset,
+                       float scroll_x, float scroll_y, unsigned char alpha) const;
+
     // Draw a light grid overlay.
     void draw_grid(int viewport_w, int viewport_h, float scroll_x, float scroll_y) const;
+
+    // Draw the selection rectangle in world tile coords.
+    void draw_selection(core::Coord a, core::Coord b,
+                        float scroll_x, float scroll_y) const;
+
+    // Draw a schematic preview at target tile (normal mode: semi-transparent actual tiles).
+    void draw_schematic_normal(core::Schematic const& schem, core::Coord target,
+                               int rotation_cw, float scroll_x, float scroll_y) const;
+
+    // Draw a schematic preview: conforming outline, gray fill, blue/red I/O, centered name.
+    void draw_schematic_abstract(core::Schematic const& schem, core::Coord target,
+                                 int rotation_cw, float scroll_x, float scroll_y) const;
 
     // Draw active rules as text in a panel at (px, py).
     void draw_rule_panel(core::RuleSet const& rs, int px, int py) const;
@@ -37,7 +55,11 @@ public:
 
     // Draw the bottom HUD bar.
     void draw_hud(std::string const& mode_label, std::string const& filename,
-                  int tick, bool won) const;
+                  int tick, bool won, std::string const& extra_info = "") const;
+
+    // Draw a centered modal dialog (text input overlay).
+    void draw_dialog(std::string const& prompt, std::string const& text,
+                     std::string const& error_msg) const;
 
     // Tile-to-screen and screen-to-tile coordinate conversions.
     Vector2 tile_to_screen(int tx, int ty, float scroll_x, float scroll_y) const;
@@ -50,7 +72,7 @@ private:
     float tile_px_;
 
     void draw_tile(core::Object const& obj, int screen_x, int screen_y,
-                   int layer, int total_layers) const;
+                   int layer, int total_layers, unsigned char alpha = 255) const;
 };
 
 }  // namespace baba::render

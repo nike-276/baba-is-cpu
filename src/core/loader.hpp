@@ -1,4 +1,4 @@
-// core/loader.hpp — text-format parser for .level and .test files.
+// core/loader.hpp — text-format parser for .level, .schem, and .test files.
 //
 // Single-pass, line-oriented; no exceptions across the API boundary; first
 // error stops parsing and is returned with 1-based line number.
@@ -6,6 +6,7 @@
 
 #include "direction.hpp"
 #include "kind.hpp"
+#include "schematic.hpp"
 #include "world.hpp"
 
 #include <istream>
@@ -67,5 +68,13 @@ std::variant<TestScenario, ParseError> load_test_file (std::string const& path);
 // ---- Serializer (round-trip for .level) ----
 
 std::string serialize_level(LoadedLevel const& level);
+
+// ---- .schem format ----
+
+using SchemResult = std::variant<Schematic, ParseError>;
+
+SchemResult load_schematic     (std::istream& in, std::string const& path);
+SchemResult load_schematic_file(std::string const& path);
+std::string serialize_schematic(Schematic const& schem);
 
 }  // namespace baba::core

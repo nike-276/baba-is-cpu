@@ -45,13 +45,24 @@ Switching back to Edit restores the snapshot taken on the last Play entry
 | Mouse wheel (over viewport)     | Zoom, anchored at cursor position. |
 | Mouse wheel (over palette)      | Scroll palette list. |
 | Arrow keys                      | Pan viewport (1 tile per press). |
-| `Q` / `E`                       | Previous / next palette entry. |
-| `Tab`                           | Toggle text-twin of selected entry (nouns only). |
-| `R`                             | Rotate selected entry's default facing. |
+| `Ctrl+Q` / `Ctrl+E`             | Previous / next palette entry. |
+| `Ctrl+Tab`                      | Toggle text-twin of selected entry (nouns only). |
+| `Ctrl+R`                        | Rotate selected entry's default facing. A direction triangle on the tile edge shows facing. |
 | Click palette entry             | Select that entry directly. |
-| Click search box / type         | Filter palette by substring (case-insensitive); `ESC` exits the search box. |
-| `Ctrl+S` / `Ctrl+O` / `Ctrl+N`  | Save / open / new level. |
+| Type any char (no Ctrl)         | Jump to palette search box, pre-filled with the typed character. `ESC` exits. |
+| Click search box                | Focus search box directly. |
+| `Ctrl+S`                        | Save. Prompts for filename if the level has never been saved. |
+| `Ctrl+Shift+S`                  | Save as (always prompts). |
+| `Ctrl+O`                        | Open level (modal text-input dialog). |
+| `Ctrl+N`                        | New blank level. |
 | `Ctrl+Z`                        | Undo last edit (place / delete). Buffer cap: 500. |
+| Shift + left mouse drag         | Box-select a rectangular region. |
+| `Ctrl+C` (with selection)       | Copy selection to clipboard. |
+| `Ctrl+X` (with selection)       | Cut selection to clipboard (undoable). |
+| `Ctrl+V` (with clipboard)       | Enter paste mode; hover to preview, LMB to stamp. |
+| `Ctrl+Shift+E` (with selection) | Save selection as a schematic. Prompts for name → saves to `schematics/<name>.schem`. Then enter tag mode: LMB=input tile (blue), RMB=output tile (red), MMB=clear, Enter=save. |
+| `Ctrl+I`                        | Import schematic. Opens fuzzy picker of `schematics/`; type to filter, Up/Down to navigate, Enter to load. Then LMB to stamp; `Ctrl+R` to rotate 90° CW. |
+| `Ctrl+B`                        | Toggle global abstract view for all placed schematics (conforming outline, gray fill, blue=input, red=output, name label). |
 | `Enter` / `Space`               | Enter Play mode (snapshots world). |
 
 ## Controls — Play mode
@@ -62,6 +73,9 @@ Switching back to Edit restores the snapshot taken on the last Play entry
 | `Space`                         | Wait tick. |
 | `Z` (or `Ctrl+Z`)               | Undo one tick (cap: 10,000). |
 | Numpad `4`/`6`/`8`/`2`          | Pan viewport. |
+| `P` / `F5`                      | Toggle auto-tick (timed auto-advance). HUD shows `AUTO:Nms`. |
+| `+` / `-`                       | Increase / decrease auto-tick speed by 50 ms (range 50 ms – 5000 ms). |
+| `0`                             | Toggle max-speed auto-tick (one tick per frame). |
 | `ESC`                           | Return to Edit mode (restores snapshot). |
 
 Note: `ESC` does **not** close the window (raylib's default exit key is disabled).
@@ -98,11 +112,25 @@ and `.test` grammar. Save uses `core::serialize_level`; load uses
 `core::load_level_file`. Round-trips are lossless for everything the
 loader knows about.
 
+## Schematics
+
+Schematics (`.schem` files) are reusable snippets of tile layouts.
+
+**Creating a schematic:**
+1. Shift-drag to select the region.
+2. `Ctrl+Shift+E` → type a name → Enter.
+3. In tag mode, click tiles to mark them as inputs (LMB, blue) or outputs (RMB, red). Enter to save.
+4. The file is written to `schematics/<name>.schem` and abstract view is enabled automatically.
+
+**Importing a schematic:**
+1. `Ctrl+I` → fuzzy-search the list → Enter.
+2. Move cursor to position the preview; `Ctrl+R` to rotate 90° CW.
+3. LMB to stamp. `ESC` to cancel.
+4. `Ctrl+B` toggles the abstract overlay for all placed schematics.
+
+Schematics can be nested: a `.schem` file may reference other `.schem` files via `schem` records (see [file-format-v1.md §5](file-format-v1.md)).
+
 ## Known issues
 
-See [feature-status.md §9](feature-status.md#9-known-bugs-open) for the
-current bug list. The most visible currently:
-
-- **BUG-1 / BUG-3**: Undo of a destroyed object respawns it with a fresh id;
-  subsequent Move records in the same undo batch target the now-missing original
-  id, so the object may land in the wrong place. Fix requires `world.respawn(id, …)`.
+See [feature-status.md §9](feature-status.md#9-known-bugs-open) for the current bug list.
+BUG-1 and BUG-3 (id-preserving undo) are **FIXED**. No open GUI bugs at this time.

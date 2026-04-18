@@ -38,6 +38,8 @@ inline const char* object_label(core::Kind k) {
         case K::N_Love:   return "LOVE";
         case K::N_Bomb:   return "BOMB";
         case K::N_Wind:   return "WIND";
+        case K::N_Track:  return "TRCK";
+        case K::N_Belt:   return "BELT";
         default:          return "???";
     }
 }
@@ -71,6 +73,8 @@ inline TileStyle style_for(core::Kind k, bool is_text) {
             case K::N_Love:   return {{255,80,120,255},             WHITE, object_label(k)};
             case K::N_Bomb:   return {{40,40,40,255},               WHITE, object_label(k)};
             case K::N_Wind:   return {{160,220,240,255},            BLACK, object_label(k)};
+            case K::N_Track:  return {{90, 80, 70, 255},            WHITE, object_label(k)};
+            case K::N_Belt:   return {{200,140, 40, 255},           BLACK, object_label(k)};
             default:          return {{80,80,80,255},               WHITE, "???"};
         }
     }

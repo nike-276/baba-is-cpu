@@ -3,11 +3,13 @@
 #include "palette_layout.hpp"
 
 #include "core/object.hpp"
+#include "core/schematic.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <string>
+#include <unordered_set>
 
 namespace baba::render {
 
@@ -28,7 +30,7 @@ Vector2 Renderer::screen_to_tile_f(float px, float py, float scroll_x, float scr
 }
 
 void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
-                          int layer, int total_layers) const {
+                          int layer, int total_layers, unsigned char alpha) const {
     TileStyle style = style_for(obj.kind, obj.text);
 
     // Vertical offset when multiple objects share a tile.
@@ -43,11 +45,14 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
         static_cast<float>(h - 2)
     };
 
-    DrawRectangleRec(rect, style.bg);
+    Color bg  = {style.bg.r,      style.bg.g,      style.bg.b,      alpha};
+    Color fg  = {style.text_fg.r, style.text_fg.g, style.text_fg.b, alpha};
+    DrawRectangleRec(rect, bg);
 
     // Border for text tiles.
     if (obj.text) {
-        DrawRectangleLinesEx(rect, 2, DARKGRAY);
+        Color border = {DARKGRAY.r, DARKGRAY.g, DARKGRAY.b, alpha};
+        DrawRectangleLinesEx(rect, 2, border);
     }
 
     // Label (truncated to fit).
@@ -56,7 +61,36 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
     int text_w = MeasureText(label, font_size);
     int tx_pos = sx + static_cast<int>((tile_px_ - static_cast<float>(text_w)) / 2.0f);
     int ty_pos = sy + offset + (h - font_size) / 2;
-    DrawText(label, tx_pos, ty_pos, font_size, style.text_fg);
+    DrawText(label, tx_pos, ty_pos, font_size, fg);
+
+    // Direction indicator: triangle at the facing edge (not center) so it doesn't block text.
+    if (!obj.text && tile_px_ >= 16.0f) {
+        float cx = sx + tile_px_ * 0.5f;
+        float cy = sy + static_cast<float>(offset) + static_cast<float>(h) * 0.5f;
+        float ar = std::min(tile_px_, static_cast<float>(h)) * 0.18f;
+
+        float ax = 0.0f, ay = 0.0f;
+        switch (obj.facing) {
+            case core::Direction::Right: ax =  1.0f; ay =  0.0f; break;
+            case core::Direction::Left:  ax = -1.0f; ay =  0.0f; break;
+            case core::Direction::Up:    ax =  0.0f; ay = -1.0f; break;
+            case core::Direction::Down:  ax =  0.0f; ay =  1.0f; break;
+        }
+        float px = -ay, py = ax;  // perpendicular (CCW)
+
+        // Center the triangle near the facing edge (tip points to the edge).
+        float half_w = tile_px_ * 0.46f;
+        float half_h = static_cast<float>(h) * 0.46f;
+        float tc_x = cx + ax * (half_w - ar);
+        float tc_y = cy + ay * (half_h - ar);
+
+        Vector2 tip    = {tc_x + ax * ar,                 tc_y + ay * ar};
+        Vector2 wing_a = {tc_x - ax * ar * 0.5f + px * ar * 0.65f, tc_y - ay * ar * 0.5f + py * ar * 0.65f};
+        Vector2 wing_b = {tc_x - ax * ar * 0.5f - px * ar * 0.65f, tc_y - ay * ar * 0.5f - py * ar * 0.65f};
+
+        Color ac = {255, 255, 255, static_cast<unsigned char>(alpha * 200 / 255)};
+        DrawTriangle(tip, wing_b, wing_a, ac);  // CCW on screen (y-down)
+    }
 }
 
 void Renderer::draw_world(core::World const& world,
@@ -112,6 +146,139 @@ void Renderer::draw_grid(int viewport_w, int viewport_h,
     for (float y = start_yf; y < static_cast<float>(viewport_h); y += tile_px_) {
         int yi = static_cast<int>(std::roundf(y));
         DrawLine(0, yi, viewport_w, yi, grid_color);
+    }
+}
+
+void Renderer::draw_world_at(core::World const& world, core::Coord offset,
+                              float scroll_x, float scroll_y, unsigned char alpha) const {
+    int screen_w = GetScreenWidth();
+    int screen_h = GetScreenHeight();
+    int min_tx = static_cast<int>(scroll_x) - 1;
+    int max_tx = static_cast<int>(scroll_x) + static_cast<int>(screen_w / tile_px_) + 2;
+    int min_ty = static_cast<int>(scroll_y) - 1;
+    int max_ty = static_cast<int>(scroll_y) + static_cast<int>(screen_h / tile_px_) + 2;
+
+    for (core::Coord c : world.all_cells()) {
+        int wx = c.x + offset.x;
+        int wy = c.y + offset.y;
+        if (wx < min_tx || wx > max_tx || wy < min_ty || wy > max_ty) continue;
+
+        auto const& ids = world.at(c);
+        if (ids.empty()) continue;
+
+        int sx = static_cast<int>(std::roundf((wx - scroll_x) * tile_px_));
+        int sy = static_cast<int>(std::roundf((wy - scroll_y) * tile_px_));
+
+        std::vector<core::ObjectId> sorted = ids;
+        std::sort(sorted.begin(), sorted.end(), [&](core::ObjectId a, core::ObjectId b) {
+            core::Object const* oa = world.get(a);
+            core::Object const* ob = world.get(b);
+            if (!oa || !ob) return a < b;
+            if (oa->text != ob->text) return !oa->text;
+            return a < b;
+        });
+
+        int total = static_cast<int>(sorted.size());
+        for (int i = 0; i < total; ++i) {
+            core::Object const* o = world.get(sorted[i]);
+            if (o) draw_tile(*o, sx, sy, i, total, alpha);
+        }
+    }
+}
+
+void Renderer::draw_selection(core::Coord a, core::Coord b,
+                               float scroll_x, float scroll_y) const {
+    core::Coord lo{std::min(a.x, b.x), std::min(a.y, b.y)};
+    core::Coord hi{std::max(a.x, b.x), std::max(a.y, b.y)};
+
+    float sx = std::roundf((lo.x - scroll_x) * tile_px_);
+    float sy = std::roundf((lo.y - scroll_y) * tile_px_);
+    float sw = (hi.x - lo.x + 1) * tile_px_;
+    float sh = (hi.y - lo.y + 1) * tile_px_;
+
+    // Semi-transparent fill.
+    DrawRectangle(static_cast<int>(sx), static_cast<int>(sy),
+                  static_cast<int>(sw), static_cast<int>(sh),
+                  {100, 180, 255, 40});
+    // Solid border.
+    DrawRectangleLinesEx({sx, sy, sw, sh}, 2, {100, 180, 255, 200});
+}
+
+void Renderer::draw_schematic_normal(core::Schematic const& schem, core::Coord target,
+                                      int rotation_cw, float scroll_x, float scroll_y) const {
+    core::Schematic rotated = core::rotate_schematic(schem, rotation_cw);
+    int32_t ox = rotated.origin.x;
+    int32_t oy = rotated.origin.y;
+    core::Coord offset{target.x - ox, target.y - oy};
+    draw_world_at(rotated.world, offset, scroll_x, scroll_y, 128);
+}
+
+void Renderer::draw_schematic_abstract(core::Schematic const& schem, core::Coord target,
+                                        int rotation_cw, float scroll_x, float scroll_y) const {
+    core::Schematic rotated = core::rotate_schematic(schem, rotation_cw);
+    int32_t ox = rotated.origin.x;
+    int32_t oy = rotated.origin.y;
+
+    // Collect occupied world tile positions.
+    using CoordSet = std::unordered_set<core::Coord, core::CoordHash>;
+    CoordSet occupied;
+    int32_t min_wx = INT32_MAX, max_wx = INT32_MIN;
+    int32_t min_wy = INT32_MAX, max_wy = INT32_MIN;
+
+    for (core::Coord c : rotated.world.all_cells()) {
+        int32_t wx = target.x + (c.x - ox);
+        int32_t wy = target.y + (c.y - oy);
+        occupied.insert({wx, wy});
+        min_wx = std::min(min_wx, wx);  max_wx = std::max(max_wx, wx);
+        min_wy = std::min(min_wy, wy);  max_wy = std::max(max_wy, wy);
+    }
+    if (occupied.empty()) return;
+
+    // Build tag lookup.
+    CoordSet input_tiles, output_tiles;
+    for (auto const& tag : rotated.tags) {
+        int32_t wx = target.x + (tag.pos.x - ox);
+        int32_t wy = target.y + (tag.pos.y - oy);
+        if (tag.type == core::SchemTag::Type::Input)  input_tiles.insert({wx, wy});
+        else                                           output_tiles.insert({wx, wy});
+    }
+
+    // Also fill all tile grid positions within bounding box (gray background for extent).
+    for (int32_t wy = min_wy; wy <= max_wy; ++wy) {
+        for (int32_t wx = min_wx; wx <= max_wx; ++wx) {
+            if (occupied.find({wx, wy}) == occupied.end()) continue;
+
+            int sx = static_cast<int>(std::roundf((wx - scroll_x) * tile_px_));
+            int sy = static_cast<int>(std::roundf((wy - scroll_y) * tile_px_));
+            int tp = static_cast<int>(tile_px_);
+
+            // Opaque-ish fill to cover underlying tile rendering.
+            Color fill = {80, 80, 80, 230};
+            if (input_tiles.count({wx, wy}))       fill = {50, 90, 210, 235};
+            else if (output_tiles.count({wx, wy})) fill = {190, 50, 50, 235};
+            DrawRectangle(sx + 1, sy + 1, tp - 2, tp - 2, fill);
+
+            // Conforming outline: draw edges where neighbor is unoccupied.
+            Color edge = {220, 220, 220, 220};
+            int lw = 2;
+            if (!occupied.count({wx - 1, wy})) DrawRectangle(sx,        sy,  lw, tp, edge);  // left
+            if (!occupied.count({wx + 1, wy})) DrawRectangle(sx + tp - lw, sy, lw, tp, edge); // right
+            if (!occupied.count({wx, wy - 1})) DrawRectangle(sx, sy,        tp, lw, edge);    // top
+            if (!occupied.count({wx, wy + 1})) DrawRectangle(sx, sy + tp - lw, tp, lw, edge); // bottom
+        }
+    }
+
+    // Centered name label.
+    if (!schem.name.empty()) {
+        float bbox_sx = std::roundf((min_wx - scroll_x) * tile_px_);
+        float bbox_sy = std::roundf((min_wy - scroll_y) * tile_px_);
+        float bbox_w  = (max_wx - min_wx + 1) * tile_px_;
+        float bbox_h  = (max_wy - min_wy + 1) * tile_px_;
+        int font_size = std::max(10, static_cast<int>(tile_px_) / 3);
+        int text_w    = MeasureText(schem.name.c_str(), font_size);
+        int tx = static_cast<int>(bbox_sx + (bbox_w - text_w) / 2.0f);
+        int ty = static_cast<int>(bbox_sy + (bbox_h - font_size) / 2.0f);
+        DrawText(schem.name.c_str(), tx, ty, font_size, WHITE);
     }
 }
 
@@ -239,7 +406,7 @@ int Renderer::draw_palette(std::vector<std::string> const& entries,
 }
 
 void Renderer::draw_hud(std::string const& mode_label, std::string const& filename,
-                         int tick, bool won) const {
+                         int tick, bool won, std::string const& extra_info) const {
     int h = GetScreenHeight();
     int w = GetScreenWidth();
 
@@ -251,6 +418,7 @@ void Renderer::draw_hud(std::string const& mode_label, std::string const& filena
 
     std::string info = filename.empty() ? "(untitled)" : filename;
     info += "  tick:" + std::to_string(tick);
+    if (!extra_info.empty()) info += "  " + extra_info;
     DrawText(info.c_str(), 80, h - 20, 12, LIGHTGRAY);
 
     if (won) {
@@ -259,9 +427,40 @@ void Renderer::draw_hud(std::string const& mode_label, std::string const& filena
 
     // Mode hint.
     const char* hint = (mode_label == "PLAY")
-        ? "arrows:move  Z:undo  ESC:edit"
-        : "LMB:place  RMB:del  Q/E:palette  Enter:play  Ctrl+S:save";
+        ? "P:auto  +/-:speed  0:max  arrows:move  Z:undo  ESC:edit"
+        : "LMB:place  Sh+drag:select  RMB:del  Ctrl+R:rotate  Ctrl+B:abstract  Enter:play  Ctrl+S/O/I";
     DrawText(hint, w - MeasureText(hint, 11) - 8, h - 20, 11, DARKGRAY);
+}
+
+void Renderer::draw_dialog(std::string const& prompt, std::string const& text,
+                            std::string const& error_msg) const {
+    int w = GetScreenWidth();
+    int h = GetScreenHeight();
+
+    // Dimmed overlay.
+    DrawRectangle(0, 0, w, h, {0, 0, 0, 160});
+
+    // Dialog box.
+    int bw = 500, bh = 90;
+    int bx = (w - bw) / 2, by = (h - bh) / 2;
+    DrawRectangle(bx, by, bw, bh, {30, 30, 30, 240});
+    DrawRectangleLinesEx({static_cast<float>(bx), static_cast<float>(by),
+                          static_cast<float>(bw), static_cast<float>(bh)}, 2, LIGHTGRAY);
+
+    DrawText(prompt.c_str(), bx + 12, by + 10, 14, LIGHTGRAY);
+
+    // Input field.
+    bool show_cursor = (static_cast<int>(GetTime() * 2) % 2 == 0);
+    std::string display = text + (show_cursor ? "|" : " ");
+    DrawRectangle(bx + 10, by + 32, bw - 20, 24, {50, 50, 50, 255});
+    DrawRectangleLinesEx({static_cast<float>(bx + 10), static_cast<float>(by + 32),
+                          static_cast<float>(bw - 20), 24.0f}, 1, YELLOW);
+    DrawText(display.c_str(), bx + 14, by + 36, 13, WHITE);
+
+    if (!error_msg.empty())
+        DrawText(error_msg.c_str(), bx + 12, by + 64, 12, RED);
+    else
+        DrawText("Enter: confirm   ESC: cancel", bx + 12, by + 64, 12, DARKGRAY);
 }
 
 }  // namespace baba::render

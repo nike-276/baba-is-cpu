@@ -9,6 +9,8 @@ add_library(core STATIC
     object.hpp
     ruleset.cpp
     ruleset.hpp
+    schematic.cpp
+    schematic.hpp
     tick.cpp
     tick.hpp
     world.cpp
