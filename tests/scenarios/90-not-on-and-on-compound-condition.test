@@ -1,0 +1,30 @@
+# BABA NOT ON ROCK AND ON WALL IS FLAG: same compound semantics but starting
+# with NOT ON.  Baba on wall but not on rock -> condition met -> becomes flag.
+# Previously this whole strip failed to parse (documented as deferred in 44).
+
+[setup]
+version 1
+name "not on X and on Y compound condition: transform fires when both met"
+
+text 0 0 baba
+text 1 0 not
+text 2 0 on
+text 3 0 rock
+text 4 0 and
+text 5 0 on
+text 6 0 wall
+text 7 0 is
+text 8 0 flag
+
+object 5 5 baba right
+object 5 5 wall right
+
+[inputs]
+input wait
+
+[expected]
+count flag 1
+count baba 0
+at 5 5 flag
+tick 1
+not_won

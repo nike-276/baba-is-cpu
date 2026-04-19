@@ -94,9 +94,10 @@ rule           := subject verb
                | [NOT] POWERED subject verb   ← global prefix condition (new)
 subject        := nounphrase
 verb           := IS predicate
-               | ON noun IS predicate
-               | NOT ON noun IS predicate
+               | ON oncond IS predicate
+               | NOT ON oncond IS predicate
                | MAKE nounlist
+oncond         := noun (AND (NOT ON | ON)? noun)*   ← mixed positive/negative chains
                | EAT nounlist
                | HAS nounlist
                | FOLLOW nounlist
@@ -153,6 +154,13 @@ tiles) is deferred.
 property. Four sub-passes run in order R→U→L→D in `apply_nudge()` (phase 2.53). Each
 pass snapshots qualifying non-text, non-STILL objects and calls `try_move` without
 changing facing on failure (unlike MOVE). Can push PUSH objects.
+
+**ON/NOT ON mixed condition semantics**: AND chains in an ON or NOT ON condition can
+mix positive and negative terms. `NOUN ON X AND NOT ON Y IS P` grants P when X is
+present AND Y is absent. `NOUN NOT ON X AND ON Y IS P` grants P when X is absent AND
+Y is present. AND distributes independently — each noun is checked separately, not as
+a group. Internally stored as `condition_nouns` (all must be present) and
+`forbidden_nouns` (all must be absent); both lists must be satisfied simultaneously.
 
 `ON` and `NOT ON` are conditional operators; the predicate is checked per-object
 at every PARSE phase. `MAKE`, `EAT`, `HAS`, `FOLLOW`, and `FEAR` are unconditional

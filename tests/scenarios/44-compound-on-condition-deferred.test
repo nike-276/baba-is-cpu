@@ -1,13 +1,10 @@
-# BABA NOT ON ROCK AND ON WALL IS YOU: compound ON conditions are DEFERRED.
-# The NOT ON ROCK part parses but then sees AND (not IS), so the whole strip
-# fails and produces no rules.  Baba has no YOU and cannot move even though
-# it is on neither rock nor wall.
-# This test locks down the current (no-rule) behaviour so we know when
-# compound conditions are eventually implemented.
+# BABA NOT ON ROCK AND ON WALL IS YOU: compound condition — NOT ON ROCK (forbidden)
+# AND ON WALL (required).  Baba starts with no rock or wall on its tile, so the
+# ON WALL required condition fails and baba has no YOU.
 
 [setup]
 version 1
-name "compound not-on+and-on condition: deferred, produces no rule"
+name "not-on plus on compound: no you when required noun absent"
 
 text 0 0 baba
 text 1 0 not

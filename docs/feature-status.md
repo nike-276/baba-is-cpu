@@ -21,8 +21,8 @@ checklist) and any scenario file that locks the behavior down.
 | `IS`     | DONE     | Property + transform + identity (`X IS X`). |
 | `AND`    | DONE     | Subject and predicate distribution (subjects, properties, nouns, MAKE/EAT targets). |
 | `NOT`    | DONE (predicate side) | Cancels positive of same property; negative-only is a no-op. **PLANNED**: subject side (`NOT X IS P`). |
-| `ON`     | DONE     | `X ON Y [AND Z]* IS P/NOUN`: compound condition — all listed nouns must be co-located. Also `X ON Y [AND Z]* MAKE NOUN`. Checked per-object in `object_has_property` / TRANSFORM / MAKE phases. |
-| `NOT ON` | DONE     | `X NOT ON Y [AND Z]* IS P/NOUN/MAKE NOUN`: condition met when ALL listed nouns are absent. |
+| `ON`     | DONE     | `X ON Y [AND …]* IS P/NOUN`: compound condition — all listed nouns must be co-located. Also `X ON Y [AND …]* MAKE NOUN`. AND chains may mix `AND NOT ON Z` terms (forbidden nouns). Checked per-object in `object_has_property` / TRANSFORM / MAKE phases. |
+| `NOT ON` | DONE     | `X NOT ON Y [AND …]* IS P/NOUN/MAKE NOUN`: each listed noun must be independently absent. AND chains may mix `AND ON Z` terms (required nouns). Condition met when all `condition_nouns` present AND all `forbidden_nouns` absent. |
 | `MAKE`   | DONE     | `X MAKE Y [AND Z]*`: unconditional. `X ON … MAKE Y` / `X NOT ON … MAKE Y`: conditional. Spawns targets post-DESTRUCT. Idempotent. |
 | `EAT`    | DONE     | `X EAT Y [AND Z]*`: operator (not a property). Subject destroys listed targets on contact in DESTRUCT. |
 | `NEAR`   | DEFERRED | Same shape as `ON` but uses 8-neighborhood. |

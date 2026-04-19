@@ -1,0 +1,30 @@
+# BABA ON ROCK AND NOT ON WALL IS FLAG: compound condition mixing positive ON
+# and negative NOT ON.  Baba at (5,5) shares its tile with a rock but not a wall,
+# so both conditions are met and baba transforms to flag.
+
+[setup]
+version 1
+name "on X and not on Y compound condition: transform fires when both met"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 rock
+text 3 0 and
+text 4 0 not
+text 5 0 on
+text 6 0 wall
+text 7 0 is
+text 8 0 flag
+
+object 5 5 baba right
+object 5 5 rock right
+
+[inputs]
+input wait
+
+[expected]
+count flag 1
+count baba 0
+at 5 5 flag
+tick 1
+not_won

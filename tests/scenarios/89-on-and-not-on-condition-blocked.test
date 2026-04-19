@@ -1,0 +1,30 @@
+# BABA ON ROCK AND NOT ON WALL IS FLAG: same rule but a wall is also present.
+# The NOT ON WALL condition is not met, so baba does not transform.
+
+[setup]
+version 1
+name "on X and not on Y compound condition: transform blocked when forbidden present"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 rock
+text 3 0 and
+text 4 0 not
+text 5 0 on
+text 6 0 wall
+text 7 0 is
+text 8 0 flag
+
+object 5 5 baba right
+object 5 5 rock right
+object 5 5 wall right
+
+[inputs]
+input wait
+
+[expected]
+count baba 1
+count flag 0
+at 5 5 baba
+tick 1
+not_won

@@ -286,23 +286,44 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         return;
     }
 
-    // ── NOUN ON NOUN [AND NOUN]* IS/MAKE PREDICATE ─────────────────────────
+    // ── NOUN ON/NOT ON … IS/MAKE PREDICATE (mixed AND chains) ─────────────
     if (*op_tok == Kind::O_On) {
         cursor = adv(cursor);
         auto cond_noun = at(cursor);
         if (!cond_noun || !is_noun(*cond_noun)) return;
-        std::vector<Kind> conditions;
-        conditions.push_back(*cond_noun);
+        std::vector<Kind> required;   // ON nouns — must be present
+        std::vector<Kind> forbidden;  // NOT ON nouns — must be absent
+        required.push_back(*cond_noun);
         cursor = adv(cursor);
-        // AND loop for additional condition nouns.
+        // AND loop: handles AND NOUN (required), AND NOT ON NOUN (forbidden),
+        //           and AND ON NOUN (required, explicit).
         while (true) {
             auto k = at(cursor);
             if (!k || *k != Kind::O_And) break;
-            Coord next = adv(cursor);
-            auto nt = at(next);
-            if (!nt || !is_noun(*nt)) break;
-            conditions.push_back(*nt);
-            cursor = adv(next);
+            Coord after_and = adv(cursor);
+            auto next_k = at(after_and);
+            if (!next_k) break;
+            if (*next_k == Kind::O_Not) {
+                Coord after_not = adv(after_and);
+                auto on_k = at(after_not);
+                if (!on_k || *on_k != Kind::O_On) break;
+                Coord after_on2 = adv(after_not);
+                auto nk = at(after_on2);
+                if (!nk || !is_noun(*nk)) break;
+                forbidden.push_back(*nk);
+                cursor = adv(after_on2);
+            } else if (*next_k == Kind::O_On) {
+                Coord after_on2 = adv(after_and);
+                auto nk = at(after_on2);
+                if (!nk || !is_noun(*nk)) break;
+                required.push_back(*nk);
+                cursor = adv(after_on2);
+            } else if (is_noun(*next_k)) {
+                required.push_back(*next_k);
+                cursor = adv(after_and);
+            } else {
+                break;
+            }
         }
 
         auto verb2 = at(cursor);
@@ -327,7 +348,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             }
             for (Kind n : subjects)
                 for (Kind t : targets)
-                    cond_make_out.push_back({n, conditions, t, false});
+                    cond_make_out.push_back({n, required, forbidden, t});
             return;
         }
 
@@ -353,7 +374,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 for (Kind n : subjects)
                     for (Kind t : targets)
                         if (n != t)
-                            cond_xform_out.push_back({n, conditions, t, false});
+                            cond_xform_out.push_back({n, required, forbidden, t});
                 return;
             }
         }
@@ -385,7 +406,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         }
         for (Kind n : subjects)
             for (auto const& pe : props)
-                if (!pe.neg) cond_out.push_back({n, conditions, pe.prop, false});
+                if (!pe.neg) cond_out.push_back({n, required, forbidden, pe.prop});
         return;
     }
 
@@ -425,18 +446,39 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         cursor = adv(cursor);
         auto cond_n = at(cursor);
         if (!cond_n || !is_noun(*cond_n)) return;
-        std::vector<Kind> conditions;
-        conditions.push_back(*cond_n);
+        std::vector<Kind> required;   // ON nouns — must be present
+        std::vector<Kind> forbidden;  // NOT ON nouns — must be absent
+        forbidden.push_back(*cond_n);
         cursor = adv(cursor);
-        // AND loop for additional condition nouns.
+        // AND loop: AND NOUN (→forbidden), AND NOT ON NOUN (→forbidden),
+        //           AND ON NOUN (→required).
         while (true) {
             auto k = at(cursor);
             if (!k || *k != Kind::O_And) break;
-            Coord next = adv(cursor);
-            auto nt = at(next);
-            if (!nt || !is_noun(*nt)) break;
-            conditions.push_back(*nt);
-            cursor = adv(next);
+            Coord after_and = adv(cursor);
+            auto next_k = at(after_and);
+            if (!next_k) break;
+            if (*next_k == Kind::O_Not) {
+                Coord after_not = adv(after_and);
+                auto on_k = at(after_not);
+                if (!on_k || *on_k != Kind::O_On) break;
+                Coord after_on2 = adv(after_not);
+                auto nk = at(after_on2);
+                if (!nk || !is_noun(*nk)) break;
+                forbidden.push_back(*nk);
+                cursor = adv(after_on2);
+            } else if (*next_k == Kind::O_On) {
+                Coord after_on2 = adv(after_and);
+                auto nk = at(after_on2);
+                if (!nk || !is_noun(*nk)) break;
+                required.push_back(*nk);
+                cursor = adv(after_on2);
+            } else if (is_noun(*next_k)) {
+                forbidden.push_back(*next_k);
+                cursor = adv(after_and);
+            } else {
+                break;
+            }
         }
 
         auto verb2 = at(cursor);
@@ -461,14 +503,14 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             }
             for (Kind n : subjects)
                 for (Kind t : targets)
-                    cond_make_out.push_back({n, conditions, t, /*negated=*/true});
+                    cond_make_out.push_back({n, required, forbidden, t});
             return;
         }
 
         if (*verb2 != Kind::O_Is) return;
         cursor = adv(cursor);
 
-        // Negated conditional transform: NOUN NOT ON … IS NOUN [AND NOUN]*
+        // NOT ON conditional transform: NOUN NOT ON … IS NOUN [AND NOUN]*
         {
             auto pred = at(cursor);
             if (pred && is_noun(*pred)) {
@@ -487,12 +529,12 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 for (Kind n : subjects)
                     for (Kind t : targets)
                         if (n != t)
-                            cond_xform_out.push_back({n, conditions, t, /*negated=*/true});
+                            cond_xform_out.push_back({n, required, forbidden, t});
                 return;
             }
         }
 
-        // Negated conditional property: NOUN NOT ON … IS [NOT] PROPERTY [AND …]
+        // NOT ON conditional property: NOUN NOT ON … IS [NOT] PROPERTY [AND …]
         struct PropEntryN { Kind prop; bool neg; };
         std::vector<PropEntryN> props;
         auto parse_prop_neg = [&]() -> bool {
@@ -519,7 +561,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         }
         for (Kind n : subjects)
             for (auto const& pe : props)
-                if (!pe.neg) cond_out.push_back({n, conditions, pe.prop, /*negated=*/true});
+                if (!pe.neg) cond_out.push_back({n, required, forbidden, pe.prop});
         return;
     }
 
@@ -719,8 +761,8 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
     if (!o->text) {
         for (auto const& cr : cond_rules_) {
             if (cr.subject != o->kind || cr.property != property) continue;
-            // ON A AND B: grant if ALL present. NOT ON A AND B: grant if NOT ALL present.
-            bool all_found = true;
+            // ALL condition_nouns must be present AND ALL forbidden_nouns must be absent.
+            bool met = true;
             for (Kind cn : cr.condition_nouns) {
                 bool found = false;
                 for (ObjectId other : world.at(o->pos)) {
@@ -728,10 +770,19 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
                     Object const* ob = world.get(other);
                     if (ob && !ob->text && ob->kind == cn) { found = true; break; }
                 }
-                if (!found) { all_found = false; break; }
+                if (!found) { met = false; break; }
             }
-            bool condition_met = cr.negated_condition ? !all_found : all_found;
-            if (condition_met) return true;
+            if (!met) continue;
+            for (Kind cn : cr.forbidden_nouns) {
+                bool found = false;
+                for (ObjectId other : world.at(o->pos)) {
+                    if (other == id) continue;
+                    Object const* ob = world.get(other);
+                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                }
+                if (found) { met = false; break; }
+            }
+            if (met) return true;
         }
 
         // Check FACING rules (NOUN [NOT] FACING <cond> IS PROPERTY).
@@ -789,7 +840,17 @@ bool RuleSet::any_has_power(World const& world) const {
                     Object const* ob = world.get(oid);
                     if (ob && !ob->text && ob->kind == cn) { found = true; break; }
                 }
-                if (cr.negated_condition ? found : !found) { met = false; break; }
+                if (!found) { met = false; break; }
+            }
+            if (!met) continue;
+            for (Kind cn : cr.forbidden_nouns) {
+                bool found = false;
+                for (ObjectId oid : world.at(o->pos)) {
+                    if (oid == id) continue;
+                    Object const* ob = world.get(oid);
+                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                }
+                if (found) { met = false; break; }
             }
             if (met) return true;
         }
