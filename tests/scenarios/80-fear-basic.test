@@ -1,0 +1,23 @@
+# BABA FEAR KEKE: baba at (5,5) facing right, keke at (6,5).
+# Forward direction (right) contains keke -> skipped.
+# Next escape: CW of right = down -> tile (5,6) is free -> baba moves down.
+
+[setup]
+version 1
+name "baba fears adjacent keke and moves away"
+
+text 0 0 baba
+text 1 0 fear
+text 2 0 keke
+
+object 5 5 baba right
+object 6 5 keke right
+
+[inputs]
+input wait
+
+[expected]
+at 5 6 baba
+not_at 5 5 baba
+tick 1
+not_won

@@ -82,6 +82,8 @@ enum class Kind : std::uint16_t {
     O_Facing,  // NOUN [NOT] FACING <cond> IS PROPERTY: condition on facing tile or own direction
     O_Has,     // NOUN HAS NOUN [AND NOUN]*: spawn target when subject is destroyed
     O_Powered, // prefix condition: [NOT] POWERED NOUN IS PROPERTY
+    O_Follow,  // NOUN FOLLOW NOUN [AND NOUN]*: move toward nearest target each tick
+    O_Fear,    // NOUN FEAR NOUN [AND NOUN]*: move away from adjacent target each tick
 
     // ---- Properties (text-only) ----
     P_You,
@@ -108,6 +110,10 @@ enum class Kind : std::uint16_t {
     P_Still,
     P_Shift,
     P_Swap,
+    P_Nudgeright, // move right each tick without changing facing
+    P_Nudgeup,    // move up each tick without changing facing
+    P_Nudgeleft,  // move left each tick without changing facing
+    P_Nudgedown,  // move down each tick without changing facing
     P_Power,   // makes the global POWERED condition true
 
     Count_,
@@ -117,7 +123,7 @@ constexpr bool is_noun(Kind k) {
     return k >= Kind::N_Baba && k <= Kind::N_Text;
 }
 constexpr bool is_operator(Kind k) {
-    return k >= Kind::O_Is && k <= Kind::O_Powered;
+    return k >= Kind::O_Is && k <= Kind::O_Fear;
 }
 constexpr bool is_property(Kind k) {
     return k >= Kind::P_You && k <= Kind::P_Power;

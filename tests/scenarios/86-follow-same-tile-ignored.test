@@ -1,0 +1,23 @@
+# BABA FOLLOW FLAG: flag at (5,5) is colocated (dist=0, ignored).
+# Flag at (5,7) has dist=2 and is the target. Baba moves down to (5,6).
+
+[setup]
+version 1
+name "baba ignores colocated flag and follows distant one"
+
+text 0 0 baba
+text 1 0 follow
+text 2 0 flag
+
+object 5 5 baba right
+object 5 5 flag right
+object 5 7 flag right
+
+[inputs]
+input wait
+
+[expected]
+at 5 6 baba
+not_at 5 5 baba
+tick 1
+not_won

@@ -1,0 +1,25 @@
+# ROCK IS NUDGEUP and ROCK IS NUDGELEFT: both apply in the same tick.
+# Sub-pass order is R->U->L->D: rock moves up first (5,5)->(5,4),
+# then left (5,4)->(4,4). Final position: (4,4).
+
+[setup]
+version 1
+name "nudgeup and nudgeleft both move object in one tick"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 nudgeup
+text 0 1 rock
+text 1 1 is
+text 2 1 nudgeleft
+
+object 5 5 rock right
+
+[inputs]
+input wait
+
+[expected]
+at 4 4 rock
+not_at 5 5 rock
+tick 1
+not_won

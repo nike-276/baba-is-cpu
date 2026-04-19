@@ -118,6 +118,8 @@ constexpr std::array kTable = {
     Entry{"facing",   Kind::O_Facing},
     Entry{"has",      Kind::O_Has},
     Entry{"powered",  Kind::O_Powered},
+    Entry{"follow",   Kind::O_Follow},
+    Entry{"fear",     Kind::O_Fear},
 
     Entry{"you",    Kind::P_You},
     Entry{"push",   Kind::P_Push},
@@ -142,8 +144,12 @@ constexpr std::array kTable = {
     Entry{"down",      Kind::P_Down},
     Entry{"still",     Kind::P_Still},
     Entry{"shift",     Kind::P_Shift},
-    Entry{"swap",      Kind::P_Swap},
-    Entry{"power",     Kind::P_Power},
+    Entry{"swap",        Kind::P_Swap},
+    Entry{"nudgeright",  Kind::P_Nudgeright},
+    Entry{"nudgeup",     Kind::P_Nudgeup},
+    Entry{"nudgeleft",   Kind::P_Nudgeleft},
+    Entry{"nudgedown",   Kind::P_Nudgedown},
+    Entry{"power",       Kind::P_Power},
 };
 
 }  // namespace

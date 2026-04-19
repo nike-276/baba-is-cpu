@@ -1,0 +1,26 @@
+# ROCK IS NUDGERIGHT but WALL IS STOP blocks the move.
+# Unlike MOVE, NUDGE does not flip the object's facing when blocked.
+# Rock stays at (5,5); WALL IS STOP means the blocker is respected.
+
+[setup]
+version 1
+name "nudgeright blocked by stop keeps object in place"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 nudgeright
+text 0 1 wall
+text 1 1 is
+text 2 1 stop
+
+object 5 5 rock right
+object 6 5 wall right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 rock
+not_at 6 5 rock
+tick 1
+not_won

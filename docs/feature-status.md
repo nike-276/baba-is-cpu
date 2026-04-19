@@ -31,6 +31,8 @@ checklist) and any scenario file that locks the behavior down.
 | `WITHOUT`| DEFERRED | Negation of `NEAR`. |
 | `HAS`    | DONE     | `X HAS Y [AND Z]*`: when X is destroyed via any DESTRUCT sub-step (SINK, EAT, HOT/MELT, WEAK, DEFEAT, OPEN/SHUT), spawns Y (and Z…) at X's tile with X's facing. Does NOT trigger on transforms. Stored as `HasRule`; processed in `apply_has()` phase 6.1. AND chains supported. `X HAS X` (self-respawn) supported. |
 | `POWERED`| DONE     | Prefix condition: `[NOT] POWERED NOUN IS PROPERTY`. True when any live non-text object has `P_Power` (via unconditional or ON-conditional rule). Parsed as `O_Powered` operator token. Stored as `GlobalConditionPropertyRule`; evaluated in `object_has_property` via `any_has_power()`. |
+| `FOLLOW` | DONE     | `X FOLLOW Y [AND Z]*`: X moves one tile toward the nearest non-colocated Y (or Z…) each tick. Nearest by Manhattan distance; ties prefer vertical. Operator `O_Follow`; stored as `FollowRule`; processed in `apply_follow()` phase 3.5 (after PARSE_POST_MOVE). |
+| `FEAR`   | DONE     | `X FEAR Y [AND Z]*`: X moves away from any 4-directionally adjacent Y (or Z…) each tick. Direction priority relative to X's facing: forward→CW→CCW→backward; skips feared directions. Operator `O_Fear`; stored as `FearRule`; processed in `apply_fear()` phase 2.55. |
 
 ## 2. Nouns
 
@@ -60,9 +62,10 @@ checklist) and any scenario file that locks the behavior down.
 | `SHIFT`      | PLANNED  | Carries any object that ends a tick on top of it one tile in SHIFT's facing direction. |
 | `PULL`       | PLANNED  | Mirror of PUSH on the back of the chain. |
 | `SWAP`       | PLANNED  | Two SWAP-property objects on neighbouring tiles trade places when one moves. |
+| `NUDGERIGHT` / `NUDGEUP` / `NUDGELEFT` / `NUDGEDOWN` | DONE | Moves the object 1 tile in the named direction each tick without changing facing. Uses `try_move` (can push PUSH objects). STILL blocks it. Sub-passes run R→U→L→D in `apply_nudge()` phase 2.53. |
 | `FLOAT`      | DEFERRED | Layered overlap; FLOAT objects only interact with other FLOAT objects on a tile. |
 | `TELE`       | DEFERRED | Teleports overlapping objects to another TELE-tagged tile. |
-| `FOLLOW`     | DEFERRED | Moves in the same direction as YOU after YOU moves. |
+| `FOLLOW`     | DONE     | See §1 Operators: FOLLOW is an operator (`X FOLLOW Y`), not a property. |
 
 ## 4. Properties — interactions / removal
 
@@ -93,7 +96,7 @@ Removal precedence inside DESTRUCT (lower = earlier):
 | `SAFE`   | DEFERRED | Immune to DEFEAT/SINK/MELT/etc. |
 | `PHANTOM`| DEFERRED | Skips collision checks entirely. |
 | `HOLD`   | DEFERRED | YOU+HOLD object can be carried. |
-| `FEAR`   | DEFERRED | YOU adjacent to FEAR-tagged object cannot move toward it. |
+| `FEAR`   | DONE     | See §1 Operators: FEAR is an operator (`X FEAR Y`), not a property. |
 | `CHILL`  | DEFERRED | Random subset of MOVE behavior; needs RNG → likely permanent N/A. |
 
 ## 5. Properties — transforms

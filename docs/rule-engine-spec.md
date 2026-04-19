@@ -15,14 +15,14 @@ References: `babaiswiki_pages_current.xml` — pages *Order of Operations*, *Rul
 
 ### 1.1 In-scope (v1 / MVP)
 
-**Operators**: `IS`, `NOT`, `AND`, `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`
+**Operators**: `IS`, `NOT`, `AND`, `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`, `FOLLOW`, `FEAR`
 
 **Nouns**: `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`,
 `DOOR`, `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`,
 `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND`. Plus reserved `TEXT`, `EMPTY`, `ALL`.
 
 **Properties**: `YOU`, `PUSH`, `STOP`, `WIN`, `DEFEAT`, `SINK`, `HOT`, `MELT`,
-`OPEN`, `SHUT`, `POWER`.
+`OPEN`, `SHUT`, `POWER`, `NUDGERIGHT`, `NUDGEUP`, `NUDGELEFT`, `NUDGEDOWN`.
 
 **Prefix conditions**: `POWERED` (global: true when any object has `POWER`).
 
@@ -44,9 +44,9 @@ for the structural changes that gate them.
 
 ### 1.3 Deferred (post-Phase 2)
 
-`CHILL`, `FEAR`, `NUDGE*`, `BOOM`, `SAFE`, `FLOAT`, `PHANTOM`,
+`CHILL`, `BOOM`, `SAFE`, `FLOAT`, `PHANTOM`,
 `HOLD`, `SELECT`, `REVERT`, `WRITE`, `MIMIC`, `LOCKED*`, `MORE`, `DONE`,
-`PLAY`, `BONUS`, `END`, `BACK`, `TELE`, `FOLLOW`, `YOU2`, `3D`,
+`PLAY`, `BONUS`, `END`, `BACK`, `TELE`, `YOU2`, `3D`,
 conditions other than `ON`/`POWERED` (`NEAR`, `FACING`, `LONELY`, …),
 `LEVEL` semantics, stack limits (6), `TOO COMPLEX` / `INFINITE LOOP`
 overflow.
@@ -99,6 +99,8 @@ verb           := IS predicate
                | MAKE nounlist
                | EAT nounlist
                | HAS nounlist
+               | FOLLOW nounlist
+               | FEAR nounlist
 predicate      := propertyphrase | nounlist
 nounphrase     := noun (AND noun)*
 nounlist       := noun (AND noun)*
@@ -108,6 +110,7 @@ property       := YOU | PUSH | STOP | WIN | DEFEAT | SINK
                | HOT | MELT | OPEN | SHUT | WEAK | MOVE | AUTO
                | FALL | FALLUP | FALLLEFT | FALLRIGHT
                | LEFT | RIGHT | UP | DOWN | POWER
+               | NUDGERIGHT | NUDGEUP | NUDGELEFT | NUDGEDOWN
 ```
 
 **POWERED prefix semantics**: When `POWERED NOUN IS PROPERTY` appears on the grid,
@@ -128,9 +131,32 @@ same facing. AND chains supported; `X HAS X` (self-respawn) is valid. HAS does
 **not** fire on transforms (`X IS Y`). **[DEVIATION]** v1 fires once after
 all DESTRUCT sub-steps complete; per-destruction chaining is not modelled.
 
+**FOLLOW semantics**: `NOUN FOLLOW NOUN [AND NOUN]*` produces `FollowRule` entries.
+Each tick (phase 3.5, after PARSE_POST_MOVE), every non-text subject moves one tile
+toward the nearest non-colocated target object by Manhattan distance. Distance-0
+(same tile) targets are ignored. When `|dx| == |dy|`, vertical movement is preferred.
+`do_face` + `try_move` are called; STOP objects block movement normally. AND chains:
+the subject follows whichever listed target is nearest. **[DEVIATION]** "last-followed"
+tie-breaking and distance-1 priority are deferred.
+
+**FEAR semantics**: `NOUN FEAR NOUN [AND NOUN]*` produces `FearRule` entries.
+Each tick (phase 2.55), for each subject: scan the 4 adjacent tiles; if any contains
+a feared object, add that direction to `feared_dirs`. If `feared_dirs` is empty (no
+adjacent feared objects) or all feared objects are colocated (same tile), no movement.
+Otherwise try escape directions in priority order relative to subject's current facing:
+forward → CW → CCW → backward. Skip directions in `feared_dirs`. Use `try_move` for
+the first non-skipped direction that succeeds. AND chains: `X FEAR A AND B` adds both
+to the feared set. **[DEVIATION]** FEAR stacking (multiple matching rules = multiple
+tiles) is deferred.
+
+**NUDGE semantics**: `NOUN IS NUDGERIGHT/UP/LEFT/DOWN` sets a directional-movement
+property. Four sub-passes run in order R→U→L→D in `apply_nudge()` (phase 2.53). Each
+pass snapshots qualifying non-text, non-STILL objects and calls `try_move` without
+changing facing on failure (unlike MOVE). Can push PUSH objects.
+
 `ON` and `NOT ON` are conditional operators; the predicate is checked per-object
-at every PARSE phase. `MAKE`, `EAT`, and `HAS` are unconditional verb operators;
-they produce `MakeRule`, `EatRule`, and `HasRule` entries (not `PropertyRule` entries).
+at every PARSE phase. `MAKE`, `EAT`, `HAS`, `FOLLOW`, and `FEAR` are unconditional
+verb operators; they produce their respective rule struct entries (not `PropertyRule` entries).
 
 ### 3.2 Parsing procedure
 
@@ -207,17 +233,26 @@ A single tick consists of these phases, executed in order. The wiki's full
 order has ~12 phases; v1 collapses those covering deferred properties.
 
 ```
-1. PARSE_INITIAL          — rebuild rules + derived properties
-2. APPLY_INPUT            — move every YOU object once in input direction
-                             (resolves push chains, STOP, OPEN/SHUT collision)
-3. PARSE_POST_MOVE
-4. TRANSFORM              — apply X IS Y transformations
-                             (X IS X protection enforced; duplications applied)
-5. PARSE_POST_TRANSFORM
-6. DESTRUCT               — apply removal effects in precedence order (§5)
-7. PARSE_POST_DESTRUCT
-8. CHECK_WIN              — any YOU sharing a tile with WIN → win
-9. COMMIT                 — finalize undo record for the tick
+1.    PARSE_INITIAL          — rebuild rules + derived properties
+1.5   APPLY_DIRECTIONAL      — set facing of UP/DOWN/LEFT/RIGHT objects
+2.    APPLY_INPUT            — move every YOU object once in input direction
+                               (resolves push chains, STOP, OPEN/SHUT collision)
+2.5   APPLY_AUTO_MOVE        — MOVE/AUTO/FALL* self-propulsion
+2.53  APPLY_NUDGE            — NUDGERIGHT/UP/LEFT/DOWN directional nudges (R→U→L→D sub-passes)
+2.55  APPLY_FEAR             — NOUN FEAR NOUN: move away from adjacent feared objects
+2.6   APPLY_SHIFT            — SHIFT carries co-tile objects one step
+2.7   APPLY_SWAP             — SWAP objects exchange positions
+3.    PARSE_POST_MOVE
+3.5   APPLY_FOLLOW           — NOUN FOLLOW NOUN: move toward nearest target
+4.    TRANSFORM              — apply X IS Y transformations
+                               (X IS X protection enforced; duplications applied)
+5.    PARSE_POST_TRANSFORM
+6.    DESTRUCT               — apply removal effects in precedence order (§5)
+6.1   APPLY_HAS              — HAS spawn on destruction
+6.5   APPLY_MAKE             — MAKE spawn (unconditional + conditional)
+7.    PARSE_POST_DESTRUCT
+8.    CHECK_WIN              — any YOU sharing a tile with WIN → win
+9.    COMMIT                 — finalize undo record for the tick
 ```
 
 If `APPLY_INPUT` produces zero changes (e.g., YOU is blocked), phases 3–7 still

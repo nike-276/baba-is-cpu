@@ -1,0 +1,20 @@
+# ROCK IS NUDGERIGHT: rock slides one tile right each tick without input.
+
+[setup]
+version 1
+name "nudgeright moves object right each tick"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 nudgeright
+
+object 5 5 rock right
+
+[inputs]
+input wait
+
+[expected]
+at 6 5 rock
+not_at 5 5 rock
+tick 1
+not_won

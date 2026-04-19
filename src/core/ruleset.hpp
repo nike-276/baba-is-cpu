@@ -43,6 +43,20 @@ struct EatRule {
     Kind target;
 };
 
+// NOUN FOLLOW NOUN [AND NOUN]*: each tick subject moves 1 tile toward nearest target
+// (Manhattan distance, ignoring colocated targets). Tie on |dx|==|dy|: prefer vertical.
+struct FollowRule {
+    Kind subject;
+    Kind target;
+};
+
+// NOUN FEAR NOUN [AND NOUN]*: each tick subject moves away from any adjacent target
+// using directional priority relative to subject facing (forward->CW->CCW->backward).
+struct FearRule {
+    Kind subject;
+    Kind target;
+};
+
 // NOUN [NOT] FACING <cond> IS PROPERTY.
 // `condition` is either:
 //   - a noun kind  → check the tile ahead contains a non-text object of that kind
@@ -128,6 +142,8 @@ public:
     std::vector<FacingTransformRule>          const& facing_transform_rules()           const { return facing_transforms_; }
     std::vector<GlobalConditionPropertyRule>  const& global_condition_property_rules()  const { return global_cond_rules_; }
     std::vector<HasRule>                      const& has_rules()                        const { return has_rules_; }
+    std::vector<FollowRule>                   const& follow_rules()                     const { return follow_rules_; }
+    std::vector<FearRule>                     const& fear_rules()                       const { return fear_rules_; }
 
 private:
     std::vector<PropertyRule>             rules_;
@@ -141,6 +157,8 @@ private:
     std::vector<FacingTransformRule>          facing_transforms_;
     std::vector<GlobalConditionPropertyRule>  global_cond_rules_;
     std::vector<HasRule>                      has_rules_;
+    std::vector<FollowRule>                   follow_rules_;
+    std::vector<FearRule>                     fear_rules_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 

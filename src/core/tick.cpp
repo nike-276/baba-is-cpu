@@ -607,6 +607,117 @@ void apply_has(World& world, RuleSet const& rs,
     }
 }
 
+// ── APPLY_NUDGE (phase 2.53) ───────────────────────────────────────────────
+// Four sub-passes R→U→L→D. Each pass moves all objects with that NUDGE property
+// one tile in the named direction. Does not change facing on block (unlike MOVE).
+
+void apply_nudge(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    static constexpr std::pair<Kind, Direction> kPasses[] = {
+        {Kind::P_Nudgeright, Direction::Right},
+        {Kind::P_Nudgeup,    Direction::Up},
+        {Kind::P_Nudgeleft,  Direction::Left},
+        {Kind::P_Nudgedown,  Direction::Down},
+    };
+    for (auto [prop, dir] : kPasses) {
+        std::vector<ObjectId> movers;
+        for (ObjectId id : world.all_ids()) {
+            Object const* o = world.get(id);
+            if (!o || o->text) continue;
+            if (rs.object_has_property(world, id, Kind::P_Still)) continue;
+            if (rs.object_has_property(world, id, prop)) movers.push_back(id);
+        }
+        Coord sv = step(dir);
+        for (ObjectId id : movers) {
+            if (!world.get(id)) continue;
+            try_move(world, id, sv, rs, log);
+        }
+    }
+}
+
+// ── APPLY_FEAR (phase 2.55) ────────────────────────────────────────────────
+// Each FEAR subject moves away from any 4-directionally adjacent feared object.
+// Direction priority relative to subject facing: forward→CW→CCW→backward.
+// Skips directions that contain a feared object. Same-tile feared = no movement.
+
+void apply_fear(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    if (rs.fear_rules().empty()) return;
+    std::vector<ObjectId> candidates;
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        for (auto const& fr : rs.fear_rules())
+            if (fr.subject == o->kind) { candidates.push_back(id); break; }
+    }
+    auto cw  = [](Direction d) { return static_cast<Direction>((static_cast<int>(d) + 3) % 4); };
+    auto ccw = [](Direction d) { return static_cast<Direction>((static_cast<int>(d) + 1) % 4); };
+    auto opp = [](Direction d) { return static_cast<Direction>((static_cast<int>(d) + 2) % 4); };
+    for (ObjectId id : candidates) {
+        Object const* o = world.get(id);
+        if (!o) continue;
+        std::vector<Direction> feared_dirs;
+        for (Direction d : {Direction::Right, Direction::Up, Direction::Left, Direction::Down}) {
+            Coord adj = {o->pos.x + step(d).x, o->pos.y + step(d).y};
+            bool found = false;
+            for (ObjectId other : world.at(adj)) {
+                Object const* ob = world.get(other);
+                if (!ob || ob->text) continue;
+                for (auto const& fr : rs.fear_rules()) {
+                    if (fr.subject == o->kind && fr.target == ob->kind) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+            if (found) feared_dirs.push_back(d);
+        }
+        if (feared_dirs.empty()) continue;
+        Direction fwd = o->facing;
+        for (Direction esc : {fwd, cw(fwd), ccw(fwd), opp(fwd)}) {
+            bool skip = false;
+            for (Direction fd : feared_dirs) { if (fd == esc) { skip = true; break; } }
+            if (skip) continue;
+            if (try_move(world, id, step(esc), rs, log)) break;
+        }
+    }
+}
+
+// ── APPLY_FOLLOW (phase 3.5) ───────────────────────────────────────────────
+// Each FOLLOW subject moves one tile toward the nearest non-colocated target
+// (Manhattan distance). Tie on |dx|==|dy|: prefer vertical movement.
+
+void apply_follow(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    if (rs.follow_rules().empty()) return;
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        std::vector<Kind> targets;
+        for (auto const& fr : rs.follow_rules())
+            if (fr.subject == o->kind) targets.push_back(fr.target);
+        if (targets.empty()) continue;
+        int best = INT_MAX;
+        Coord best_pos{};
+        for (ObjectId other : world.all_ids()) {
+            Object const* ob = world.get(other);
+            if (!ob || ob->text) continue;
+            bool is_tgt = false;
+            for (Kind tk : targets) if (ob->kind == tk) { is_tgt = true; break; }
+            if (!is_tgt) continue;
+            int dist = std::abs(ob->pos.x - o->pos.x) + std::abs(ob->pos.y - o->pos.y);
+            if (dist == 0) continue;
+            if (dist < best) { best = dist; best_pos = ob->pos; }
+        }
+        if (best == INT_MAX) continue;
+        int dx = best_pos.x - o->pos.x;
+        int dy = best_pos.y - o->pos.y;
+        Direction dir = (std::abs(dy) >= std::abs(dx))
+            ? (dy < 0 ? Direction::Up : Direction::Down)
+            : (dx < 0 ? Direction::Left : Direction::Right);
+        do_face(world, id, dir, log);
+        try_move(world, id, step(dir), rs, log);
+    }
+}
+
 }  // namespace
 
 // ── apply_tick (9-phase pipeline) ─────────────────────────────────────────
@@ -650,6 +761,12 @@ TickReport apply_tick(World& world, Input input) {
     // Phase 2.5: APPLY_AUTO_MOVE
     apply_auto_move(world, rs, log);
 
+    // Phase 2.53: APPLY_NUDGE
+    apply_nudge(world, rs, log);
+
+    // Phase 2.55: APPLY_FEAR
+    apply_fear(world, rs, log);
+
     // Phase 2.6: APPLY_SHIFT
     apply_shift(world, rs, log);
 
@@ -658,6 +775,9 @@ TickReport apply_tick(World& world, Input input) {
 
     // Phase 3: PARSE_POST_MOVE
     rs = RuleSet::parse(world);
+
+    // Phase 3.5: APPLY_FOLLOW
+    apply_follow(world, rs, log);
 
     // Phase 4: TRANSFORM
     apply_transforms(world, rs, log);

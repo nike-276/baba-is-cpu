@@ -25,6 +25,7 @@ authoritative master checklist.
 | MAKE          | O_Make operator | yes (operator) | APPLY_MAKE phase       |
 | TEXT (predicate) | N_Text noun   | yes          | base rule TEXT IS PUSH; transform planned |
 | POWER               | yes (P_Power)  | yes (property) | `any_has_power()` in RuleSet; enables POWERED |
+| NUDGERIGHT / NUDGEUP / NUDGELEFT / NUDGEDOWN | yes (P_Nudge*) | yes | APPLY_NUDGE phase 2.53; try_move without facing change |
 | SHIFT / PULL / SWAP | no      | —            | deferred                 |
 
 ## Operators recognized
@@ -39,6 +40,8 @@ authoritative master checklist.
 | EAT   | yes (O_Eat)     | NOUN EAT NOUN [AND NOUN]* destruction (DONE) |
 | HAS   | yes (O_Has)     | NOUN HAS NOUN [AND NOUN]*: spawn target when subject destroyed via DESTRUCT (DONE). Phase 6.1 `apply_has()`. |
 | POWERED (O_Powered) | yes (O_Powered) | Global prefix condition: `[NOT] POWERED NOUN IS PROPERTY`. Stored as `GlobalConditionPropertyRule`; evaluated via `any_has_power()` in `object_has_property`. |
+| FOLLOW (O_Follow) | yes (O_Follow) | `NOUN FOLLOW NOUN [AND NOUN]*`: move toward nearest non-colocated target (Manhattan, vertical tie-break). Phase 3.5 `apply_follow()`. |
+| FEAR (O_Fear) | yes (O_Fear) | `NOUN FEAR NOUN [AND NOUN]*`: move away from adjacent target; priority fwd→CW→CCW→bwd relative to facing. Phase 2.55 `apply_fear()`. |
 | NEAR / FACING / LONELY | deferred | |
 
 ## Tick-phase pipeline
@@ -53,7 +56,13 @@ APPLY_INPUT                ← DONE (push chain, STOP, multi-YOU by id,
   ↓
 APPLY_AUTO_MOVE            ← DONE (MOVE/AUTO one-tile; FALL* slide-to-block)
   ↓
+APPLY_NUDGE                ← DONE (NUDGERIGHT/UP/LEFT/DOWN; R→U→L→D sub-passes)
+  ↓
+APPLY_FEAR                 ← DONE (NOUN FEAR NOUN; move away from adjacent)
+  ↓
 PARSE_POST_MOVE
+  ↓
+APPLY_FOLLOW               ← DONE (NOUN FOLLOW NOUN; move toward nearest)
   ↓
 TRANSFORM                  ← DONE (X IS Y, X IS X protection, duplication)
                               PLANNED: X IS TEXT

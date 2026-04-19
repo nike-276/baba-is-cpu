@@ -40,7 +40,9 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<FacingPropertyRule>& facing_out,
                 std::vector<FacingTransformRule>& facing_xform_out,
                 std::vector<GlobalConditionPropertyRule>& global_cond_out,
-                std::vector<HasRule>& has_out) {
+                std::vector<HasRule>& has_out,
+                std::vector<FollowRule>& follow_out,
+                std::vector<FearRule>& fear_out) {
     auto at = [&](Coord c) { return text_kind_at(world, c); };
     auto adv = [&](Coord c) -> Coord { return {c.x + step_dir.x, c.y + step_dir.y}; };
     auto bak = [&](Coord c) -> Coord { return {c.x - step_dir.x, c.y - step_dir.y}; };
@@ -95,7 +97,8 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         while (true) {
             auto k = at(cur);
             if (!k) break;
-            if (*k == Kind::O_On || *k == Kind::O_Facing || *k == Kind::O_Powered) return;
+            if (*k == Kind::O_On || *k == Kind::O_Facing || *k == Kind::O_Powered ||
+                *k == Kind::O_Follow || *k == Kind::O_Fear) return;
             // NOT POWERED acts as a prefix condition chain-starter
             if (*k == Kind::O_Not) {
                 auto after_not = at(adv(cur));
@@ -231,6 +234,54 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             for (Kind n : subjects)
                 for (Kind t : targets)
                     has_out.push_back({n, t});
+        }
+        return;
+    }
+
+    // ── NOUN FOLLOW NOUN [AND NOUN]* ───────────────────────────────────────
+    if (*op_tok == Kind::O_Follow) {
+        cursor = adv(cursor);
+        auto target = at(cursor);
+        if (target && is_noun(*target)) {
+            std::vector<Kind> targets;
+            targets.push_back(*target);
+            cursor = adv(cursor);
+            while (true) {
+                auto k = at(cursor);
+                if (!k || *k != Kind::O_And) break;
+                Coord next = adv(cursor);
+                auto nt = at(next);
+                if (!nt || !is_noun(*nt)) break;
+                targets.push_back(*nt);
+                cursor = adv(next);
+            }
+            for (Kind n : subjects)
+                for (Kind t : targets)
+                    follow_out.push_back({n, t});
+        }
+        return;
+    }
+
+    // ── NOUN FEAR NOUN [AND NOUN]* ─────────────────────────────────────────
+    if (*op_tok == Kind::O_Fear) {
+        cursor = adv(cursor);
+        auto target = at(cursor);
+        if (target && is_noun(*target)) {
+            std::vector<Kind> targets;
+            targets.push_back(*target);
+            cursor = adv(cursor);
+            while (true) {
+                auto k = at(cursor);
+                if (!k || *k != Kind::O_And) break;
+                Coord next = adv(cursor);
+                auto nt = at(next);
+                if (!nt || !is_noun(*nt)) break;
+                targets.push_back(*nt);
+                cursor = adv(next);
+            }
+            for (Kind n : subjects)
+                for (Kind t : targets)
+                    fear_out.push_back({n, t});
         }
         return;
     }
@@ -553,8 +604,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_);
     }
 
     // Deduplicate verb-operator rules before further processing.
@@ -604,6 +655,17 @@ RuleSet RuleSet::parse(World const& world) {
         }
         rs.has_rules_ = std::move(deduped);
     }
+    {
+        std::set<std::pair<uint16_t,uint16_t>> seen;
+        std::vector<FollowRule> deduped;
+        for (auto const& fr : rs.follow_rules_) {
+            auto key2 = std::make_pair(static_cast<uint16_t>(fr.subject),
+                                       static_cast<uint16_t>(fr.target));
+            if (seen.insert(key2).second) deduped.push_back(fr);
+        }
+        rs.follow_rules_ = std::move(deduped);
+    }
+    // FearRule: no dedup — identical entries represent stacking (reserved for future use).
 
     // Base rule: TEXT IS PUSH (always, treated as positive non-cancellable).
     rs.rules_.push_back({Kind::N_Text, Kind::P_Push, false});

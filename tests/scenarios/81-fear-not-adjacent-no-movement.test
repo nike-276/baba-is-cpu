@@ -1,0 +1,21 @@
+# BABA FEAR KEKE: keke is 2 tiles away (not adjacent). No feared direction
+# is detected, so baba does not move.
+
+[setup]
+version 1
+name "baba does not fear keke two tiles away"
+
+text 0 0 baba
+text 1 0 fear
+text 2 0 keke
+
+object 5 5 baba right
+object 7 5 keke right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 baba
+tick 1
+not_won
