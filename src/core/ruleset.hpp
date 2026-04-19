@@ -54,6 +54,14 @@ struct FacingPropertyRule {
     bool negated{false};  // true for NOT FACING
 };
 
+// NOUN [NOT] FACING <cond> IS NOUN — conditional transform based on facing.
+struct FacingTransformRule {
+    Kind subject;
+    Kind condition;  // noun OR directional property
+    Kind target;
+    bool negated{false};
+};
+
 // NOUN HAS NOUN [AND NOUN]*: when a non-text `subject` is destroyed via any DESTRUCT
 // sub-step, one `target` object spawns at the destroyed subject's tile with its facing.
 struct HasRule {
@@ -113,12 +121,13 @@ public:
     std::vector<TransformRule>           const& transform_rules()  const { return transforms_; }
     std::vector<MakeRule>                const& make_rules()       const { return makes_; }
     std::vector<EatRule>                 const& eat_rules()               const { return eats_; }
-    std::vector<ConditionalPropertyRule>      const& conditional_rules()               const { return cond_rules_; }
-    std::vector<ConditionalTransformRule>     const& conditional_transform_rules()     const { return cond_transforms_; }
-    std::vector<ConditionalMakeRule>          const& conditional_make_rules()          const { return cond_makes_; }
-    std::vector<FacingPropertyRule>           const& facing_rules()                   const { return facing_rules_; }
-    std::vector<GlobalConditionPropertyRule>  const& global_condition_property_rules() const { return global_cond_rules_; }
-    std::vector<HasRule>                      const& has_rules()                       const { return has_rules_; }
+    std::vector<ConditionalPropertyRule>      const& conditional_rules()                const { return cond_rules_; }
+    std::vector<ConditionalTransformRule>     const& conditional_transform_rules()      const { return cond_transforms_; }
+    std::vector<ConditionalMakeRule>          const& conditional_make_rules()           const { return cond_makes_; }
+    std::vector<FacingPropertyRule>           const& facing_rules()                    const { return facing_rules_; }
+    std::vector<FacingTransformRule>          const& facing_transform_rules()           const { return facing_transforms_; }
+    std::vector<GlobalConditionPropertyRule>  const& global_condition_property_rules()  const { return global_cond_rules_; }
+    std::vector<HasRule>                      const& has_rules()                        const { return has_rules_; }
 
 private:
     std::vector<PropertyRule>             rules_;
@@ -129,6 +138,7 @@ private:
     std::vector<ConditionalTransformRule> cond_transforms_;
     std::vector<ConditionalMakeRule>      cond_makes_;
     std::vector<FacingPropertyRule>           facing_rules_;
+    std::vector<FacingTransformRule>          facing_transforms_;
     std::vector<GlobalConditionPropertyRule>  global_cond_rules_;
     std::vector<HasRule>                      has_rules_;
     // Cached lookup: (noun, property) → bool.

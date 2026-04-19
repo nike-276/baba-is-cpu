@@ -1,0 +1,27 @@
+# ARROW FACING UP IS SUN: arrow transforms into sun when its facing is Up.
+
+[setup]
+version 1
+name "facing direction transform: arrow facing up becomes sun"
+
+text 0 0 arrow
+text 1 0 facing
+text 2 0 up
+text 3 0 is
+text 4 0 sun
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 arrow up
+object 9 9 baba right
+
+[inputs]
+input wait
+
+[expected]
+count arrow 0
+count sun 1
+at 5 5 sun
+not_won

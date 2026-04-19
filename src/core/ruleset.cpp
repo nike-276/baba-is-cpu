@@ -38,6 +38,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<ConditionalTransformRule>& cond_xform_out,
                 std::vector<ConditionalMakeRule>& cond_make_out,
                 std::vector<FacingPropertyRule>& facing_out,
+                std::vector<FacingTransformRule>& facing_xform_out,
                 std::vector<GlobalConditionPropertyRule>& global_cond_out,
                 std::vector<HasRule>& has_out) {
     auto at = [&](Coord c) { return text_kind_at(world, c); };
@@ -182,7 +183,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         return;
     }
 
-    // ── NOUN FACING <cond> IS [NOT] PROPERTY ──────────────────────────────
+    // ── NOUN FACING <cond> IS NOUN|PROPERTY ──────────────────────────────
     // <cond> is either a noun (adjacent tile) or P_Left/Right/Up/Down (own facing).
     if (*op_tok == Kind::O_Facing) {
         cursor = adv(cursor);
@@ -199,9 +200,14 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         if (!pk) return;
         bool neg = false;
         if (*pk == Kind::O_Not) { neg = true; cursor = adv(cursor); pk = at(cursor); }
-        if (!pk || !is_property(*pk)) return;
-        for (Kind n : subjects)
-            facing_out.push_back({n, cond, *pk, neg});
+        if (!pk) return;
+        if (is_noun(*pk)) {
+            if (!neg) for (Kind n : subjects)
+                if (n != *pk) facing_xform_out.push_back({n, cond, *pk, false});
+        } else if (is_property(*pk)) {
+            for (Kind n : subjects)
+                facing_out.push_back({n, cond, *pk, neg});
+        }
         return;
     }
 
@@ -337,7 +343,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         cursor = adv(cursor);
         auto on_check = at(cursor);
 
-        // ── NOUN NOT FACING <cond> IS [NOT] PROPERTY ──────────────────────
+        // ── NOUN NOT FACING <cond> IS NOUN|PROPERTY ───────────────────────
         if (on_check && *on_check == Kind::O_Facing) {
             cursor = adv(cursor);
             auto cond_k = at(cursor);
@@ -353,9 +359,14 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             if (!pk) return;
             bool neg = false;
             if (*pk == Kind::O_Not) { neg = true; cursor = adv(cursor); pk = at(cursor); }
-            if (!pk || !is_property(*pk)) return;
-            for (Kind n : subjects)
-                facing_out.push_back({n, cond, *pk, !neg}); // negated=true (NOT FACING)
+            if (!pk) return;
+            if (is_noun(*pk)) {
+                if (!neg) for (Kind n : subjects)
+                    if (n != *pk) facing_xform_out.push_back({n, cond, *pk, true}); // negated
+            } else if (is_property(*pk)) {
+                for (Kind n : subjects)
+                    facing_out.push_back({n, cond, *pk, !neg}); // negated=true (NOT FACING)
+            }
             return;
         }
 
@@ -542,8 +553,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.global_cond_rules_, rs.has_rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.global_cond_rules_, rs.has_rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_);
     }
 
     // Deduplicate verb-operator rules before further processing.
