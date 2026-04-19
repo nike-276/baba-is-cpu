@@ -1,0 +1,27 @@
+# BABA HAS ROCK + WATER IS SINK: BABA and WATER share a tile.
+# SINK destroys both; BABA HAS ROCK spawns ROCK at that tile.
+
+[setup]
+version 1
+name "has triggered by sink"
+
+text 0 0 water
+text 1 0 is
+text 2 0 sink
+
+text 0 1 baba
+text 1 1 has
+text 2 1 rock
+
+object 5 5 baba right
+object 5 5 water right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 rock
+not_at 5 5 baba
+not_at 5 5 water
+tick 1
+not_won

@@ -1,0 +1,31 @@
+# FLAG IS WEAK + FLAG HAS ROCK + BABA IS YOU: BABA moves onto FLAG.
+# FLAG (WEAK) is destroyed by arrival, ROCK spawns at FLAG's tile.
+
+[setup]
+version 1
+name "has triggered by weak"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 flag
+text 1 1 is
+text 2 1 weak
+
+text 0 2 flag
+text 1 2 has
+text 2 2 rock
+
+object 5 5 baba right
+object 6 5 flag right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 rock
+not_at 6 5 flag
+at 6 5 baba
+tick 1
+not_won

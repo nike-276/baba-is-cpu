@@ -1,0 +1,26 @@
+# BABA HAS ROCK + BABA IS KEKE: BABA transforms to KEKE — no ROCK spawned.
+# HAS only fires on destruction, not on retypes.
+
+[setup]
+version 1
+name "has not triggered by transform"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 keke
+
+text 0 1 baba
+text 1 1 has
+text 2 1 rock
+
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+not_at 5 5 baba
+at 5 5 keke
+not_at 5 5 rock
+tick 1
+not_won

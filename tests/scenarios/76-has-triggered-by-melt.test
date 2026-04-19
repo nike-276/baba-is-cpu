@@ -1,0 +1,31 @@
+# ROCK IS HOT + BABA IS MELT + BABA HAS FLAG: BABA (MELT) shares tile with ROCK (HOT).
+# BABA is destroyed by the MELT rule; FLAG spawns at that tile. ROCK (HOT) survives.
+
+[setup]
+version 1
+name "has triggered by melt"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 hot
+
+text 0 1 baba
+text 1 1 is
+text 2 1 melt
+
+text 0 2 baba
+text 1 2 has
+text 2 2 flag
+
+object 5 5 baba right
+object 5 5 rock right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 flag
+not_at 5 5 baba
+at 5 5 rock
+tick 1
+not_won

@@ -1,0 +1,32 @@
+# BABA HAS ME AND KEKE: both ME and KEKE spawn when BABA is defeated.
+
+[setup]
+version 1
+name "has and - multiple targets spawn"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 skull
+text 1 1 is
+text 2 1 defeat
+
+text 0 2 baba
+text 1 2 has
+text 2 2 me
+text 3 2 and
+text 4 2 keke
+
+object 5 5 baba right
+object 6 5 skull right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 me
+at 6 5 keke
+not_at 6 5 baba
+tick 1
+not_won

@@ -1,0 +1,27 @@
+# FLAG EAT BABA + BABA HAS ROCK: BABA is eaten by FLAG, ROCK spawns at the tile.
+# FLAG survives (EAT subject is not destroyed).
+
+[setup]
+version 1
+name "has triggered by eat"
+
+text 0 0 flag
+text 1 0 eat
+text 2 0 baba
+
+text 0 1 baba
+text 1 1 has
+text 2 1 rock
+
+object 5 5 baba right
+object 5 5 flag right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 rock
+not_at 5 5 baba
+at 5 5 flag
+tick 1
+not_won

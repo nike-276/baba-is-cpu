@@ -1,0 +1,30 @@
+# BABA HAS ROCK: when BABA is destroyed by DEFEAT, ROCK spawns at BABA's tile.
+
+[setup]
+version 1
+name "has basic - defeat triggers spawn"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 skull
+text 1 1 is
+text 2 1 defeat
+
+text 0 2 baba
+text 1 2 has
+text 2 2 rock
+
+object 5 5 baba right
+object 6 5 skull right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 rock
+not_at 6 5 baba
+at 6 5 skull
+tick 1
+not_won
