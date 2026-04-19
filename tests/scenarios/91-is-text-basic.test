@@ -1,0 +1,18 @@
+# BABA IS TEXT: non-text baba object becomes a text-baba tile.
+
+[setup]
+version 1
+name "is text: non-text object converts to text tile"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 text
+
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+text_at 5 5 baba
+not_won

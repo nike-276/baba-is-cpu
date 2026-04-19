@@ -1,0 +1,18 @@
+# BABA IS TEXT: a text-baba tile is already text; it is not affected.
+
+[setup]
+version 1
+name "is text: existing text tile unchanged"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 text
+
+text 5 5 baba
+
+[inputs]
+input wait
+
+[expected]
+text_at 5 5 baba
+not_won

@@ -23,7 +23,7 @@ authoritative master checklist.
 | FALL / FALLUP / FALLLEFT / FALLRIGHT | yes | yes | APPLY_AUTO_MOVE (slide, no push) |
 | LEFT / RIGHT / UP / DOWN | yes | yes     | APPLY_DIRECTIONAL (facing only) |
 | MAKE          | O_Make operator | yes (operator) | APPLY_MAKE phase       |
-| TEXT (predicate) | N_Text noun   | yes          | base rule TEXT IS PUSH; transform planned |
+| TEXT (predicate) | N_Text noun   | yes          | base rule TEXT IS PUSH; `X IS TEXT` → `do_flip_text` (non-text→text, coexistence guard) |
 | POWER               | yes (P_Power)  | yes (property) | `any_has_power()` in RuleSet; enables POWERED |
 | NUDGERIGHT / NUDGEUP / NUDGELEFT / NUDGEDOWN | yes (P_Nudge*) | yes | APPLY_NUDGE phase 2.53; try_move without facing change |
 | SHIFT / PULL / SWAP | no      | —            | deferred                 |
@@ -64,8 +64,7 @@ PARSE_POST_MOVE
   ↓
 APPLY_FOLLOW               ← DONE (NOUN FOLLOW NOUN; move toward nearest)
   ↓
-TRANSFORM                  ← DONE (X IS Y, X IS X protection, duplication)
-                              PLANNED: X IS TEXT
+TRANSFORM                  ← DONE (X IS Y, X IS X protection, duplication, X IS TEXT)
   ↓
 PARSE_POST_TRANSFORM
   ↓
@@ -83,7 +82,6 @@ COMMIT
 ## Open architectural debts
 - NOT subject-side (`NOT X IS P` → applies P to everything except X)
   is parsed but not resolved.
-- X IS TEXT predicate transform is unimplemented.
 
 ## See also
 

@@ -43,6 +43,9 @@ bool Simulator::step_back() {
             case ChangeKind::Retype:
                 world_.retype(c.id, c.from_kind);
                 break;
+            case ChangeKind::FlipText:
+                world_.flip_text(c.id);
+                break;
         }
     }
     --tick_;

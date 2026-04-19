@@ -1,0 +1,21 @@
+# BABA IS TEXT: non-text baba on a tile that already has a text tile is skipped.
+# Coexistence rule: at most one text per tile.
+
+[setup]
+version 1
+name "is text: coexistence skip when text already present"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 text
+
+object 5 5 baba right
+text 5 5 rock
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 baba
+text_at 5 5 rock
+not_won

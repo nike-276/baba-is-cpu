@@ -41,7 +41,7 @@ checklist) and any scenario file that locks the behavior down.
 | `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`, `DOOR` | DONE | Original palette objects. |
 | `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`, `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
 | `TRACK`, `BELT` | DONE | Added as full noun kinds with object tiles + text tiles + palette entries. |
-| `TEXT` (meta-noun)        | PARTIAL | Recognized in rule grammar (base rule `TEXT IS PUSH`). PLANNED: as predicate (`X IS TEXT` transforms X into its text twin). |
+| `TEXT` (meta-noun)        | DONE | Recognized in rule grammar (base rule `TEXT IS PUSH`). `X IS TEXT` converts non-text X objects into text tiles of the same kind. Coexistence guard prevents double-text on same cell. |
 | `EMPTY`                   | PLANNED | As subject = "empty tiles"; as predicate = self-destruct. Currently neither is wired. |
 | `ALL`                     | DEFERRED | Distribution-over-everything semantics. |
 | `LEVEL`, `IMAGE`, `CURSOR`| N/A      | Out of scope for v1. |
@@ -103,7 +103,7 @@ Removal precedence inside DESTRUCT (lower = earlier):
 
 | Property | Status | Notes |
 |----------|--------|-------|
-| `TEXT` (as predicate) | PLANNED | `X IS TEXT` swaps every X-instance with its text twin (kind unchanged, `text` flag flipped). |
+| `TEXT` (as predicate) | DONE | `X IS TEXT` converts non-text X objects to text tiles (kind unchanged, `text` flag set). One-directional; coexistence guard skips if text already present on tile. |
 | `WORD` | DEFERRED | Variant treating a non-text object as a noun for parsing. |
 | `MIMIC`| DEFERRED | Subject takes on properties of overlapped object. |
 | `WRITE`| DEFERRED | Cosmetic; pulls letters together. |

@@ -37,8 +37,6 @@ must fit the v1 architecture without rework — see
 for the structural changes that gate them.
 
 - Movement properties: `SHIFT`, `PULL`, `SWAP`.
-- Transform properties: `TEXT` as a predicate (`X IS TEXT` swaps the
-  object's text-twin in place).
 - Subject-side `NOT` (`NOT X IS P`).
 - Compound conditions (`X ON Y AND ON Z IS P`).
 
@@ -225,6 +223,13 @@ Resolution algorithm:
    `transforms[X] += Y`. If `transforms[X]` contains multiple targets, every
    X-instance is replaced with one instance of *each* target (Wiki:
    `BABA IS KEKE AND ME` duplicates).
+
+   **Special case — `X IS TEXT`**: when Y is the meta-noun `TEXT`, matching
+   non-text objects of kind X have their `text` flag set to `true` (kind
+   unchanged). This converts, e.g., a BABA object into the "baba" text tile.
+   Objects that are already text tiles are unaffected (one-directional).
+   If a text tile already exists on the target cell, the flip is skipped
+   (coexistence guard). `TEXT IS TEXT` is a no-op (self-protection strips it).
 
 ### 3.4 Determinism
 

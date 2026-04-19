@@ -53,6 +53,22 @@ void do_retype(World& world, ObjectId id, Kind new_kind, std::vector<Change>& lo
     if (old_kind != new_kind) log.push_back(Change::retype(id, old_kind, new_kind));
 }
 
+// IS TEXT: convert a non-text object to a text tile of the same kind.
+// Skips objects that are already text, and skips if a text tile already
+// occupies the same cell (coexistence guard).
+bool do_flip_text(World& world, ObjectId id, std::vector<Change>& log) {
+    Object const* o = world.get(id);
+    if (!o || o->text) return false;
+    for (ObjectId other : world.at(o->pos)) {
+        if (other == id) continue;
+        Object const* ob = world.get(other);
+        if (ob && ob->text) return false;
+    }
+    log.push_back(Change::flip_text(id));
+    world.flip_text(id);
+    return true;
+}
+
 // ── APPLY_INPUT helpers ────────────────────────────────────────────────────
 
 bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
@@ -470,11 +486,31 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
     for (auto const& e : pending) {
         if (!world.get(e.id)) continue;
         if (e.targets.size() == 1) {
-            do_retype(world, e.id, e.targets[0], log);
+            if (e.targets[0] == Kind::N_Text)
+                do_flip_text(world, e.id, log);
+            else
+                do_retype(world, e.id, e.targets[0], log);
         } else {
-            do_destroy(world, e.id, log);
-            for (Kind target : e.targets) {
-                do_spawn(world, e.pos, target, /*text=*/false, e.facing, log);
+            // Multi-target: destroy and respawn. If any target is N_Text, flip
+            // instead of spawning a fresh object with kind N_Text.
+            bool has_text_target = false;
+            for (Kind t : e.targets) if (t == Kind::N_Text) { has_text_target = true; break; }
+            if (has_text_target && e.targets.size() == 2) {
+                // e.g. BABA IS TEXT AND WALL — flip text flag + retype to other target.
+                // For now, handle the common case: one N_Text + one real kind.
+                Kind other_kind = Kind::None;
+                for (Kind t : e.targets) if (t != Kind::N_Text) other_kind = t;
+                do_flip_text(world, e.id, log);
+                if (other_kind != Kind::None) {
+                    do_spawn(world, e.pos, other_kind, /*text=*/false, e.facing, log);
+                }
+            } else {
+                do_destroy(world, e.id, log);
+                for (Kind target : e.targets) {
+                    if (target != Kind::N_Text)
+                        do_spawn(world, e.pos, target, /*text=*/false, e.facing, log);
+                    // N_Text in a multi-target: skip (flip not meaningful when destroying)
+                }
             }
         }
     }

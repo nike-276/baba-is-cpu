@@ -22,6 +22,7 @@ enum class ChangeKind : std::uint8_t {
     Spawn,
     Destroy,
     Retype,
+    FlipText,  // IS TEXT: toggle text bool (non-text → text tile)
 };
 
 struct Change {
@@ -90,6 +91,13 @@ struct Change {
         c.id        = id;
         c.from_kind = from;
         c.to_kind   = to;
+        return c;
+    }
+
+    static Change flip_text(ObjectId id) {
+        Change c;
+        c.kind = ChangeKind::FlipText;
+        c.id   = id;
         return c;
     }
 };

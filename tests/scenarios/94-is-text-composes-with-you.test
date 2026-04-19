@@ -1,0 +1,24 @@
+# BABA IS YOU + BABA IS TEXT (two rules): baba moves then becomes a text tile
+# in the same tick, verifying IS TEXT composes with other phase rules.
+
+[setup]
+version 1
+name "is text: composes with YOU — moves then converts"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 baba
+text 1 1 is
+text 2 1 text
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+text_at 6 5 baba
+not_at 5 5 baba
+not_won

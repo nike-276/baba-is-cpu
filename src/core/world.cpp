@@ -54,6 +54,13 @@ bool World::retype(ObjectId id, Kind new_kind) {
     return true;
 }
 
+bool World::flip_text(ObjectId id) {
+    auto it = objects_.find(id);
+    if (it == objects_.end()) return false;
+    it->second.text = !it->second.text;
+    return true;
+}
+
 bool World::destroy(ObjectId id) {
     auto it = objects_.find(id);
     if (it == objects_.end()) return false;
