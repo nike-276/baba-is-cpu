@@ -233,6 +233,12 @@ bool parse_assertion(std::vector<std::string> const& tok, Assertion& out, std::s
         if (!parse_int(tok[1], n)) { msg = "int: not an integer"; return false; }
         out.kind = AssertionKind::Tick; out.int_arg = n; return true;
     }
+    if (kw == "sound_count") {
+        if (tok.size() != 2) { msg = "expected `sound_count <int>`"; return false; }
+        int n;
+        if (!parse_int(tok[1], n)) { msg = "int: not an integer"; return false; }
+        out.kind = AssertionKind::SoundCount; out.int_arg = n; return true;
+    }
     msg = "record " + kw + ": unknown assertion";
     return false;
 }

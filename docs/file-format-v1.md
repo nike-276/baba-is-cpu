@@ -185,6 +185,7 @@ Zero or more assertions about the world after all inputs have been applied. Each
 | `won`        | `won`                               | The win condition fired during the run.                      |
 | `not_won`    | `not_won`                           | The win condition did not fire.                              |
 | `tick`       | `tick <int>`                        | The forward tick counter equals `<int>` (undo steps are not counted). |
+| `sound_count`| `sound_count <int>`                 | Total `SoundEvent`s emitted across all ticks equals `<int>`. Used to test `PLAY` rules. |
 
 The harness reports the first failing assertion with line number; subsequent assertions are still checked and reported but the test as a whole fails.
 

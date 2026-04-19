@@ -44,6 +44,7 @@ authoritative master checklist.
 | POWERED2 / POWERED3 | yes (O_Powered2/3) | Independent variants; `[NOT] POWERED2 NOUN IS PROPERTY`. AND-chains of POWERED/POWERED2/POWERED3 require ALL channels active. |
 | FOLLOW (O_Follow) | yes (O_Follow) | `NOUN FOLLOW NOUN [AND NOUN]*`: move toward nearest non-colocated target (Manhattan, vertical tie-break). Phase 3.5 `apply_follow()`. |
 | FEAR (O_Fear) | yes (O_Fear) | `NOUN FEAR NOUN [AND NOUN]*`: move away from adjacent target; priority fwd→CW→CCW→bwd relative to facing. Phase 2.55 `apply_fear()`. |
+| PLAY (O_Play) | yes (O_Play) | `NOUN PLAY NOTE [OCTAVE] [ACCIDENTAL]`: each non-text subject emits one `SoundEvent` per tick (phase 7.5 `apply_play()`). NOTE = O_LetterA…O_LetterG; optional OCTAVE = O_Num0…O_Num9 (default 5); optional ACCIDENTAL = O_Sharp / O_Flat. Modifiers in any order. |
 | NEAR / FACING / LONELY | deferred | |
 
 ## Tick-phase pipeline
@@ -75,6 +76,8 @@ DESTRUCT                   ← DONE (SINK, EAT, HOT/MELT, WEAK, DEFEAT, OPEN/SHU
 APPLY_MAKE                 ← DONE (NOUN MAKE NOUN spawns target, idempotent)
   ↓
 PARSE_POST_DESTRUCT
+  ↓
+APPLY_PLAY                 ← DONE (NOUN PLAY NOTE: emits SoundEvent per matching object)
   ↓
 CHECK_WIN
   ↓

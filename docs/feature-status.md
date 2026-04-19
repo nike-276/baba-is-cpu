@@ -33,6 +33,7 @@ checklist) and any scenario file that locks the behavior down.
 | `POWERED`| DONE     | Prefix condition: `[NOT] POWERED NOUN IS PROPERTY`. True when any live non-text object has `P_Power` (via unconditional or ON-conditional rule). Parsed as `O_Powered` operator token. Stored as `GlobalConditionPropertyRule`; evaluated in `object_has_property` via `any_has_power()`. |
 | `FOLLOW` | DONE     | `X FOLLOW Y [AND Z]*`: X moves one tile toward the nearest non-colocated Y (or Z…) each tick. Nearest by Manhattan distance; ties prefer vertical. Operator `O_Follow`; stored as `FollowRule`; processed in `apply_follow()` phase 3.5 (after PARSE_POST_MOVE). |
 | `FEAR`   | DONE     | `X FEAR Y [AND Z]*`: X moves away from any 4-directionally adjacent Y (or Z…) each tick. Direction priority relative to X's facing: forward→CW→CCW→backward; skips feared directions. Operator `O_Fear`; stored as `FearRule`; processed in `apply_fear()` phase 2.55. |
+| `PLAY`   | DONE     | `X PLAY NOTE [OCTAVE] [ACCIDENTAL]`: each non-text X emits one `SoundEvent` per tick (phase 7.5 `apply_play()`). NOTE = letter A–G (O_LetterA…G); OCTAVE = digit 0–9 (O_Num0…9, default 5); ACCIDENTAL = `sharp` / `flat` (O_Sharp / O_Flat). Modifiers in any order. AND subjects supported. Engine layer collects events in `TickReport::sound_events`; GUI layer synthesises sine-wave audio; test harness counts via `sound_count` assertion. Letters A–Z, digits 0–9, SHARP, FLAT are text-only tiles (no non-text object counterpart). |
 
 ## 2. Nouns
 
@@ -45,7 +46,8 @@ checklist) and any scenario file that locks the behavior down.
 | `EMPTY`                   | PLANNED | As subject = "empty tiles"; as predicate = self-destruct. Currently neither is wired. |
 | `ALL`                     | DEFERRED | Distribution-over-everything semantics. |
 | `LEVEL`, `IMAGE`, `CURSOR`| N/A      | Out of scope for v1. |
-| Letter / WORD objects     | N/A      | Deferred entirely (see spec §9). |
+| Letter tiles A–Z          | DONE (text-only) | O_LetterA…O_LetterZ are text-only Kind tokens (kTable: `"a"`–`"z"`). A–G serve as PLAY note tokens; H–Z are general text tiles. No non-text object counterpart exists for any letter in Baba Is You. |
+| `WORD` objects            | N/A      | Deferred entirely (see spec §9). |
 
 ## 3. Properties — movement
 

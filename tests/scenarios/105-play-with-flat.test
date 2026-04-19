@@ -1,0 +1,23 @@
+# BABA PLAY D FLAT 4 → one SoundEvent; accidental before octave (either order) parses correctly.
+# Verifies modifiers in ACCIDENTAL then OCTAVE order.
+
+[setup]
+version 1
+name "play with flat and octave"
+
+text 0 0 baba
+text 1 0 play
+text 2 0 d
+text 3 0 flat
+text 4 0 4
+
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 baba
+sound_count 1
+tick 1
+not_won

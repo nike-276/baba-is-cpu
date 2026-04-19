@@ -1,0 +1,22 @@
+# BABA PLAY C 4 → one SoundEvent; octave modifier parses without crash.
+# Verifies the optional number token after a note is consumed by the parser.
+
+[setup]
+version 1
+name "play with octave modifier"
+
+text 0 0 baba
+text 1 0 play
+text 2 0 c
+text 3 0 4
+
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 baba
+sound_count 1
+tick 1
+not_won

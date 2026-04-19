@@ -25,12 +25,14 @@ std::string assertion_text(Assertion const& a) {
         case AssertionKind::TextCount: os << "text_count " << kn      << " " << a.int_arg;            break;
         case AssertionKind::Won:       os << "won";                                                  break;
         case AssertionKind::NotWon:    os << "not_won";                                              break;
-        case AssertionKind::Tick:      os << "tick "       << a.int_arg;                              break;
+        case AssertionKind::Tick:       os << "tick "        << a.int_arg;                              break;
+        case AssertionKind::SoundCount: os << "sound_count " << a.int_arg;                              break;
     }
     return os.str();
 }
 
-bool eval_assertion(Assertion const& a, World const& world, int forward_ticks, bool won, std::string& detail) {
+bool eval_assertion(Assertion const& a, World const& world, int forward_ticks,
+                    bool won, int total_sounds, std::string& detail) {
     auto cell_has_kind = [&](Coord c, Kind k, bool want_text) -> bool {
         for (ObjectId id : world.at(c)) {
             Object const* o = world.get(id);
@@ -78,6 +80,9 @@ bool eval_assertion(Assertion const& a, World const& world, int forward_ticks, b
         case AssertionKind::Tick:
             if (forward_ticks == a.int_arg) return true;
             detail = "tick count = " + std::to_string(forward_ticks); return false;
+        case AssertionKind::SoundCount:
+            if (total_sounds == a.int_arg) return true;
+            detail = "actual sound_count = " + std::to_string(total_sounds); return false;
     }
     detail = "unhandled assertion kind";
     return false;
@@ -116,6 +121,7 @@ TestResult run_test_file(std::string const& path) {
 
     bool won_ever      = false;
     int  forward_ticks = 0;
+    int  total_sounds  = 0;
 
     for (auto const& act : sc.inputs) {
         if (act.kind == TestActionKind::Undo) {
@@ -125,13 +131,14 @@ TestResult run_test_file(std::string const& path) {
         TickReport rep = sim.step_forward(action_to_input(act.kind));
         ++forward_ticks;
         if (rep.won) won_ever = true;
+        total_sounds += static_cast<int>(rep.sound_events.size());
     }
     r.ticks_run = forward_ticks;
 
     r.assertions_total = static_cast<int>(sc.expected.size());
     for (auto const& a : sc.expected) {
         std::string detail;
-        if (!eval_assertion(a, sim.world(), forward_ticks, won_ever, detail)) {
+        if (!eval_assertion(a, sim.world(), forward_ticks, won_ever, total_sounds, detail)) {
             r.failures.push_back({a.line, assertion_text(a) + " — " + detail});
             ++r.assertions_failed;
         }

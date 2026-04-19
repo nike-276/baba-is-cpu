@@ -57,6 +57,16 @@ struct FearRule {
     Kind target;
 };
 
+// NOUN PLAY NOTE [OCTAVE] [ACCIDENTAL]: each tick, emit a SoundEvent for each matching object.
+// note = O_LetterA…O_LetterG; modifiers may appear in any order after the note.
+struct PlayRule {
+    Kind subject;
+    Kind note{Kind::O_LetterA};  // O_LetterA…O_LetterG
+    int  octave{5};
+    bool sharp{false};
+    bool flat{false};
+};
+
 // NOUN [NOT] FACING <cond> IS PROPERTY.
 // `condition` is either:
 //   - a noun kind  → check the tile ahead contains a non-text object of that kind
@@ -153,6 +163,7 @@ public:
     std::vector<HasRule>                      const& has_rules()                        const { return has_rules_; }
     std::vector<FollowRule>                   const& follow_rules()                     const { return follow_rules_; }
     std::vector<FearRule>                     const& fear_rules()                       const { return fear_rules_; }
+    std::vector<PlayRule>                     const& play_rules()                       const { return play_rules_; }
 
 private:
     std::vector<PropertyRule>             rules_;
@@ -168,6 +179,7 @@ private:
     std::vector<HasRule>                      has_rules_;
     std::vector<FollowRule>                   follow_rules_;
     std::vector<FearRule>                     fear_rules_;
+    std::vector<PlayRule>                     play_rules_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 

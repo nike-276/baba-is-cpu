@@ -16,6 +16,7 @@
 
 #include "change.hpp"
 #include "direction.hpp"
+#include "kind.hpp"
 #include "world.hpp"
 
 #include <vector>
@@ -35,10 +36,23 @@ struct Input {
     static Input move(Direction d) { return {InputKind::Move, d}; }
 };
 
+// One note emitted by a PLAY rule during a tick.
+// `noun` carries the subject kind for future per-object timbre lookup.
+// `pos` carries the tile position for future spatial audio.
+struct SoundEvent {
+    Kind  noun;
+    Kind  note;          // O_LetterA…O_LetterG
+    int   octave{5};
+    bool  sharp{false};
+    bool  flat{false};
+    Coord pos;
+};
+
 struct TickReport {
     bool won{false};
     int  moved_count{0};              // how many YOU objects actually moved
-    std::vector<Change> changes;      // all mutations this tick, in forward order
+    std::vector<Change>     changes;  // all mutations this tick, in forward order
+    std::vector<SoundEvent> sound_events;
 };
 
 // Forward-tick the world once. Mutates `world` in place. Pure with respect

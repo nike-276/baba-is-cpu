@@ -1,0 +1,21 @@
+# BABA PLAY A with no baba object → zero SoundEvents.
+# Verifies PLAY only fires for objects that actually exist.
+
+[setup]
+version 1
+name "play no object - no baba present"
+
+text 0 0 baba
+text 1 0 play
+text 2 0 a
+
+object 5 5 rock right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 rock
+sound_count 0
+tick 1
+not_won

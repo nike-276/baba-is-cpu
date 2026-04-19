@@ -64,6 +64,9 @@ struct InputState {
     bool request_auto_tick_faster{false};
     bool request_auto_tick_slower{false};
     bool request_auto_tick_max{false};
+
+    // Sound events accumulated from play_step calls this frame.
+    std::vector<core::SoundEvent> pending_sounds;
 };
 
 inline void poll_input(editor::Editor& ed, InputState& st) {
@@ -287,16 +290,19 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
     } else {  // Play mode
 
         // ── Movement ─────────────────────────────────────────────────────
+        auto accumulate_sounds = [&](core::TickReport rep) {
+            for (auto& e : rep.sound_events) st.pending_sounds.push_back(std::move(e));
+        };
         if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
-            ed.play_step(core::Input::move(core::Direction::Right));
+            accumulate_sounds(ed.play_step(core::Input::move(core::Direction::Right)));
         if (IsKeyPressed(KEY_LEFT)  || IsKeyPressed(KEY_A))
-            ed.play_step(core::Input::move(core::Direction::Left));
+            accumulate_sounds(ed.play_step(core::Input::move(core::Direction::Left)));
         if (IsKeyPressed(KEY_UP)    || IsKeyPressed(KEY_W))
-            ed.play_step(core::Input::move(core::Direction::Up));
+            accumulate_sounds(ed.play_step(core::Input::move(core::Direction::Up)));
         if (IsKeyPressed(KEY_DOWN)  || IsKeyPressed(KEY_S))
-            ed.play_step(core::Input::move(core::Direction::Down));
+            accumulate_sounds(ed.play_step(core::Input::move(core::Direction::Down)));
         if (IsKeyPressed(KEY_SPACE))
-            ed.play_step(core::Input::wait());
+            accumulate_sounds(ed.play_step(core::Input::wait()));
 
         // ── Auto-tick controls ───────────────────────────────────────────
         if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_F5))

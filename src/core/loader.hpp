@@ -40,6 +40,7 @@ struct TestAction {
 
 enum class AssertionKind {
     At, NotAt, TextAt, Count, TextCount, Won, NotWon, Tick,
+    SoundCount,  // "sound_count N" — total SoundEvents across all ticks
 };
 
 struct Assertion {

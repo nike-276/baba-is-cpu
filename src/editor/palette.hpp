@@ -269,6 +269,28 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::O_Powered,    true, "T:powered");
     add(K::O_Powered2,   true, "T:powered2");
     add(K::O_Powered3,   true, "T:powered3");
+    add(K::O_Play,       true, "T:play");
+    // PLAY parameter tokens
+    add(K::O_LetterA,    true, "T:a");  add(K::O_LetterB, true, "T:b");
+    add(K::O_LetterC,    true, "T:c");  add(K::O_LetterD, true, "T:d");
+    add(K::O_LetterE,    true, "T:e");  add(K::O_LetterF, true, "T:f");
+    add(K::O_LetterG,    true, "T:g");  add(K::O_LetterH, true, "T:h");
+    add(K::O_LetterI,    true, "T:i");  add(K::O_LetterJ, true, "T:j");
+    add(K::O_LetterK,    true, "T:k");  add(K::O_LetterL, true, "T:l");
+    add(K::O_LetterM,    true, "T:m");  add(K::O_LetterN, true, "T:n");
+    add(K::O_LetterO,    true, "T:o");  add(K::O_LetterP, true, "T:p");
+    add(K::O_LetterQ,    true, "T:q");  add(K::O_LetterR, true, "T:r");
+    add(K::O_LetterS,    true, "T:s");  add(K::O_LetterT, true, "T:t");
+    add(K::O_LetterU,    true, "T:u");  add(K::O_LetterV, true, "T:v");
+    add(K::O_LetterW,    true, "T:w");  add(K::O_LetterX, true, "T:x");
+    add(K::O_LetterY,    true, "T:y");  add(K::O_LetterZ, true, "T:z");
+    add(K::O_Sharp,      true, "T:sharp");
+    add(K::O_Flat,       true, "T:flat");
+    add(K::O_Num0,       true, "T:0");  add(K::O_Num1, true, "T:1");
+    add(K::O_Num2,       true, "T:2");  add(K::O_Num3, true, "T:3");
+    add(K::O_Num4,       true, "T:4");  add(K::O_Num5, true, "T:5");
+    add(K::O_Num6,       true, "T:6");  add(K::O_Num7, true, "T:7");
+    add(K::O_Num8,       true, "T:8");  add(K::O_Num9, true, "T:9");
 
     return p;
 }

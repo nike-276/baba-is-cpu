@@ -1,0 +1,23 @@
+# BABA AND KEKE PLAY A with both objects present → two SoundEvents.
+# Verifies subject AND-chaining distributes the PLAY rule.
+
+[setup]
+version 1
+name "play subject and-chain"
+
+text 0 0 baba
+text 1 0 and
+text 2 0 keke
+text 3 0 play
+text 4 0 a
+
+object 5 5 baba right
+object 7 5 keke right
+
+[inputs]
+input wait
+
+[expected]
+sound_count 2
+tick 1
+not_won

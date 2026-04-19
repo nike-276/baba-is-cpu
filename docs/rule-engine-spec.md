@@ -15,7 +15,7 @@ References: `babaiswiki_pages_current.xml` — pages *Order of Operations*, *Rul
 
 ### 1.1 In-scope (v1 / MVP)
 
-**Operators**: `IS`, `NOT`, `AND`, `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`, `FOLLOW`, `FEAR`
+**Operators**: `IS`, `NOT`, `AND`, `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`, `FOLLOW`, `FEAR`, `PLAY`
 
 **Nouns**: `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`,
 `DOOR`, `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`,
@@ -44,7 +44,7 @@ for the structural changes that gate them.
 
 `CHILL`, `BOOM`, `SAFE`, `FLOAT`, `PHANTOM`,
 `HOLD`, `SELECT`, `REVERT`, `WRITE`, `MIMIC`, `LOCKED*`, `MORE`, `DONE`,
-`PLAY`, `BONUS`, `END`, `BACK`, `TELE`, `YOU2`, `3D`,
+`BONUS`, `END`, `BACK`, `TELE`, `YOU2`, `3D`,
 conditions other than `ON`/`POWERED` (`NEAR`, `FACING`, `LONELY`, …),
 `LEVEL` semantics, stack limits (6), `TOO COMPLEX` / `INFINITE LOOP`
 overflow.
@@ -95,12 +95,16 @@ verb           := IS predicate
                | ON oncond IS predicate
                | NOT ON oncond IS predicate
                | MAKE nounlist
+               | PLAY note [modifier]*
 oncond         := noun (AND (NOT ON | ON)? noun)*   ← mixed positive/negative chains
                | EAT nounlist
                | HAS nounlist
                | FOLLOW nounlist
                | FEAR nounlist
 predicate      := propertyphrase | nounlist
+note           := A | B | C | D | E | F | G   ← O_LetterA…O_LetterG
+modifier       := 0 | 1 | … | 9               ← O_Num0…O_Num9 (octave, default 5)
+               | SHARP | FLAT                 ← O_Sharp / O_Flat (accidental)
 nounphrase     := noun (AND noun)*
 nounlist       := noun (AND noun)*
 propertyphrase := [NOT] property (AND [NOT] property)*
@@ -152,6 +156,20 @@ tiles) is deferred.
 property. Four sub-passes run in order R→U→L→D in `apply_nudge()` (phase 2.53). Each
 pass snapshots qualifying non-text, non-STILL objects and calls `try_move` without
 changing facing on failure (unlike MOVE). Can push PUSH objects.
+
+**PLAY semantics**: `NOUN PLAY NOTE [OCTAVE] [ACCIDENTAL]` produces `PlayRule` entries.
+After PARSE_POST_DESTRUCT, phase 7.5 (`apply_play`) iterates all non-text objects in
+ascending id order. For each matching subject kind, one `SoundEvent` is emitted into
+`TickReport::sound_events`. Fields: `noun` (subject kind), `note` (O_LetterA…G),
+`octave` (0–9, default 5), `sharp`/`flat` (bool). Invalid note token → rule silently
+ignored. SHARP and FLAT are mutually exclusive by convention (last modifier wins if
+both appear). The engine layer is audio-agnostic: it records `SoundEvent` values;
+the GUI layer synthesises audio (sine wave, 0.3 s, 10 ms fade-out, cached per
+note+octave+accidental). The test harness counts total events via `sound_count N`.
+Letter text tiles A–Z (O_LetterA…O_LetterZ) are text-only; no non-text "A" object
+exists. Digits 0–9 (O_Num0…O_Num9) and SHARP/FLAT are likewise text-only.
+AND subject distribution works: `BABA AND KEKE PLAY A` emits one event per matching
+object of each kind per tick.
 
 **ON/NOT ON mixed condition semantics**: AND chains in an ON or NOT ON condition can
 mix positive and negative terms. `NOUN ON X AND NOT ON Y IS P` grants P when X is

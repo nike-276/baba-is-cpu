@@ -86,6 +86,18 @@ enum class Kind : std::uint16_t {
     O_Powered3, // prefix condition: [NOT] POWERED3 NOUN IS PROPERTY (channel 3)
     O_Follow,  // NOUN FOLLOW NOUN [AND NOUN]*: move toward nearest target each tick
     O_Fear,    // NOUN FEAR NOUN [AND NOUN]*: move away from adjacent target each tick
+    O_Play,    // NOUN PLAY NOTE [OCTAVE] [ACCIDENTAL]: emit note each tick
+
+    // ---- PLAY parameter tokens (text-only; not operators, not properties) ----
+    // Letters A-Z: general text tiles; A-G also serve as PLAY note tokens.
+    O_LetterA, O_LetterB, O_LetterC, O_LetterD, O_LetterE, O_LetterF, O_LetterG,
+    O_LetterH, O_LetterI, O_LetterJ, O_LetterK, O_LetterL, O_LetterM, O_LetterN,
+    O_LetterO, O_LetterP, O_LetterQ, O_LetterR, O_LetterS, O_LetterT, O_LetterU,
+    O_LetterV, O_LetterW, O_LetterX, O_LetterY, O_LetterZ,
+    O_Sharp,   // SHARP accidental modifier for PLAY
+    O_Flat,    // FLAT accidental modifier for PLAY
+    O_Num0, O_Num1, O_Num2, O_Num3, O_Num4,  // octave/number tokens for PLAY
+    O_Num5, O_Num6, O_Num7, O_Num8, O_Num9,
 
     // ---- Properties (text-only) ----
     P_You,
@@ -127,10 +139,26 @@ constexpr bool is_noun(Kind k) {
     return k >= Kind::N_Baba && k <= Kind::N_Text;
 }
 constexpr bool is_operator(Kind k) {
-    return k >= Kind::O_Is && k <= Kind::O_Fear;
+    return k >= Kind::O_Is && k <= Kind::O_Play;
 }
 constexpr bool is_property(Kind k) {
     return k >= Kind::P_You && k <= Kind::P_Power3;
+}
+// PLAY parameter token predicates.
+constexpr bool is_note_token(Kind k) {
+    return k >= Kind::O_LetterA && k <= Kind::O_LetterG;
+}
+constexpr bool is_accidental_token(Kind k) {
+    return k == Kind::O_Sharp || k == Kind::O_Flat;
+}
+constexpr bool is_num_token(Kind k) {
+    return k >= Kind::O_Num0 && k <= Kind::O_Num9;
+}
+constexpr char note_to_char(Kind k) {
+    return static_cast<char>('A' + (static_cast<int>(k) - static_cast<int>(Kind::O_LetterA)));
+}
+constexpr int num_to_int(Kind k) {
+    return static_cast<int>(k) - static_cast<int>(Kind::O_Num0);
 }
 
 // Lowercase canonical name as it appears in .level / .test files.

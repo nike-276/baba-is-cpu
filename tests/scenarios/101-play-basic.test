@@ -1,0 +1,21 @@
+# BABA PLAY A with a baba object present → one SoundEvent emitted per tick.
+# Verifies the basic PLAY operator parses and fires.
+
+[setup]
+version 1
+name "play basic - baba plays A"
+
+text 0 0 baba
+text 1 0 play
+text 2 0 a
+
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 baba
+sound_count 1
+tick 1
+not_won

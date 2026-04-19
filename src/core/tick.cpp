@@ -776,6 +776,23 @@ void apply_follow(World& world, RuleSet const& rs, std::vector<Change>& log) {
     }
 }
 
+// ── APPLY_PLAY (phase 7.5) ────────────────────────────────────────────────
+// For each non-text object with a matching PlayRule, emit one SoundEvent.
+// Iteration in ascending id order preserves determinism.
+
+void apply_play(World const& world, RuleSet const& rs,
+                std::vector<SoundEvent>& out) {
+    if (rs.play_rules().empty()) return;
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        for (auto const& pr : rs.play_rules()) {
+            if (pr.subject != o->kind) continue;
+            out.push_back({o->kind, pr.note, pr.octave, pr.sharp, pr.flat, o->pos});
+        }
+    }
+}
+
 }  // namespace
 
 // ── apply_tick (9-phase pipeline) ─────────────────────────────────────────
@@ -855,6 +872,9 @@ TickReport apply_tick(World& world, Input input) {
 
     // Phase 7: PARSE_POST_DESTRUCT
     rs = RuleSet::parse(world);
+
+    // Phase 7.5: APPLY_PLAY
+    apply_play(world, rs, report.sound_events);
 
     // Phase 8: CHECK_WIN
     report.won = check_win(world, rs);

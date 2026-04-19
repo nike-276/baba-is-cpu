@@ -10,10 +10,13 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace baba::app {
@@ -61,11 +64,65 @@ static bool handle_dialog_input(std::string& text, bool& cancelled) {
     return false;
 }
 
+// ── Audio helpers (PLAY keyword) ──────────────────────────────────────────
+namespace {
+
+float note_freq(core::Kind note, int octave, bool sharp, bool flat) {
+    // Chromatic position from C: C=0, D=2, E=4, F=5, G=7, A=9, B=11
+    static constexpr int chroma[] = {9, 11, 0, 2, 4, 5, 7};  // A B C D E F G
+    int idx = static_cast<int>(note) - static_cast<int>(core::Kind::O_LetterA);
+    if (idx < 0 || idx > 6) idx = 0;
+    int midi = (octave + 1) * 12 + chroma[idx];
+    if (sharp) ++midi;
+    if (flat)  --midi;
+    return 440.0f * std::pow(2.0f, (midi - 69) / 12.0f);
+}
+
+Sound& note_sound(core::Kind note, int octave, bool sharp, bool flat) {
+    using Key = std::tuple<int, int, bool, bool>;
+    static std::map<Key, Sound> cache;
+    Key k{static_cast<int>(note), octave, sharp, flat};
+    auto it = cache.find(k);
+    if (it != cache.end()) return it->second;
+
+    constexpr int   SR  = 44100;
+    constexpr float DUR = 0.3f;
+    const int N    = static_cast<int>(SR * DUR);
+    const int FADE = static_cast<int>(SR * 0.01f);  // 10 ms fade-out
+
+    float freq = note_freq(note, octave, sharp, flat);
+    std::vector<int16_t> buf(N);
+    constexpr float TWO_PI = 6.28318530717958647692f;
+    for (int i = 0; i < N; ++i) {
+        float t   = static_cast<float>(i) / SR;
+        float env = (i >= N - FADE) ? static_cast<float>(N - 1 - i) / FADE : 1.0f;
+        buf[i] = static_cast<int16_t>(env * 16000.0f * std::sin(TWO_PI * freq * t));
+    }
+
+    Wave wave{};
+    wave.frameCount = static_cast<unsigned int>(N);
+    wave.sampleRate = SR;
+    wave.sampleSize = 16;
+    wave.channels   = 1;
+    wave.data       = buf.data();  // LoadSoundFromWave copies the data
+
+    cache[k] = LoadSoundFromWave(wave);
+    return cache[k];
+}
+
+void play_sound_events(std::vector<core::SoundEvent> const& events) {
+    for (auto const& ev : events)
+        PlaySound(note_sound(ev.note, ev.octave, ev.sharp, ev.flat));
+}
+
+}  // namespace
+
 // ── Main loop ─────────────────────────────────────────────────────────────
 int run_gui(std::string const& level_path) {
     const int WIN_W = 1280;
     const int WIN_H = 720;
     InitWindow(WIN_W, WIN_H, "baba-is-true editor");
+    InitAudioDevice();
     SetTargetFPS(60);
     SetExitKey(0);
 
@@ -115,6 +172,7 @@ int run_gui(std::string const& level_path) {
         state.request_auto_tick_faster = false;
         state.request_auto_tick_slower = false;
         state.request_auto_tick_max    = false;
+        state.pending_sounds.clear();
         renderer.set_tile_px(state.tile_px);
 
         // ── Filtered palette ───────────────────────────────────────────────
@@ -139,6 +197,7 @@ int run_gui(std::string const& level_path) {
         bool overlay_active = (overlay != Overlay::None);
         if (!overlay_active) {
             poll_input(ed, state);
+            play_sound_events(state.pending_sounds);
         } else {
             // Allow scroll/zoom while overlay is up.
             float wheel = GetMouseWheelMove();
@@ -228,12 +287,12 @@ int run_gui(std::string const& level_path) {
         if (auto_tick.active && ed.mode() == editor::EditorMode::Play) {
             float dt_ms = GetFrameTime() * 1000.0f;
             if (auto_tick.max_speed) {
-                ed.play_step(core::Input::wait());
+                play_sound_events(ed.play_step(core::Input::wait()).sound_events);
             } else {
                 auto_tick.accum_ms += dt_ms;
                 if (auto_tick.accum_ms >= auto_tick.interval_ms) {
                     auto_tick.accum_ms = std::fmod(auto_tick.accum_ms, auto_tick.interval_ms);
-                    ed.play_step(core::Input::wait());
+                    play_sound_events(ed.play_step(core::Input::wait()).sound_events);
                 }
             }
         }
@@ -580,6 +639,7 @@ int run_gui(std::string const& level_path) {
         EndDrawing();
     }
 
+    CloseAudioDevice();
     CloseWindow();
     return 0;
 }
