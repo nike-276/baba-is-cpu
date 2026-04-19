@@ -78,7 +78,8 @@ enum class Kind : std::uint16_t {
     O_Not,
     O_On,
     O_Make,
-    O_Eat,   // NOUN EAT NOUN: subject destroys target on contact
+    O_Eat,    // NOUN EAT NOUN: subject destroys target on contact
+    O_Facing, // NOUN FACING NOUN IS PROP: condition on the tile in the object's facing direction
 
     // ---- Properties (text-only) ----
     P_You,
@@ -113,7 +114,7 @@ constexpr bool is_noun(Kind k) {
     return k >= Kind::N_Baba && k <= Kind::N_Text;
 }
 constexpr bool is_operator(Kind k) {
-    return k >= Kind::O_Is && k <= Kind::O_Eat;
+    return k >= Kind::O_Is && k <= Kind::O_Facing;
 }
 constexpr bool is_property(Kind k) {
     return k >= Kind::P_You && k <= Kind::P_Swap;

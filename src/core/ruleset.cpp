@@ -1,4 +1,5 @@
 #include "ruleset.hpp"
+#include "direction.hpp"
 
 #include <algorithm>
 #include <set>
@@ -35,7 +36,8 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<EatRule>& eat_out,
                 std::vector<ConditionalPropertyRule>& cond_out,
                 std::vector<ConditionalTransformRule>& cond_xform_out,
-                std::vector<ConditionalMakeRule>& cond_make_out) {
+                std::vector<ConditionalMakeRule>& cond_make_out,
+                std::vector<FacingPropertyRule>& facing_out) {
     auto at = [&](Coord c) { return text_kind_at(world, c); };
     auto adv = [&](Coord c) -> Coord { return {c.x + step_dir.x, c.y + step_dir.y}; };
     auto bak = [&](Coord c) -> Coord { return {c.x - step_dir.x, c.y - step_dir.y}; };
@@ -54,7 +56,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         while (true) {
             auto k = at(cur);
             if (!k) break;
-            if (*k == Kind::O_On) return;
+            if (*k == Kind::O_On || *k == Kind::O_Facing) return;
             if (*k != Kind::O_And) break;
             Coord noun_pos = bak(cur);
             auto nk = at(noun_pos);
@@ -133,6 +135,29 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 for (Kind t : targets)
                     eat_out.push_back({n, t});
         }
+        return;
+    }
+
+    // ── NOUN FACING <cond> IS [NOT] PROPERTY ──────────────────────────────
+    // <cond> is either a noun (adjacent tile) or P_Left/Right/Up/Down (own facing).
+    if (*op_tok == Kind::O_Facing) {
+        cursor = adv(cursor);
+        auto cond_k = at(cursor);
+        if (!cond_k) return;
+        bool cond_is_dir = (*cond_k == Kind::P_Left || *cond_k == Kind::P_Right ||
+                            *cond_k == Kind::P_Up   || *cond_k == Kind::P_Down);
+        if (!is_noun(*cond_k) && !cond_is_dir) return;
+        Kind cond = *cond_k;
+        cursor = adv(cursor);
+        if (auto verb = at(cursor); !verb || *verb != Kind::O_Is) return;
+        cursor = adv(cursor);
+        auto pk = at(cursor);
+        if (!pk) return;
+        bool neg = false;
+        if (*pk == Kind::O_Not) { neg = true; cursor = adv(cursor); pk = at(cursor); }
+        if (!pk || !is_property(*pk)) return;
+        for (Kind n : subjects)
+            facing_out.push_back({n, cond, *pk, neg});
         return;
     }
 
@@ -243,6 +268,29 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
     if (*op_tok == Kind::O_Not) {
         cursor = adv(cursor);
         auto on_check = at(cursor);
+
+        // ── NOUN NOT FACING <cond> IS [NOT] PROPERTY ──────────────────────
+        if (on_check && *on_check == Kind::O_Facing) {
+            cursor = adv(cursor);
+            auto cond_k = at(cursor);
+            if (!cond_k) return;
+            bool cond_is_dir = (*cond_k == Kind::P_Left || *cond_k == Kind::P_Right ||
+                                *cond_k == Kind::P_Up   || *cond_k == Kind::P_Down);
+            if (!is_noun(*cond_k) && !cond_is_dir) return;
+            Kind cond = *cond_k;
+            cursor = adv(cursor);
+            if (auto verb = at(cursor); !verb || *verb != Kind::O_Is) return;
+            cursor = adv(cursor);
+            auto pk = at(cursor);
+            if (!pk) return;
+            bool neg = false;
+            if (*pk == Kind::O_Not) { neg = true; cursor = adv(cursor); pk = at(cursor); }
+            if (!pk || !is_property(*pk)) return;
+            for (Kind n : subjects)
+                facing_out.push_back({n, cond, *pk, !neg}); // negated=true (NOT FACING)
+            return;
+        }
+
         if (!on_check || *on_check != Kind::O_On) return;
         cursor = adv(cursor);
         auto cond_n = at(cursor);
@@ -426,8 +474,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_);
     }
 
     // Deduplicate verb-operator rules before further processing.
@@ -522,6 +570,31 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
             }
             bool condition_met = cr.negated_condition ? !all_found : all_found;
             if (condition_met) return true;
+        }
+
+        // Check FACING rules (NOUN [NOT] FACING <cond> IS PROPERTY).
+        for (auto const& fr : facing_rules_) {
+            if (fr.subject != o->kind || fr.property != property) continue;
+            bool matched;
+            bool cond_is_dir = (fr.condition == Kind::P_Left || fr.condition == Kind::P_Right ||
+                                fr.condition == Kind::P_Up   || fr.condition == Kind::P_Down);
+            if (cond_is_dir) {
+                // Direction check: does the object's facing match the required direction?
+                Direction req = fr.condition == Kind::P_Left  ? Direction::Left  :
+                                fr.condition == Kind::P_Right ? Direction::Right :
+                                fr.condition == Kind::P_Up    ? Direction::Up    :
+                                                                Direction::Down;
+                matched = (o->facing == req);
+            } else {
+                // Noun check: does the tile ahead contain the required noun?
+                Coord face_pos = {o->pos.x + step(o->facing).x, o->pos.y + step(o->facing).y};
+                matched = false;
+                for (ObjectId other : world.at(face_pos)) {
+                    Object const* ob = world.get(other);
+                    if (ob && !ob->text && ob->kind == fr.condition) { matched = true; break; }
+                }
+            }
+            if (fr.negated ? !matched : matched) return true;
         }
     }
     return false;

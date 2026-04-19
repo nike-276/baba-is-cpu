@@ -220,7 +220,8 @@ void apply_shift(World& world, RuleSet const& rs, std::vector<Change>& log) {
         }
         std::sort(targets.begin(), targets.end());
         for (ObjectId tid : targets) {
-            try_move(world, tid, step_v, rs, log);
+            if (try_move(world, tid, step_v, rs, log))
+                do_face(world, tid, s->facing, log);
         }
     }
 }

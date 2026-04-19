@@ -1,0 +1,25 @@
+# ARROW FACING DOWN IS WIN: arrow has WIN when its own facing is Down.
+# Baba (YOU) shares a tile with the arrow facing down → win fires.
+
+[setup]
+version 1
+name "facing direction: object facing down grants win"
+
+text 0 0 arrow
+text 1 0 facing
+text 2 0 down
+text 3 0 is
+text 4 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 baba  right
+object 5 5 arrow down
+
+[inputs]
+input wait
+
+[expected]
+won

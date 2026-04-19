@@ -1,0 +1,25 @@
+# BABA FACING FLAG IS WIN: baba does NOT win when the flag is behind it, not ahead.
+# Baba faces right; flag is to the left.
+
+[setup]
+version 1
+name "facing condition: not facing flag = no win"
+
+text 0 0 baba
+text 1 0 facing
+text 2 0 flag
+text 3 0 is
+text 4 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 baba right
+object 4 5 flag right
+
+[inputs]
+input wait
+
+[expected]
+not_won

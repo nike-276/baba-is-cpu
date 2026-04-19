@@ -226,9 +226,10 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::O_Is,   true, "T:is");
     add(K::O_And,  true, "T:and");
     add(K::O_Not,  true, "T:not");
-    add(K::O_On,   true, "T:on");
-    add(K::O_Make, true, "T:make");
-    add(K::O_Eat,  true, "T:eat");
+    add(K::O_On,     true, "T:on");
+    add(K::O_Make,   true, "T:make");
+    add(K::O_Eat,    true, "T:eat");
+    add(K::O_Facing, true, "T:facing");
 
     // Text: properties
     add(K::P_You,       true, "T:you");

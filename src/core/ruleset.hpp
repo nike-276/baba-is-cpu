@@ -43,6 +43,17 @@ struct EatRule {
     Kind target;
 };
 
+// NOUN [NOT] FACING <cond> IS PROPERTY.
+// `condition` is either:
+//   - a noun kind  → check the tile ahead contains a non-text object of that kind
+//   - P_Left/P_Right/P_Up/P_Down → check the subject's own facing direction matches
+struct FacingPropertyRule {
+    Kind subject;
+    Kind condition;  // noun OR directional property (P_Left/Right/Up/Down)
+    Kind property;
+    bool negated{false};  // true for NOT FACING
+};
+
 // NOUN ON NOUN [AND NOUN]* IS PROPERTY: `subject` has `property` only when
 // sharing a tile with ALL of the condition_nouns (or NONE if negated).
 struct ConditionalPropertyRule {
@@ -90,6 +101,7 @@ public:
     std::vector<ConditionalPropertyRule>  const& conditional_rules()           const { return cond_rules_; }
     std::vector<ConditionalTransformRule> const& conditional_transform_rules() const { return cond_transforms_; }
     std::vector<ConditionalMakeRule>      const& conditional_make_rules()      const { return cond_makes_; }
+    std::vector<FacingPropertyRule>       const& facing_rules()                const { return facing_rules_; }
 
 private:
     std::vector<PropertyRule>            rules_;
@@ -99,6 +111,7 @@ private:
     std::vector<ConditionalPropertyRule>  cond_rules_;
     std::vector<ConditionalTransformRule> cond_transforms_;
     std::vector<ConditionalMakeRule>      cond_makes_;
+    std::vector<FacingPropertyRule>       facing_rules_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 
