@@ -128,6 +128,15 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
     if (st.palette_search_active) {
         int ch;
         while ((ch = GetCharPressed()) != 0) {
+            // Digits 1–9: select the Nth filtered result and close search.
+            if (ch >= '1' && ch <= '9' && !st.palette_filtered.empty()) {
+                int n = ch - '1';  // 0-based
+                if (n < static_cast<int>(st.palette_filtered.size())) {
+                    ed.palette_select(st.palette_filtered[n]);
+                    st.palette_search_active = false;
+                }
+                continue;
+            }
             if (ch >= 32 && ch < 127)
                 st.palette_search += static_cast<char>(ch);
             st.palette_scroll = 0;

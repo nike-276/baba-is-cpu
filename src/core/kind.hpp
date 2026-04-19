@@ -40,6 +40,36 @@ enum class Kind : std::uint16_t {
     N_Wind,
     N_Track,
     N_Belt,
+    // --- Extended noun catalog (from wiki: Category:Nouns) ---
+    N_Algae,   N_Arm,      N_Arrow,   N_Badbad,  N_Banana,
+    N_Bat,     N_Bean,     N_Bed,     N_Bee,     N_Bird,
+    N_Blob,    N_Boat,     N_Boba,    N_Bog,     N_Bone,
+    N_Book,    N_Bottle,   N_Brain,   N_Brick,   N_Bubble,
+    N_Bucket,  N_Bug,      N_Bunny,   N_Burger,  N_Cactus,
+    N_Cake,    N_Car,      N_Cart,    N_Cash,    N_Cat,
+    N_Chair,   N_Cheese,   N_Chili,   N_Circle,  N_Cliff,
+    N_Clock,   N_Cog,      N_Crab,    N_Crystal, N_Cup,
+    N_Dog,     N_Donut,    N_Dot,     N_Drink,   N_Drum,
+    N_Dust,    N_Ear,      N_Egg,     N_Eye,     N_Fence,
+    N_Fire,    N_Fish,     N_Flower,  N_Foliage, N_Foot,
+    N_Fort,    N_Fox,      N_Frog,    N_Fruit,   N_Fungi,
+    N_Fungus,  N_Gate,     N_Gem,     N_Ghost,   N_Grass,
+    N_Guitar,  N_Hand,     N_Hedge,   N_Hihat,   N_Hotdog,
+    N_House,   N_Husk,     N_Husks,   N_Ice,     N_It,
+    N_Jelly,   N_Jiji,     N_Knight,  N_Ladder,  N_Lamp,
+    N_Lever,   N_Lift,     N_Lily,    N_Line,    N_Lizard,
+    N_Lock,    N_Mirror,   N_Monitor, N_Monster, N_No,
+    N_Nose,    N_Orb,      N_Palm,    N_Pants,   N_Paper,
+    N_Pawn,    N_Piano,    N_Pillar,  N_Pipe,    N_Pixel,
+    N_Pizza,   N_Plane,    N_Plank,   N_Potato,  N_Pumpkin,
+    N_Reed,    N_Ring,     N_Road,    N_Robot,   N_Rocket,
+    N_Rose,    N_Rubble,   N_Sax,     N_Scissors,N_Seed,
+    N_Shell,   N_Shirt,    N_Shovel,  N_Sign,    N_Snail,
+    N_Spike,   N_Sprout,   N_Square,  N_Statue,  N_Stick,
+    N_Stump,   N_Sword,    N_Table,   N_Teeth,   N_TileObj,
+    N_Tower,   N_Train,    N_Tree,    N_Trees,   N_Triangle,
+    N_Trumpet, N_Turnip,   N_Turtle,  N_Ufo,     N_Vase,
+    N_Vine,    N_What,     N_Worm,    N_Yes,
     N_Text,   // the abstract noun "TEXT" (matches every text object)
 
     // ---- Operators (text-only) ----
@@ -72,6 +102,9 @@ enum class Kind : std::uint16_t {
     P_Right,
     P_Up,
     P_Down,
+    P_Still,
+    P_Shift,
+    P_Swap,
 
     Count_,
 };
@@ -83,7 +116,7 @@ constexpr bool is_operator(Kind k) {
     return k >= Kind::O_Is && k <= Kind::O_Eat;
 }
 constexpr bool is_property(Kind k) {
-    return k >= Kind::P_You && k <= Kind::P_Down;
+    return k >= Kind::P_You && k <= Kind::P_Swap;
 }
 
 // Lowercase canonical name as it appears in .level / .test files.

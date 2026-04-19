@@ -40,11 +40,17 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
     auto adv = [&](Coord c) -> Coord { return {c.x + step_dir.x, c.y + step_dir.y}; };
     auto bak = [&](Coord c) -> Coord { return {c.x - step_dir.x, c.y - step_dir.y}; };
 
-    // Guard: don't start a rule from inside an ON-condition noun list.
-    // Walk back through (noun AND)* chains from prev; if O_On is reached
-    // we're inside a condition list (e.g. "ON A AND B" — B should not be a rule start).
+    // Guard: don't start a rule from inside an AND-chained noun list.
+    // This covers two cases:
+    //   subject chains: "BABA AND KEKE IS P" — don't start from KEKE
+    //   condition chains: "X ON A AND B IS P" — don't start from B
+    // Walk backwards through (noun AND)* chains; if O_On is reached we're in
+    // a condition list; if we walked any AND-noun pair without finding O_On
+    // we're in a subject list. Either way, skip — the rule was already parsed
+    // starting from the first noun.
     {
         Coord cur = bak(start);
+        bool walked_and_chain = false;
         while (true) {
             auto k = at(cur);
             if (!k) break;
@@ -53,8 +59,10 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             Coord noun_pos = bak(cur);
             auto nk = at(noun_pos);
             if (!nk || !is_noun(*nk)) break;
+            walked_and_chain = true;
             cur = bak(noun_pos);
         }
+        if (walked_and_chain) return;
     }
 
     Coord cursor = start;

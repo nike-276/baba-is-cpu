@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <map>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -58,7 +59,19 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
               std::vector<Change>& log) {
     Object const* mover = world.get(mover_id);
     if (!mover) return false;
+
+    // STILL objects cannot move themselves.
+    if (rs.object_has_property(world, mover_id, Kind::P_Still)) return false;
+
     Coord origin = mover->pos;
+
+    // SWAP movers ignore all solidity — move directly to adjacent tile, no chain.
+    // The position exchange with whatever is there is handled in apply_swap.
+    bool mover_is_swap = rs.object_has_property(world, mover_id, Kind::P_Swap);
+    if (mover_is_swap) {
+        do_move(world, mover_id, {origin.x + step_v.x, origin.y + step_v.y}, log);
+        return true;
+    }
 
     // OPEN chains can bypass SHUT blockers (wiki §OPEN).
     bool chain_has_open = rs.object_has_property(world, mover_id, Kind::P_Open);
@@ -72,14 +85,22 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
         std::vector<ObjectId> pushables;
         bool any_blocker = false;
         for (ObjectId id : cell) {
-            bool push = rs.object_has_property(world, id, Kind::P_Push);
-            bool stop = rs.object_has_property(world, id, Kind::P_Stop);
-            if (push) {
+            bool still = rs.object_has_property(world, id, Kind::P_Still);
+            bool push  = rs.object_has_property(world, id, Kind::P_Push);
+            bool stop  = rs.object_has_property(world, id, Kind::P_Stop);
+            bool swap  = rs.object_has_property(world, id, Kind::P_Swap);
+
+            if (still) {
+                // STILL blocks movement through this tile regardless of PUSH.
+                // SWAP objects can pass through STILL (but won't move it — handled in apply_swap).
+                any_blocker = true;
+            } else if (push) {
                 pushables.push_back(id);
                 if (rs.object_has_property(world, id, Kind::P_Open)) chain_has_open = true;
             } else if (stop) {
+                // SWAP property overrides STOP solidity (mover passes through).
                 bool shut = rs.object_has_property(world, id, Kind::P_Shut);
-                if (!(shut && chain_has_open)) any_blocker = true;
+                if (!swap && !(shut && chain_has_open)) any_blocker = true;
             }
         }
 
@@ -140,11 +161,9 @@ void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) 
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
-        if (rs.object_has_property(world, id, Kind::P_Move))
-            movers.push_back({id, step(o->facing), false, true});
-        else if (rs.object_has_property(world, id, Kind::P_Auto))
-            movers.push_back({id, step(o->facing), false, false});
-        else if (rs.object_has_property(world, id, Kind::P_Fall))
+        if (rs.object_has_property(world, id, Kind::P_Still)) continue;
+        // FALL* overrides MOVE/AUTO — a sliding object ignores self-propulsion.
+        if (rs.object_has_property(world, id, Kind::P_Fall))
             movers.push_back({id, step(Direction::Down),  true, false});
         else if (rs.object_has_property(world, id, Kind::P_Fallup))
             movers.push_back({id, step(Direction::Up),    true, false});
@@ -152,6 +171,10 @@ void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) 
             movers.push_back({id, step(Direction::Left),  true, false});
         else if (rs.object_has_property(world, id, Kind::P_Fallright))
             movers.push_back({id, step(Direction::Right), true, false});
+        else if (rs.object_has_property(world, id, Kind::P_Move))
+            movers.push_back({id, step(o->facing), false, true});
+        else if (rs.object_has_property(world, id, Kind::P_Auto))
+            movers.push_back({id, step(o->facing), false, false});
     }
 
     for (auto const& m : movers) {
@@ -165,6 +188,102 @@ void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) 
             }
         }
     }
+}
+
+// ── APPLY_SHIFT phase ─────────────────────────────────────────────────────
+// SHIFT objects push all co-located non-text, non-SHIFT, non-STILL objects
+// one step in the SHIFT object's facing direction (respects STOP/STILL).
+
+void apply_shift(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    std::vector<ObjectId> shifters;
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        if (rs.object_has_property(world, id, Kind::P_Shift))
+            shifters.push_back(id);
+    }
+    for (ObjectId sid : shifters) {
+        Object const* s = world.get(sid);
+        if (!s) continue;
+        Coord pos = s->pos;
+        Coord step_v = step(s->facing);
+        std::vector<ObjectId> targets;
+        for (ObjectId id : world.at(pos)) {
+            if (id == sid) continue;
+            Object const* o = world.get(id);
+            if (!o || o->text) continue;
+            if (rs.object_has_property(world, id, Kind::P_Shift)) continue;
+            targets.push_back(id);
+        }
+        std::sort(targets.begin(), targets.end());
+        for (ObjectId tid : targets) {
+            try_move(world, tid, step_v, rs, log);
+        }
+    }
+}
+
+// ── APPLY_SWAP phase ───────────────────────────────────────────────────────
+// After all movement, objects sharing a tile with a SWAP object exchange
+// positions: the non-SWAP goes to SWAP's origin (or SWAP goes to the mover's
+// origin), based on which one moved into the shared tile.
+
+// initial_swap: set of object IDs that had SWAP at PARSE_INITIAL (pre-movement).
+// Conditional SWAP ("BABA ON FLAG IS SWAP") must not activate in the same tick
+// that the object first lands on the condition noun — those cases are evaluated
+// against the post-movement world, which would spuriously trigger exchanges.
+void apply_swap(World& world, RuleSet const& rs,
+                std::unordered_set<ObjectId> const& initial_swap,
+                std::vector<Change>& log) {
+    // Build original-position map from Move entries recorded so far.
+    // emplace guarantees we capture the *first* Move per object (its true origin).
+    std::unordered_map<ObjectId, Coord> original_pos;
+    for (auto const& c : log) {
+        if (c.kind == ChangeKind::Move)
+            original_pos.emplace(c.id, c.from_pos);
+    }
+
+    struct Teleport { ObjectId id; Coord dest; };
+    std::vector<Teleport> teleports;
+    std::unordered_set<ObjectId> processed;
+
+    for (ObjectId swap_id : world.all_ids()) {
+        Object const* s = world.get(swap_id);
+        if (!s || s->text) continue;
+        if (!initial_swap.count(swap_id)) continue;
+        if (processed.count(swap_id)) continue;
+
+        bool swap_moved = original_pos.count(swap_id) > 0;
+        Coord swap_pos = s->pos;
+
+        for (ObjectId other_id : world.at(swap_pos)) {
+            if (other_id == swap_id) continue;
+            Object const* o = world.get(other_id);
+            if (!o || o->text) continue;
+            if (initial_swap.count(other_id)) continue;
+            if (processed.count(other_id)) continue;
+
+            bool other_moved = original_pos.count(other_id) > 0;
+            if (!swap_moved && !other_moved) continue;
+
+            if (swap_moved) {
+                // SWAP arrived at other's tile → other teleports to SWAP's origin.
+                if (!rs.object_has_property(world, other_id, Kind::P_Still))
+                    teleports.push_back({other_id, original_pos.at(swap_id)});
+            } else {
+                // Other arrived at SWAP's tile → SWAP teleports to other's origin.
+                if (!rs.object_has_property(world, swap_id, Kind::P_Still))
+                    teleports.push_back({swap_id, original_pos.at(other_id)});
+            }
+            processed.insert(swap_id);
+            processed.insert(other_id);
+            break;
+        }
+    }
+
+    std::sort(teleports.begin(), teleports.end(),
+              [](Teleport const& a, Teleport const& b) { return a.id < b.id; });
+    for (auto const& t : teleports)
+        do_move(world, t.id, t.dest, log);
 }
 
 // ── APPLY_MAKE phase ───────────────────────────────────────────────────────
@@ -437,6 +556,18 @@ TickReport apply_tick(World& world, Input input) {
     // Phase 1: PARSE_INITIAL
     RuleSet rs = RuleSet::parse(world);
 
+    // Snapshot objects that have SWAP at tick-start so apply_swap doesn't
+    // spuriously activate conditional SWAP acquired mid-tick by landing on the
+    // condition noun (e.g. "BABA ON FLAG IS SWAP" must not fire the same tick
+    // baba first reaches the flag tile via fall_slide).
+    std::unordered_set<ObjectId> initial_swap;
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        if (rs.object_has_property(world, id, Kind::P_Swap))
+            initial_swap.insert(id);
+    }
+
     // Phase 1.5: APPLY_DIRECTIONAL — set facing of UP/DOWN/LEFT/RIGHT objects
     apply_directional(world, rs, log);
 
@@ -456,6 +587,12 @@ TickReport apply_tick(World& world, Input input) {
 
     // Phase 2.5: APPLY_AUTO_MOVE
     apply_auto_move(world, rs, log);
+
+    // Phase 2.6: APPLY_SHIFT
+    apply_shift(world, rs, log);
+
+    // Phase 2.7: APPLY_SWAP
+    apply_swap(world, rs, initial_swap, log);
 
     // Phase 3: PARSE_POST_MOVE
     rs = RuleSet::parse(world);

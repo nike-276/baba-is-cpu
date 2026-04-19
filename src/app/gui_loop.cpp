@@ -4,6 +4,7 @@
 #include "editor/editor.hpp"
 #include "render/palette_layout.hpp"
 #include "render/renderer.hpp"
+#include "render/sprite_atlas.hpp"
 #include "sim/simulator.hpp"
 
 #include <algorithm>
@@ -75,6 +76,9 @@ int run_gui(std::string const& level_path) {
     }
 
     render::Renderer renderer(48.0f);
+    render::SpriteAtlas sprite_atlas;
+    sprite_atlas.load("assets/sprites");
+    if (!sprite_atlas.empty()) renderer.set_atlas(&sprite_atlas);
     InputState state;
     state.tile_px = renderer.tile_px();
 

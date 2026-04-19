@@ -3,6 +3,7 @@
 #include "core/ruleset.hpp"
 #include "core/schematic.hpp"
 #include "core/world.hpp"
+#include "sprite_atlas.hpp"
 
 #include <raylib.h>
 #include <string>
@@ -11,11 +12,15 @@
 
 namespace baba::render {
 
-// Renders a World using colored rectangles + text labels (no sprites).
+// Renders a World using colored rectangles + text labels, with optional sprite overlay.
 // Pure consumer of const World& — never mutates simulation state.
 class Renderer {
 public:
     explicit Renderer(float tile_px = 48.0f);
+
+    // Attach a sprite atlas (optional). Sprites are drawn instead of colored rects.
+    // The atlas must outlive this Renderer.
+    void set_atlas(SpriteAtlas const* atlas) { atlas_ = atlas; }
 
     // Draw all objects in the world. scroll_x/scroll_y are in tile units (float for sub-tile precision).
     void draw_world(core::World const& world, float scroll_x, float scroll_y) const;
@@ -70,6 +75,7 @@ public:
 
 private:
     float tile_px_;
+    SpriteAtlas const* atlas_{nullptr};
 
     void draw_tile(core::Object const& obj, int screen_x, int screen_y,
                    int layer, int total_layers, unsigned char alpha = 255) const;

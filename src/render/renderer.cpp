@@ -47,7 +47,17 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
 
     Color bg  = {style.bg.r,      style.bg.g,      style.bg.b,      alpha};
     Color fg  = {style.text_fg.r, style.text_fg.g, style.text_fg.b, alpha};
-    DrawRectangleRec(rect, bg);
+
+    // Try to draw a sprite texture; fall back to colored rect.
+    Texture2D const* tex = atlas_ ? atlas_->get(obj.kind, obj.text) : nullptr;
+    if (tex && tex->id != 0) {
+        Color sprite_bg = {20, 20, 30, alpha};  // dark neutral — sprites have transparent bg
+        DrawRectangleRec(rect, sprite_bg);
+        Rectangle src{0, 0, static_cast<float>(tex->width), static_cast<float>(tex->height)};
+        DrawTexturePro(*tex, src, rect, {0, 0}, 0.0f, {255, 255, 255, alpha});
+    } else {
+        DrawRectangleRec(rect, bg);
+    }
 
     // Border for text tiles.
     if (obj.text) {
@@ -55,13 +65,15 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
         DrawRectangleLinesEx(rect, 2, border);
     }
 
-    // Label (truncated to fit).
-    int font_size = std::max(8, static_cast<int>(tile_px_) / 4);
-    const char* label = style.label;
-    int text_w = MeasureText(label, font_size);
-    int tx_pos = sx + static_cast<int>((tile_px_ - static_cast<float>(text_w)) / 2.0f);
-    int ty_pos = sy + offset + (h - font_size) / 2;
-    DrawText(label, tx_pos, ty_pos, font_size, fg);
+    // Label only when no sprite available.
+    if (!tex || tex->id == 0) {
+        int font_size = std::max(8, static_cast<int>(tile_px_) / 4);
+        const char* label = style.label;
+        int text_w = MeasureText(label, font_size);
+        int tx_pos = sx + static_cast<int>((tile_px_ - static_cast<float>(text_w)) / 2.0f);
+        int ty_pos = sy + offset + (h - font_size) / 2;
+        DrawText(label, tx_pos, ty_pos, font_size, fg);
+    }
 
     // Direction indicator: triangle at the facing edge (not center) so it doesn't block text.
     if (!obj.text && tile_px_ >= 16.0f) {
