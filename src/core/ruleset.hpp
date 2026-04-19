@@ -54,6 +54,13 @@ struct FacingPropertyRule {
     bool negated{false};  // true for NOT FACING
 };
 
+// NOUN HAS NOUN [AND NOUN]*: when a non-text `subject` is destroyed via any DESTRUCT
+// sub-step, one `target` object spawns at the destroyed subject's tile with its facing.
+struct HasRule {
+    Kind subject;
+    Kind target;
+};
+
 // NOUN ON NOUN [AND NOUN]* IS PROPERTY: `subject` has `property` only when
 // sharing a tile with ALL of the condition_nouns (or NONE if negated).
 struct ConditionalPropertyRule {
@@ -79,6 +86,14 @@ struct ConditionalMakeRule {
     bool negated_condition{false};
 };
 
+// [NOT] POWERED NOUN IS PROPERTY: subject has property when any live object has P_Power.
+// negated=true → condition is met when NO object has P_Power.
+struct GlobalConditionPropertyRule {
+    Kind subject;
+    Kind property;
+    bool negated{false};
+};
+
 class RuleSet {
 public:
     RuleSet() = default;
@@ -98,22 +113,29 @@ public:
     std::vector<TransformRule>           const& transform_rules()  const { return transforms_; }
     std::vector<MakeRule>                const& make_rules()       const { return makes_; }
     std::vector<EatRule>                 const& eat_rules()               const { return eats_; }
-    std::vector<ConditionalPropertyRule>  const& conditional_rules()           const { return cond_rules_; }
-    std::vector<ConditionalTransformRule> const& conditional_transform_rules() const { return cond_transforms_; }
-    std::vector<ConditionalMakeRule>      const& conditional_make_rules()      const { return cond_makes_; }
-    std::vector<FacingPropertyRule>       const& facing_rules()                const { return facing_rules_; }
+    std::vector<ConditionalPropertyRule>      const& conditional_rules()               const { return cond_rules_; }
+    std::vector<ConditionalTransformRule>     const& conditional_transform_rules()     const { return cond_transforms_; }
+    std::vector<ConditionalMakeRule>          const& conditional_make_rules()          const { return cond_makes_; }
+    std::vector<FacingPropertyRule>           const& facing_rules()                   const { return facing_rules_; }
+    std::vector<GlobalConditionPropertyRule>  const& global_condition_property_rules() const { return global_cond_rules_; }
+    std::vector<HasRule>                      const& has_rules()                       const { return has_rules_; }
 
 private:
-    std::vector<PropertyRule>            rules_;
-    std::vector<TransformRule>           transforms_;
-    std::vector<MakeRule>                makes_;
-    std::vector<EatRule>                 eats_;
+    std::vector<PropertyRule>             rules_;
+    std::vector<TransformRule>            transforms_;
+    std::vector<MakeRule>                 makes_;
+    std::vector<EatRule>                  eats_;
     std::vector<ConditionalPropertyRule>  cond_rules_;
     std::vector<ConditionalTransformRule> cond_transforms_;
     std::vector<ConditionalMakeRule>      cond_makes_;
-    std::vector<FacingPropertyRule>       facing_rules_;
+    std::vector<FacingPropertyRule>           facing_rules_;
+    std::vector<GlobalConditionPropertyRule>  global_cond_rules_;
+    std::vector<HasRule>                      has_rules_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
+
+    // Returns true if any live non-text object currently has P_Power (unconditional or via ON).
+    bool any_has_power(World const& world) const;
 
     static std::uint32_t key_(Kind noun, Kind property) {
         return (static_cast<std::uint32_t>(noun) << 16) |

@@ -1,0 +1,26 @@
+# BOLT IS POWER, POWERED BOLT IS MOVE → BOLT powers itself and auto-moves.
+# An object can supply the POWER condition for its own POWERED rule.
+
+[setup]
+version 1
+name "powered self-referential - object powers itself"
+
+text 0 0 bolt
+text 1 0 is
+text 2 0 power
+
+text 0 1 powered
+text 1 1 bolt
+text 2 1 is
+text 3 1 move
+
+object 5 5 bolt right
+
+[inputs]
+input wait
+
+[expected]
+at 6 5 bolt
+not_at 5 5 bolt
+tick 1
+not_won

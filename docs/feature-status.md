@@ -29,7 +29,8 @@ checklist) and any scenario file that locks the behavior down.
 | `FACING` | DEFERRED | Subject must be facing a tile containing the noun. |
 | `LONELY` | DEFERRED | Subject must be the only object on its tile (or in 4-neighborhood per wiki variant). |
 | `WITHOUT`| DEFERRED | Negation of `NEAR`. |
-| `HAS`    | DEFERRED | Pairs with `MAKE`/`HAS` semantics for spawning on destruction. |
+| `HAS`    | DONE     | `X HAS Y [AND Z]*`: when X is destroyed via any DESTRUCT sub-step (SINK, EAT, HOT/MELT, WEAK, DEFEAT, OPEN/SHUT), spawns Y (and Z…) at X's tile with X's facing. Does NOT trigger on transforms. Stored as `HasRule`; processed in `apply_has()` phase 6.1. AND chains supported. `X HAS X` (self-respawn) supported. |
+| `POWERED`| DONE     | Prefix condition: `[NOT] POWERED NOUN IS PROPERTY`. True when any live non-text object has `P_Power` (via unconditional or ON-conditional rule). Parsed as `O_Powered` operator token. Stored as `GlobalConditionPropertyRule`; evaluated in `object_has_property` via `any_has_power()`. |
 
 ## 2. Nouns
 
@@ -86,6 +87,7 @@ Removal precedence inside DESTRUCT (lower = earlier):
 | `EAT`    | DONE     | `X EAT Y [AND Z]*` (EAT is an operator, not a property). Subject destroys listed target kinds on contact. Supports AND for multiple targets. DESTRUCT sub-step (b). |
 | `WEAK`   | DONE     | Destroyed when any object arrives on its tile this tick (determined from Move changes in the log). DESTRUCT sub-step (d). |
 | `MAKE`   | DONE     | `X MAKE Y [AND Z]*` (MAKE is an operator, not a property). Phase APPLY_MAKE post-DESTRUCT: spawns all targets on every tile containing X. Idempotent (skips if target already present). Supports AND for multiple targets. |
+| `POWER`  | DONE     | `X IS POWER` makes the global `POWERED` prefix condition true for this tick. No destruction/removal effect itself. Stored as `P_Power` property; evaluated by `any_has_power()` in `RuleSet`. |
 | `HAS`    | DEFERRED | `X HAS Y` spawns Y when X is destroyed; needs to hook DESTRUCT. |
 | `BOOM`   | DEFERRED | Destroys self + neighbouring tiles' contents. |
 | `SAFE`   | DEFERRED | Immune to DEFEAT/SINK/MELT/etc. |

@@ -1,0 +1,24 @@
+# NOT POWERED BABA IS MOVE → BABA auto-moves right when no POWER object exists.
+# Since no POWER rule is active, NOT POWERED is true → BABA gains MOVE.
+# Input is wait, yet BABA moves because MOVE is self-propelled.
+
+[setup]
+version 1
+name "not powered grants move when no power rule"
+
+text 0 0 not
+text 1 0 powered
+text 2 0 baba
+text 3 0 is
+text 4 0 move
+
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+at 6 5 baba
+not_at 5 5 baba
+tick 1
+not_won

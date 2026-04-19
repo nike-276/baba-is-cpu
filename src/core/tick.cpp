@@ -549,6 +549,26 @@ bool check_win(World const& world, RuleSet const& rs) {
     return false;
 }
 
+// ── APPLY_HAS phase ────────────────────────────────────────────────────────
+// Fires after all DESTRUCT sub-steps complete. For each non-text object destroyed
+// during DESTRUCT, spawn each HAS target at the destroyed object's tile.
+// [DEVIATION] v1 processes HAS after the entire DESTRUCT phase; conditional HAS
+// interactions within DESTRUCT are not modelled.
+void apply_has(World& world, RuleSet const& rs,
+               std::vector<Change>& log, std::size_t destruct_start) {
+    if (rs.has_rules().empty()) return;
+    std::size_t const n = log.size();
+    for (std::size_t i = destruct_start; i < n; ++i) {
+        Change const c = log[i];  // copy: do_spawn may reallocate log, invalidating refs
+        if (c.kind != ChangeKind::Destroy) continue;
+        if (c.obj_text) continue;  // text tiles do not trigger HAS
+        for (auto const& hr : rs.has_rules()) {
+            if (hr.subject != c.obj_kind) continue;
+            do_spawn(world, c.obj_pos, hr.target, /*text=*/false, c.obj_facing, log);
+        }
+    }
+}
+
 }  // namespace
 
 // ── apply_tick (9-phase pipeline) ─────────────────────────────────────────
@@ -608,7 +628,11 @@ TickReport apply_tick(World& world, Input input) {
     rs = RuleSet::parse(world);
 
     // Phase 6: DESTRUCT
+    std::size_t const pre_destruct = log.size();
     apply_destructions(world, rs, log);
+
+    // Phase 6.1: HAS (spawn on destruction, before APPLY_MAKE)
+    apply_has(world, rs, log, pre_destruct);
 
     // Phase 6.5: APPLY_MAKE
     apply_make(world, rs, log);

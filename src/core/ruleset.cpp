@@ -37,10 +37,48 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<ConditionalPropertyRule>& cond_out,
                 std::vector<ConditionalTransformRule>& cond_xform_out,
                 std::vector<ConditionalMakeRule>& cond_make_out,
-                std::vector<FacingPropertyRule>& facing_out) {
+                std::vector<FacingPropertyRule>& facing_out,
+                std::vector<GlobalConditionPropertyRule>& global_cond_out,
+                std::vector<HasRule>& has_out) {
     auto at = [&](Coord c) { return text_kind_at(world, c); };
     auto adv = [&](Coord c) -> Coord { return {c.x + step_dir.x, c.y + step_dir.y}; };
     auto bak = [&](Coord c) -> Coord { return {c.x - step_dir.x, c.y - step_dir.y}; };
+
+    // ── [NOT] POWERED NOUN IS PROPERTY ───────────────────────────────────────
+    // Detect global prefix condition before the usual noun-subject guard.
+    {
+        auto try_parse_powered = [&]() -> bool {
+            Coord pw = start;
+            bool neg = false;
+            auto tok0 = at(pw);
+            if (!tok0) return false;
+            if (*tok0 == Kind::O_Not) {
+                // NOT POWERED … — must have POWERED immediately after NOT
+                auto tok1 = at(adv(pw));
+                if (!tok1 || *tok1 != Kind::O_Powered) return false;
+                neg = true;
+                pw = adv(adv(pw));  // skip NOT, skip POWERED
+            } else if (*tok0 == Kind::O_Powered) {
+                // POWERED … — but skip if a NOT precedes us (handled from NOT position)
+                auto prev = at(bak(start));
+                if (prev && *prev == Kind::O_Not) return false;
+                pw = adv(pw);  // skip POWERED
+            } else {
+                return false;
+            }
+            auto subj = at(pw);
+            if (!subj || !is_noun(*subj)) return false;
+            pw = adv(pw);
+            auto is_tok = at(pw);
+            if (!is_tok || *is_tok != Kind::O_Is) return false;
+            pw = adv(pw);
+            auto prop_tok = at(pw);
+            if (!prop_tok || !is_property(*prop_tok)) return false;
+            global_cond_out.push_back({*subj, *prop_tok, neg});
+            return true;
+        };
+        if (try_parse_powered()) return;
+    }
 
     // Guard: don't start a rule from inside an AND-chained noun list.
     // This covers two cases:
@@ -56,7 +94,13 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         while (true) {
             auto k = at(cur);
             if (!k) break;
-            if (*k == Kind::O_On || *k == Kind::O_Facing) return;
+            if (*k == Kind::O_On || *k == Kind::O_Facing || *k == Kind::O_Powered) return;
+            // NOT POWERED acts as a prefix condition chain-starter
+            if (*k == Kind::O_Not) {
+                auto after_not = at(adv(cur));
+                if (after_not && *after_not == Kind::O_Powered) return;
+                break;
+            }
             if (*k != Kind::O_And) break;
             Coord noun_pos = bak(cur);
             auto nk = at(noun_pos);
@@ -158,6 +202,30 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         if (!pk || !is_property(*pk)) return;
         for (Kind n : subjects)
             facing_out.push_back({n, cond, *pk, neg});
+        return;
+    }
+
+    // ── NOUN HAS NOUN [AND NOUN]* ───────────────────────────────────────────
+    if (*op_tok == Kind::O_Has) {
+        cursor = adv(cursor);
+        auto target = at(cursor);
+        if (target && is_noun(*target)) {
+            std::vector<Kind> targets;
+            targets.push_back(*target);
+            cursor = adv(cursor);
+            while (true) {
+                auto k = at(cursor);
+                if (!k || *k != Kind::O_And) break;
+                Coord next = adv(cursor);
+                auto nt = at(next);
+                if (!nt || !is_noun(*nt)) break;
+                targets.push_back(*nt);
+                cursor = adv(next);
+            }
+            for (Kind n : subjects)
+                for (Kind t : targets)
+                    has_out.push_back({n, t});
+        }
         return;
     }
 
@@ -474,8 +542,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.global_cond_rules_, rs.has_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.global_cond_rules_, rs.has_rules_);
     }
 
     // Deduplicate verb-operator rules before further processing.
@@ -503,6 +571,27 @@ RuleSet RuleSet::parse(World const& world) {
             if (seen.insert(key2).second) deduped.push_back(er);
         }
         rs.eats_ = std::move(deduped);
+    }
+    {
+        std::set<std::tuple<uint16_t,uint16_t,bool>> seen;
+        std::vector<GlobalConditionPropertyRule> deduped;
+        for (auto const& gcr : rs.global_cond_rules_) {
+            auto key3 = std::make_tuple(static_cast<uint16_t>(gcr.subject),
+                                        static_cast<uint16_t>(gcr.property),
+                                        gcr.negated);
+            if (seen.insert(key3).second) deduped.push_back(gcr);
+        }
+        rs.global_cond_rules_ = std::move(deduped);
+    }
+    {
+        std::set<std::pair<uint16_t,uint16_t>> seen;
+        std::vector<HasRule> deduped;
+        for (auto const& hr : rs.has_rules_) {
+            auto key2 = std::make_pair(static_cast<uint16_t>(hr.subject),
+                                       static_cast<uint16_t>(hr.target));
+            if (seen.insert(key2).second) deduped.push_back(hr);
+        }
+        rs.has_rules_ = std::move(deduped);
     }
 
     // Base rule: TEXT IS PUSH (always, treated as positive non-cancellable).
@@ -579,14 +668,12 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
             bool cond_is_dir = (fr.condition == Kind::P_Left || fr.condition == Kind::P_Right ||
                                 fr.condition == Kind::P_Up   || fr.condition == Kind::P_Down);
             if (cond_is_dir) {
-                // Direction check: does the object's facing match the required direction?
                 Direction req = fr.condition == Kind::P_Left  ? Direction::Left  :
                                 fr.condition == Kind::P_Right ? Direction::Right :
                                 fr.condition == Kind::P_Up    ? Direction::Up    :
                                                                 Direction::Down;
                 matched = (o->facing == req);
             } else {
-                // Noun check: does the tile ahead contain the required noun?
                 Coord face_pos = {o->pos.x + step(o->facing).x, o->pos.y + step(o->facing).y};
                 matched = false;
                 for (ObjectId other : world.at(face_pos)) {
@@ -595,6 +682,43 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
                 }
             }
             if (fr.negated ? !matched : matched) return true;
+        }
+
+        // Check global conditional rules ([NOT] POWERED NOUN IS PROPERTY).
+        if (!global_cond_rules_.empty()) {
+            int power_exists = -1;  // -1 = uncomputed, 0 = false, 1 = true
+            for (auto const& gcr : global_cond_rules_) {
+                if (gcr.subject != o->kind || gcr.property != property) continue;
+                if (power_exists < 0)
+                    power_exists = any_has_power(world) ? 1 : 0;
+                bool cond_met = gcr.negated ? (power_exists == 0) : (power_exists == 1);
+                if (cond_met) return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool RuleSet::any_has_power(World const& world) const {
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        // Unconditional POWER (X IS POWER → in index)
+        if (index_.count(key_(o->kind, Kind::P_Power))) return true;
+        // Conditional POWER via ON/NOT ON (no recursion: never calls any_has_power again)
+        for (auto const& cr : cond_rules_) {
+            if (cr.subject != o->kind || cr.property != Kind::P_Power) continue;
+            bool met = true;
+            for (Kind cn : cr.condition_nouns) {
+                bool found = false;
+                for (ObjectId oid : world.at(o->pos)) {
+                    if (oid == id) continue;
+                    Object const* ob = world.get(oid);
+                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                }
+                if (cr.negated_condition ? found : !found) { met = false; break; }
+            }
+            if (met) return true;
         }
     }
     return false;

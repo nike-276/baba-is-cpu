@@ -1,0 +1,32 @@
+# NOT POWERED BABA IS STOP → BABA is NOT STOP when BOLT IS POWER and a bolt exists.
+# With POWER active, NOT POWERED is false → STOP not granted → BABA can move freely.
+
+[setup]
+version 1
+name "not powered is false when power exists"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 bolt
+text 1 1 is
+text 2 1 power
+
+text 0 2 not
+text 1 2 powered
+text 2 2 baba
+text 3 2 is
+text 4 2 stop
+
+object 5 5 baba right
+object 8 5 bolt right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+not_at 5 5 baba
+tick 1
+not_won

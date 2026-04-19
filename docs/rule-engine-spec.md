@@ -15,14 +15,16 @@ References: `babaiswiki_pages_current.xml` — pages *Order of Operations*, *Rul
 
 ### 1.1 In-scope (v1 / MVP)
 
-**Operators**: `IS`, `NOT`, `AND`, `ON`, `NOT ON`, `MAKE`, `EAT`
+**Operators**: `IS`, `NOT`, `AND`, `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`
 
 **Nouns**: `BABA`, `WALL`, `ROCK`, `FLAG`, `WATER`, `LAVA`, `SKULL`, `KEY`,
 `DOOR`, `KEKE`, `FOFO`, `ME`, `BOX`, `LEAF`, `CLOUD`, `SUN`, `MOON`, `STAR`,
 `PLANET`, `BOLT`, `LOVE`, `BOMB`, `WIND`. Plus reserved `TEXT`, `EMPTY`, `ALL`.
 
 **Properties**: `YOU`, `PUSH`, `STOP`, `WIN`, `DEFEAT`, `SINK`, `HOT`, `MELT`,
-`OPEN`, `SHUT`.
+`OPEN`, `SHUT`, `POWER`.
+
+**Prefix conditions**: `POWERED` (global: true when any object has `POWER`).
 
 **Base rules** (always active, not parseable):
 - `TEXT IS PUSH`
@@ -42,10 +44,10 @@ for the structural changes that gate them.
 
 ### 1.3 Deferred (post-Phase 2)
 
-`CHILL`, `FEAR`, `NUDGE*`, `BOOM`, `HAS`, `SAFE`, `FLOAT`, `PHANTOM`,
+`CHILL`, `FEAR`, `NUDGE*`, `BOOM`, `SAFE`, `FLOAT`, `PHANTOM`,
 `HOLD`, `SELECT`, `REVERT`, `WRITE`, `MIMIC`, `LOCKED*`, `MORE`, `DONE`,
 `PLAY`, `BONUS`, `END`, `BACK`, `TELE`, `FOLLOW`, `YOU2`, `3D`,
-conditions other than `ON` (`NEAR`, `FACING`, `LONELY`, `POWERED`, …),
+conditions other than `ON`/`POWERED` (`NEAR`, `FACING`, `LONELY`, …),
 `LEVEL` semantics, stack limits (6), `TOO COMPLEX` / `INFINITE LOOP`
 overflow.
 
@@ -89,12 +91,14 @@ never persisted, never undoable.
 
 ```
 rule           := subject verb
+               | [NOT] POWERED subject verb   ← global prefix condition (new)
 subject        := nounphrase
 verb           := IS predicate
                | ON noun IS predicate
                | NOT ON noun IS predicate
                | MAKE nounlist
                | EAT nounlist
+               | HAS nounlist
 predicate      := propertyphrase | nounlist
 nounphrase     := noun (AND noun)*
 nounlist       := noun (AND noun)*
@@ -103,12 +107,30 @@ noun           := <object kind> | TEXT | EMPTY | ALL
 property       := YOU | PUSH | STOP | WIN | DEFEAT | SINK
                | HOT | MELT | OPEN | SHUT | WEAK | MOVE | AUTO
                | FALL | FALLUP | FALLLEFT | FALLRIGHT
-               | LEFT | RIGHT | UP | DOWN
+               | LEFT | RIGHT | UP | DOWN | POWER
 ```
 
+**POWERED prefix semantics**: When `POWERED NOUN IS PROPERTY` appears on the grid,
+the rule grants `PROPERTY` to all instances of `NOUN` for the tick *if and only if*
+at least one live non-text object in the level currently has the `POWER` property
+(either via an unconditional `X IS POWER` rule, or via a conditional `X ON Y IS POWER`
+rule whose condition is currently satisfied). `NOT POWERED NOUN IS PROPERTY` inverts
+the condition. The check is performed lazily once per object per `object_has_property`
+call via `RuleSet::any_has_power()`. Recursion through `GlobalConditionPropertyRule`
+granting `P_Power` is not supported (use unconditional or ON-conditional rules for
+POWER sources).
+
+**HAS semantics**: `NOUN HAS NOUN [AND NOUN]*` produces `HasRule` entries.
+When any DESTRUCT sub-step destroys an object whose kind matches the subject,
+`apply_has()` (phase 6.1, after all DESTRUCT sub-steps, before APPLY_MAKE)
+spawns one instance of each target noun at the destroyed object's tile with the
+same facing. AND chains supported; `X HAS X` (self-respawn) is valid. HAS does
+**not** fire on transforms (`X IS Y`). **[DEVIATION]** v1 fires once after
+all DESTRUCT sub-steps complete; per-destruction chaining is not modelled.
+
 `ON` and `NOT ON` are conditional operators; the predicate is checked per-object
-at every PARSE phase. `MAKE` and `EAT` are unconditional verb operators; they
-produce `MakeRule` and `EatRule` entries (not `PropertyRule` entries).
+at every PARSE phase. `MAKE`, `EAT`, and `HAS` are unconditional verb operators;
+they produce `MakeRule`, `EatRule`, and `HasRule` entries (not `PropertyRule` entries).
 
 ### 3.2 Parsing procedure
 

@@ -1,0 +1,22 @@
+# POWERED BABA IS YOU but no POWER rule exists → BABA is not YOU, cannot move.
+# Verifies that POWERED condition is false when no object has POWER.
+
+[setup]
+version 1
+name "powered false when no power rule"
+
+text 0 0 powered
+text 1 0 baba
+text 2 0 is
+text 3 0 you
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+at 5 5 baba
+not_at 6 5 baba
+tick 1
+not_won

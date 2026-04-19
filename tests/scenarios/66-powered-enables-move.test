@@ -1,0 +1,27 @@
+# ROCK IS POWER, POWERED BABA IS MOVE → BABA auto-moves right each tick.
+# Verifies POWERED condition enables the MOVE auto-movement property.
+
+[setup]
+version 1
+name "powered enables move property"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 power
+
+text 0 1 powered
+text 1 1 baba
+text 2 1 is
+text 3 1 move
+
+object 5 5 baba right
+object 10 5 rock right
+
+[inputs]
+input wait
+
+[expected]
+at 6 5 baba
+not_at 5 5 baba
+tick 1
+not_won

@@ -24,6 +24,7 @@ authoritative master checklist.
 | LEFT / RIGHT / UP / DOWN | yes | yes     | APPLY_DIRECTIONAL (facing only) |
 | MAKE          | O_Make operator | yes (operator) | APPLY_MAKE phase       |
 | TEXT (predicate) | N_Text noun   | yes          | base rule TEXT IS PUSH; transform planned |
+| POWER               | yes (P_Power)  | yes (property) | `any_has_power()` in RuleSet; enables POWERED |
 | SHIFT / PULL / SWAP | no      | —            | deferred                 |
 
 ## Operators recognized
@@ -36,6 +37,8 @@ authoritative master checklist.
 | ON    | yes (O_On)      | `NOUN ON NOUN [AND NOUN]* IS/MAKE P/NOUN` — compound condition (all must be present). NOT ON variant also DONE. |
 | MAKE  | yes (O_Make)    | Unconditional `NOUN MAKE NOUN [AND NOUN]*` + conditional `NOUN ON/NOT ON … MAKE NOUN` (DONE) |
 | EAT   | yes (O_Eat)     | NOUN EAT NOUN [AND NOUN]* destruction (DONE) |
+| HAS   | yes (O_Has)     | NOUN HAS NOUN [AND NOUN]*: spawn target when subject destroyed via DESTRUCT (DONE). Phase 6.1 `apply_has()`. |
+| POWERED (O_Powered) | yes (O_Powered) | Global prefix condition: `[NOT] POWERED NOUN IS PROPERTY`. Stored as `GlobalConditionPropertyRule`; evaluated via `any_has_power()` in `object_has_property`. |
 | NEAR / FACING / LONELY | deferred | |
 
 ## Tick-phase pipeline
