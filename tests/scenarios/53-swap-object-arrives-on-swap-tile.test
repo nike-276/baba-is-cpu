@@ -1,0 +1,27 @@
+# When an object moves onto a SWAP tile, the SWAP object teleports to the object's origin.
+
+[setup]
+version 1
+name "object arrives on swap tile — positions exchange"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 rock
+text 1 1 is
+text 2 1 swap
+
+object 5 5 baba right
+object 6 5 rock right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+at 5 5 rock
+not_at 5 5 baba
+not_at 6 5 rock
+tick 1
+not_won

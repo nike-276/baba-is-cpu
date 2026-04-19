@@ -1,0 +1,29 @@
+# STILL prevents an object from being pushed even if it has PUSH.
+
+[setup]
+version 1
+name "still blocks being pushed"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 rock
+text 1 1 is
+text 2 1 push
+text 3 1 and
+text 4 1 still
+
+object 5 5 baba right
+object 6 5 rock right
+
+[inputs]
+input right
+
+[expected]
+at 5 5 baba
+at 6 5 rock
+not_at 6 5 baba
+not_at 7 5 rock
+tick 1
+not_won

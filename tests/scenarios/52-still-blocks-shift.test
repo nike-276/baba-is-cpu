@@ -1,0 +1,30 @@
+# STILL prevents an object from being carried by SHIFT.
+
+[setup]
+version 1
+name "still blocks shift carry"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 shift
+
+text 0 1 baba
+text 1 1 is
+text 2 1 still
+
+text 0 2 wall
+text 1 2 is
+text 2 2 you
+
+object 5 5 rock right
+object 5 5 baba right
+object 0 5 wall right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 baba
+not_at 6 5 baba
+tick 1
+not_won

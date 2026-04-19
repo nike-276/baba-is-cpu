@@ -1,0 +1,27 @@
+# STILL prevents an object from self-propelling via MOVE.
+
+[setup]
+version 1
+name "still suppresses move self-propulsion"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 move
+text 3 0 and
+text 4 0 still
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 rock right
+object 0 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 rock
+not_at 6 5 rock
+tick 1
+not_won

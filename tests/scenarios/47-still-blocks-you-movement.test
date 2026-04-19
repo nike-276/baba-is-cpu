@@ -1,0 +1,22 @@
+# STILL prevents a YOU-property object from moving.
+
+[setup]
+version 1
+name "still blocks you movement"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+text 3 0 and
+text 4 0 still
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+at 5 5 baba
+not_at 6 5 baba
+tick 1
+not_won
