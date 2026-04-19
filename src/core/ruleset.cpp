@@ -47,28 +47,80 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
     auto adv = [&](Coord c) -> Coord { return {c.x + step_dir.x, c.y + step_dir.y}; };
     auto bak = [&](Coord c) -> Coord { return {c.x - step_dir.x, c.y - step_dir.y}; };
 
-    // ── [NOT] POWERED NOUN IS PROPERTY ───────────────────────────────────────
-    // Detect global prefix condition before the usual noun-subject guard.
+    // ── [NOT] POWEREDx [AND [NOT] POWEREDy]* NOUN IS PROPERTY ───────────────
+    // Detect global prefix condition (with optional AND-chained channels) before
+    // the usual noun-subject guard.
     {
+        auto is_pow_op = [](Kind k) {
+            return k == Kind::O_Powered || k == Kind::O_Powered2 || k == Kind::O_Powered3;
+        };
+        auto pow_prop = [](Kind k) -> Kind {
+            if (k == Kind::O_Powered2) return Kind::P_Power2;
+            if (k == Kind::O_Powered3) return Kind::P_Power3;
+            return Kind::P_Power;
+        };
+
         auto try_parse_powered = [&]() -> bool {
             Coord pw = start;
-            bool neg = false;
             auto tok0 = at(pw);
             if (!tok0) return false;
-            if (*tok0 == Kind::O_Not) {
-                // NOT POWERED … — must have POWERED immediately after NOT
-                auto tok1 = at(adv(pw));
-                if (!tok1 || *tok1 != Kind::O_Powered) return false;
-                neg = true;
-                pw = adv(adv(pw));  // skip NOT, skip POWERED
-            } else if (*tok0 == Kind::O_Powered) {
-                // POWERED … — but skip if a NOT precedes us (handled from NOT position)
+
+            // Must start with NOT or a POWEREDx operator.
+            if (*tok0 != Kind::O_Not && !is_pow_op(*tok0)) return false;
+
+            // Skip if preceded by AND (mid-chain, handled from the real start).
+            {
                 auto prev = at(bak(start));
-                if (prev && *prev == Kind::O_Not) return false;
-                pw = adv(pw);  // skip POWERED
-            } else {
-                return false;
+                if (prev && *prev == Kind::O_And) return false;
+                // Skip if we are a POWEREDx preceded by NOT (handled from NOT position).
+                if (is_pow_op(*tok0) && prev && *prev == Kind::O_Not) return false;
             }
+
+            using Cond = GlobalConditionPropertyRule::Condition;
+            std::vector<Cond> conditions;
+
+            auto parse_one_cond = [&]() -> bool {
+                auto t = at(pw);
+                if (!t) return false;
+                if (*t == Kind::O_Not) {
+                    auto t2 = at(adv(pw));
+                    if (!t2 || !is_pow_op(*t2)) return false;
+                    conditions.push_back({pow_prop(*t2), true});
+                    pw = adv(adv(pw));  // skip NOT + POWEREDx
+                    return true;
+                }
+                if (is_pow_op(*t)) {
+                    conditions.push_back({pow_prop(*t), false});
+                    pw = adv(pw);  // skip POWEREDx
+                    return true;
+                }
+                return false;
+            };
+
+            if (!parse_one_cond()) return false;
+
+            // AND loop: continue only if AND is followed by [NOT] POWEREDx.
+            while (true) {
+                auto t = at(pw);
+                if (!t || *t != Kind::O_And) break;
+                Coord after_and = adv(pw);
+                auto peek = at(after_and);
+                if (!peek) break;
+                bool next_is_pow_cond;
+                if (is_pow_op(*peek)) {
+                    next_is_pow_cond = true;
+                } else if (*peek == Kind::O_Not) {
+                    auto p2 = at(adv(after_and));
+                    next_is_pow_cond = p2 && is_pow_op(*p2);
+                } else {
+                    next_is_pow_cond = false;
+                }
+                if (!next_is_pow_cond) break;
+                pw = after_and;  // skip AND
+                if (!parse_one_cond()) break;
+            }
+
+            // Expect NOUN IS PROPERTY.
             auto subj = at(pw);
             if (!subj || !is_noun(*subj)) return false;
             pw = adv(pw);
@@ -77,7 +129,8 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             pw = adv(pw);
             auto prop_tok = at(pw);
             if (!prop_tok || !is_property(*prop_tok)) return false;
-            global_cond_out.push_back({*subj, *prop_tok, neg});
+
+            global_cond_out.push_back({*subj, *prop_tok, std::move(conditions)});
             return true;
         };
         if (try_parse_powered()) return;
@@ -92,23 +145,29 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
     // we're in a subject list. Either way, skip — the rule was already parsed
     // starting from the first noun.
     {
+        auto is_pow_op_g = [](Kind k) {
+            return k == Kind::O_Powered || k == Kind::O_Powered2 || k == Kind::O_Powered3;
+        };
         Coord cur = bak(start);
         bool walked_and_chain = false;
         while (true) {
             auto k = at(cur);
             if (!k) break;
-            if (*k == Kind::O_On || *k == Kind::O_Facing || *k == Kind::O_Powered ||
+            if (*k == Kind::O_On || *k == Kind::O_Facing || is_pow_op_g(*k) ||
                 *k == Kind::O_Follow || *k == Kind::O_Fear) return;
-            // NOT POWERED acts as a prefix condition chain-starter
+            // [NOT] POWEREDx acts as a prefix condition chain-starter
             if (*k == Kind::O_Not) {
                 auto after_not = at(adv(cur));
-                if (after_not && *after_not == Kind::O_Powered) return;
+                if (after_not && is_pow_op_g(*after_not)) return;
                 break;
             }
             if (*k != Kind::O_And) break;
             Coord noun_pos = bak(cur);
             auto nk = at(noun_pos);
-            if (!nk || !is_noun(*nk)) break;
+            if (!nk) break;
+            // AND followed by a POWEREDx operator — part of a powered prefix chain
+            if (is_pow_op_g(*nk)) return;
+            if (!is_noun(*nk)) break;
             walked_and_chain = true;
             cur = bak(noun_pos);
         }
@@ -677,13 +736,17 @@ RuleSet RuleSet::parse(World const& world) {
         rs.eats_ = std::move(deduped);
     }
     {
-        std::set<std::tuple<uint16_t,uint16_t,bool>> seen;
         std::vector<GlobalConditionPropertyRule> deduped;
         for (auto const& gcr : rs.global_cond_rules_) {
-            auto key3 = std::make_tuple(static_cast<uint16_t>(gcr.subject),
-                                        static_cast<uint16_t>(gcr.property),
-                                        gcr.negated);
-            if (seen.insert(key3).second) deduped.push_back(gcr);
+            bool dup = false;
+            for (auto const& ex : deduped) {
+                if (ex.subject == gcr.subject && ex.property == gcr.property
+                    && ex.conditions == gcr.conditions) {
+                    dup = true;
+                    break;
+                }
+            }
+            if (!dup) deduped.push_back(gcr);
         }
         rs.global_cond_rules_ = std::move(deduped);
     }
@@ -808,30 +871,29 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
             if (fr.negated ? !matched : matched) return true;
         }
 
-        // Check global conditional rules ([NOT] POWERED NOUN IS PROPERTY).
-        if (!global_cond_rules_.empty()) {
-            int power_exists = -1;  // -1 = uncomputed, 0 = false, 1 = true
-            for (auto const& gcr : global_cond_rules_) {
-                if (gcr.subject != o->kind || gcr.property != property) continue;
-                if (power_exists < 0)
-                    power_exists = any_has_power(world) ? 1 : 0;
-                bool cond_met = gcr.negated ? (power_exists == 0) : (power_exists == 1);
-                if (cond_met) return true;
+        // Check global conditional rules ([NOT] POWEREDx [AND …] NOUN IS PROPERTY).
+        for (auto const& gcr : global_cond_rules_) {
+            if (gcr.subject != o->kind || gcr.property != property) continue;
+            bool all_met = true;
+            for (auto const& cond : gcr.conditions) {
+                bool pw_exists = any_has_power_kind(world, cond.power_kind);
+                if (cond.negated ? pw_exists : !pw_exists) { all_met = false; break; }
             }
+            if (all_met) return true;
         }
     }
     return false;
 }
 
-bool RuleSet::any_has_power(World const& world) const {
+bool RuleSet::any_has_power_kind(World const& world, Kind power_prop) const {
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
-        // Unconditional POWER (X IS POWER → in index)
-        if (index_.count(key_(o->kind, Kind::P_Power))) return true;
-        // Conditional POWER via ON/NOT ON (no recursion: never calls any_has_power again)
+        // Unconditional (X IS POWERx → in index)
+        if (index_.count(key_(o->kind, power_prop))) return true;
+        // Conditional via ON/NOT ON (no recursion into global_cond_rules_)
         for (auto const& cr : cond_rules_) {
-            if (cr.subject != o->kind || cr.property != Kind::P_Power) continue;
+            if (cr.subject != o->kind || cr.property != power_prop) continue;
             bool met = true;
             for (Kind cn : cr.condition_nouns) {
                 bool found = false;

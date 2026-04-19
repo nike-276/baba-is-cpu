@@ -1,0 +1,28 @@
+# POWERED AND POWERED2 BABA IS MOVE with only a POWER object (no POWER2) → BABA does NOT move.
+# Verifies AND semantics: both POWER and POWER2 channels must be active.
+
+[setup]
+version 1
+name "powered and powered2 both required - only power exists, baba stays"
+
+text 0 0 bolt
+text 1 0 is
+text 2 0 power
+
+text 0 2 powered
+text 1 2 and
+text 2 2 powered2
+text 3 2 baba
+text 4 2 is
+text 5 2 move
+
+object 8 5 baba right
+object 8 6 bolt right
+
+[inputs]
+input wait
+
+[expected]
+at 8 5 baba
+tick 1
+not_won

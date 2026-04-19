@@ -1,0 +1,21 @@
+# POWERED2 BABA IS YOU with no POWER2 property anywhere → BABA does NOT have YOU.
+# Verifies POWERED2 condition is false when no object has POWER2.
+
+[setup]
+version 1
+name "powered2 false without power2 rule"
+
+text 0 1 powered2
+text 1 1 baba
+text 2 1 is
+text 3 1 you
+
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+at 5 5 baba
+tick 1
+not_won

@@ -24,7 +24,8 @@ authoritative master checklist.
 | LEFT / RIGHT / UP / DOWN | yes | yes     | APPLY_DIRECTIONAL (facing only) |
 | MAKE          | O_Make operator | yes (operator) | APPLY_MAKE phase       |
 | TEXT (predicate) | N_Text noun   | yes          | base rule TEXT IS PUSH; `X IS TEXT` → `do_flip_text` (non-text→text, coexistence guard) |
-| POWER               | yes (P_Power)  | yes (property) | `any_has_power()` in RuleSet; enables POWERED |
+| POWER               | yes (P_Power)  | yes (property) | `any_has_power_kind(P_Power)` in RuleSet; enables POWERED |
+| POWER2 / POWER3     | yes (P_Power2/3) | yes          | independent channels; enable POWERED2/POWERED3 |
 | NUDGERIGHT / NUDGEUP / NUDGELEFT / NUDGEDOWN | yes (P_Nudge*) | yes | APPLY_NUDGE phase 2.53; try_move without facing change |
 | SHIFT / PULL / SWAP | no      | —            | deferred                 |
 
@@ -39,7 +40,8 @@ authoritative master checklist.
 | MAKE  | yes (O_Make)    | Unconditional `NOUN MAKE NOUN [AND NOUN]*` + conditional `NOUN ON/NOT ON … MAKE NOUN` (DONE) |
 | EAT   | yes (O_Eat)     | NOUN EAT NOUN [AND NOUN]* destruction (DONE) |
 | HAS   | yes (O_Has)     | NOUN HAS NOUN [AND NOUN]*: spawn target when subject destroyed via DESTRUCT (DONE). Phase 6.1 `apply_has()`. |
-| POWERED (O_Powered) | yes (O_Powered) | Global prefix condition: `[NOT] POWERED NOUN IS PROPERTY`. Stored as `GlobalConditionPropertyRule`; evaluated via `any_has_power()` in `object_has_property`. |
+| POWERED (O_Powered) | yes (O_Powered) | Global prefix condition: `[NOT] POWERED NOUN IS PROPERTY`. Stored as `GlobalConditionPropertyRule{conditions}`; evaluated via `any_has_power_kind(P_Power)`. |
+| POWERED2 / POWERED3 | yes (O_Powered2/3) | Independent variants; `[NOT] POWERED2 NOUN IS PROPERTY`. AND-chains of POWERED/POWERED2/POWERED3 require ALL channels active. |
 | FOLLOW (O_Follow) | yes (O_Follow) | `NOUN FOLLOW NOUN [AND NOUN]*`: move toward nearest non-colocated target (Manhattan, vertical tie-break). Phase 3.5 `apply_follow()`. |
 | FEAR (O_Fear) | yes (O_Fear) | `NOUN FEAR NOUN [AND NOUN]*`: move away from adjacent target; priority fwd→CW→CCW→bwd relative to facing. Phase 2.55 `apply_fear()`. |
 | NEAR / FACING / LONELY | deferred | |

@@ -1,0 +1,27 @@
+# POWERED2 BABA IS YOU → BABA has YOU because BOLT IS POWER2 and a bolt object exists.
+# Verifies the POWER2/POWERED2 variant works independently of POWER/POWERED.
+
+[setup]
+version 1
+name "power2 basic - bolt is power2 enables powered2 baba is you"
+
+text 0 0 bolt
+text 1 0 is
+text 2 0 power2
+
+text 0 1 powered2
+text 1 1 baba
+text 2 1 is
+text 3 1 you
+
+object 5 5 baba right
+object 8 5 bolt right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+not_at 5 5 baba
+tick 1
+not_won

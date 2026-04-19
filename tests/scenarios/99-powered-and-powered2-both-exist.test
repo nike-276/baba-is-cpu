@@ -1,0 +1,34 @@
+# POWERED AND POWERED2 BABA IS MOVE with both a POWER object and a POWER2 object → BABA moves.
+# Verifies AND-chained POWERED/POWERED2 prefix condition grants the property when both channels active.
+
+[setup]
+version 1
+name "powered and powered2 both required - both exist, baba moves"
+
+text 0 0 bolt
+text 1 0 is
+text 2 0 power
+
+text 0 1 rock
+text 1 1 is
+text 2 1 power2
+
+text 0 2 powered
+text 1 2 and
+text 2 2 powered2
+text 3 2 baba
+text 4 2 is
+text 5 2 move
+
+object 8 5 baba right
+object 8 6 bolt right
+object 8 7 rock right
+
+[inputs]
+input wait
+
+[expected]
+at 9 5 baba
+not_at 8 5 baba
+tick 1
+not_won

@@ -109,12 +109,20 @@ struct ConditionalMakeRule {
     Kind target;
 };
 
-// [NOT] POWERED NOUN IS PROPERTY: subject has property when any live object has P_Power.
-// negated=true → condition is met when NO object has P_Power.
+// [NOT] POWEREDx [AND [NOT] POWEREDy]* NOUN IS PROPERTY.
+// Each Condition checks one POWER channel; ALL conditions must hold (AND semantics).
+// negated=true → condition met when NO object has power_kind.
 struct GlobalConditionPropertyRule {
+    struct Condition {
+        Kind power_kind{Kind::P_Power};
+        bool negated{false};
+        bool operator==(Condition const& o) const {
+            return power_kind == o.power_kind && negated == o.negated;
+        }
+    };
     Kind subject;
     Kind property;
-    bool negated{false};
+    std::vector<Condition> conditions;
 };
 
 class RuleSet {
@@ -163,8 +171,9 @@ private:
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 
-    // Returns true if any live non-text object currently has P_Power (unconditional or via ON).
-    bool any_has_power(World const& world) const;
+    // Returns true if any live non-text object has `power_prop` (unconditional or via ON).
+    // Never recurses into global_cond_rules_ to avoid infinite loops.
+    bool any_has_power_kind(World const& world, Kind power_prop) const;
 
     static std::uint32_t key_(Kind noun, Kind property) {
         return (static_cast<std::uint32_t>(noun) << 16) |

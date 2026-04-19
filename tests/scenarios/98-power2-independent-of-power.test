@@ -1,0 +1,26 @@
+# BOLT IS POWER (channel 1) does NOT satisfy the POWERED2 condition (channel 2).
+# Verifies that POWER and POWER2 are independent channels.
+
+[setup]
+version 1
+name "power2 independent of power - power channel does not satisfy powered2"
+
+text 0 0 bolt
+text 1 0 is
+text 2 0 power
+
+text 0 1 powered2
+text 1 1 baba
+text 2 1 is
+text 3 1 you
+
+object 5 5 baba right
+object 8 5 bolt right
+
+[inputs]
+input right
+
+[expected]
+at 5 5 baba
+tick 1
+not_won

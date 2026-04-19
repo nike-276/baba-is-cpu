@@ -264,7 +264,11 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::P_Nudgeleft,  true, "T:nudgeleft");
     add(K::P_Nudgedown,  true, "T:nudgedown");
     add(K::P_Power,      true, "T:power");
+    add(K::P_Power2,     true, "T:power2");
+    add(K::P_Power3,     true, "T:power3");
     add(K::O_Powered,    true, "T:powered");
+    add(K::O_Powered2,   true, "T:powered2");
+    add(K::O_Powered3,   true, "T:powered3");
 
     return p;
 }

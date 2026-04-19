@@ -81,7 +81,9 @@ enum class Kind : std::uint16_t {
     O_Eat,     // NOUN EAT NOUN: subject destroys target on contact
     O_Facing,  // NOUN [NOT] FACING <cond> IS PROPERTY: condition on facing tile or own direction
     O_Has,     // NOUN HAS NOUN [AND NOUN]*: spawn target when subject is destroyed
-    O_Powered, // prefix condition: [NOT] POWERED NOUN IS PROPERTY
+    O_Powered,  // prefix condition: [NOT] POWERED NOUN IS PROPERTY
+    O_Powered2, // prefix condition: [NOT] POWERED2 NOUN IS PROPERTY (channel 2)
+    O_Powered3, // prefix condition: [NOT] POWERED3 NOUN IS PROPERTY (channel 3)
     O_Follow,  // NOUN FOLLOW NOUN [AND NOUN]*: move toward nearest target each tick
     O_Fear,    // NOUN FEAR NOUN [AND NOUN]*: move away from adjacent target each tick
 
@@ -115,6 +117,8 @@ enum class Kind : std::uint16_t {
     P_Nudgeleft,  // move left each tick without changing facing
     P_Nudgedown,  // move down each tick without changing facing
     P_Power,   // makes the global POWERED condition true
+    P_Power2,  // makes the global POWERED2 condition true (channel 2)
+    P_Power3,  // makes the global POWERED3 condition true (channel 3)
 
     Count_,
 };
@@ -126,7 +130,7 @@ constexpr bool is_operator(Kind k) {
     return k >= Kind::O_Is && k <= Kind::O_Fear;
 }
 constexpr bool is_property(Kind k) {
-    return k >= Kind::P_You && k <= Kind::P_Power;
+    return k >= Kind::P_You && k <= Kind::P_Power3;
 }
 
 // Lowercase canonical name as it appears in .level / .test files.

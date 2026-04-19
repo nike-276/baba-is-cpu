@@ -1,0 +1,27 @@
+# POWERED3 BABA IS YOU → BABA has YOU because BOLT IS POWER3 and a bolt object exists.
+# Verifies the POWER3/POWERED3 variant works independently.
+
+[setup]
+version 1
+name "power3 basic - bolt is power3 enables powered3 baba is you"
+
+text 0 0 bolt
+text 1 0 is
+text 2 0 power3
+
+text 0 1 powered3
+text 1 1 baba
+text 2 1 is
+text 3 1 you
+
+object 5 5 baba right
+object 8 5 bolt right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+not_at 5 5 baba
+tick 1
+not_won
