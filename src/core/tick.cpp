@@ -347,7 +347,7 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
 
 void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log) {
     auto const& transforms = rs.transform_rules();
-    if (transforms.empty() && rs.conditional_transform_rules().empty()) return;
+    if (transforms.empty() && rs.conditional_transform_rules().empty() && rs.facing_transform_rules().empty()) return;
 
     std::map<Kind, std::vector<Kind>> xmap;
     for (auto const& tr : transforms) {
@@ -361,7 +361,7 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
         if (self) it = xmap.erase(it);
         else      ++it;
     }
-    if (xmap.empty() && rs.conditional_transform_rules().empty()) return;
+    if (xmap.empty() && rs.conditional_transform_rules().empty() && rs.facing_transform_rules().empty()) return;
 
     struct XEntry { ObjectId id; Coord pos; Direction facing; std::vector<Kind> targets; };
     std::vector<XEntry> pending;
@@ -400,6 +400,44 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
         }
         for (auto& [id, targets] : cond_targets) {
             // Sort + dedup handles duplicates from multiple scan starting positions.
+            std::sort(targets.begin(), targets.end());
+            targets.erase(std::unique(targets.begin(), targets.end()), targets.end());
+            Object const* o = world.get(id);
+            if (o) pending.push_back({id, o->pos, o->facing, targets});
+        }
+    }
+
+    // Facing transforms (NOUN [NOT] FACING <cond> IS NOUN).
+    {
+        auto facing_match = [](Object const* o, Kind cond, World const& w) -> bool {
+            bool cond_is_dir = (cond == Kind::P_Left || cond == Kind::P_Right ||
+                                cond == Kind::P_Up   || cond == Kind::P_Down);
+            if (cond_is_dir) {
+                Direction req = cond == Kind::P_Left  ? Direction::Left  :
+                                cond == Kind::P_Right ? Direction::Right :
+                                cond == Kind::P_Up    ? Direction::Up    :
+                                                        Direction::Down;
+                return o->facing == req;
+            }
+            Coord fp = {o->pos.x + step(o->facing).x, o->pos.y + step(o->facing).y};
+            for (ObjectId oid : w.at(fp)) {
+                Object const* ob = w.get(oid);
+                if (ob && !ob->text && ob->kind == cond) return true;
+            }
+            return false;
+        };
+        std::map<ObjectId, std::vector<Kind>> ftargets;
+        for (ObjectId id : world.all_ids()) {
+            Object const* o = world.get(id);
+            if (!o || o->text) continue;
+            for (auto const& ftr : rs.facing_transform_rules()) {
+                if (ftr.subject != o->kind) continue;
+                bool matched = facing_match(o, ftr.condition, world);
+                if (ftr.negated ? !matched : matched)
+                    ftargets[id].push_back(ftr.target);
+            }
+        }
+        for (auto& [id, targets] : ftargets) {
             std::sort(targets.begin(), targets.end());
             targets.erase(std::unique(targets.begin(), targets.end()), targets.end());
             Object const* o = world.get(id);

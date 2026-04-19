@@ -54,6 +54,14 @@ struct FacingPropertyRule {
     bool negated{false};  // true for NOT FACING
 };
 
+// NOUN [NOT] FACING <cond> IS NOUN — conditional transform based on facing.
+struct FacingTransformRule {
+    Kind subject;
+    Kind condition;  // noun OR directional property
+    Kind target;
+    bool negated{false};
+};
+
 // NOUN ON NOUN [AND NOUN]* IS PROPERTY: `subject` has `property` only when
 // sharing a tile with ALL of the condition_nouns (or NONE if negated).
 struct ConditionalPropertyRule {
@@ -102,6 +110,7 @@ public:
     std::vector<ConditionalTransformRule> const& conditional_transform_rules() const { return cond_transforms_; }
     std::vector<ConditionalMakeRule>      const& conditional_make_rules()      const { return cond_makes_; }
     std::vector<FacingPropertyRule>       const& facing_rules()                const { return facing_rules_; }
+    std::vector<FacingTransformRule>      const& facing_transform_rules()      const { return facing_transforms_; }
 
 private:
     std::vector<PropertyRule>            rules_;
@@ -112,6 +121,7 @@ private:
     std::vector<ConditionalTransformRule> cond_transforms_;
     std::vector<ConditionalMakeRule>      cond_makes_;
     std::vector<FacingPropertyRule>       facing_rules_;
+    std::vector<FacingTransformRule>      facing_transforms_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
 
