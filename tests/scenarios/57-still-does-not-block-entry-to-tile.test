@@ -1,0 +1,28 @@
+# STILL alone does NOT make a tile impassable — other objects can enter.
+# Rock is STILL (cannot self-move or be pushed), but Baba (YOU) can walk onto
+# the same tile because STILL without PUSH/STOP allows co-location.
+
+[setup]
+version 1
+name "still alone: passable tile (co-location allowed)"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 you
+
+text 0 1 rock
+text 1 1 is
+text 2 1 still
+
+object 5 5 baba right
+object 6 5 rock right
+
+[inputs]
+input right
+
+[expected]
+at 6 5 baba
+at 6 5 rock
+not_at 5 5 baba
+tick 1
+not_won

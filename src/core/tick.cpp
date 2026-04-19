@@ -91,9 +91,12 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
             bool swap  = rs.object_has_property(world, id, Kind::P_Swap);
 
             if (still) {
-                // STILL blocks movement through this tile regardless of PUSH.
-                // SWAP objects can pass through STILL (but won't move it — handled in apply_swap).
-                any_blocker = true;
+                // STILL objects cannot be displaced. If they have PUSH (would need to be
+                // pushed to make room) or STOP they block; STILL alone allows co-location.
+                if (push || stop) {
+                    bool shut = stop && rs.object_has_property(world, id, Kind::P_Shut);
+                    if (!swap && !(shut && chain_has_open)) any_blocker = true;
+                }
             } else if (push) {
                 pushables.push_back(id);
                 if (rs.object_has_property(world, id, Kind::P_Open)) chain_has_open = true;
