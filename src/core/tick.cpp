@@ -316,8 +316,8 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
         for (ObjectId id : world.all_ids()) {
             Object const* o = world.get(id);
             if (!o || o->text || o->kind != cmr.subject) continue;
-            // Check all condition nouns.
-            bool condition_met = true;
+            // Check all condition nouns. ON A AND B: all present. NOT ON A AND B: not all present.
+            bool all_found = true;
             for (Kind cn : cmr.condition_nouns) {
                 bool found = false;
                 for (ObjectId other : world.at(o->pos)) {
@@ -325,9 +325,9 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
                     Object const* ob = world.get(other);
                     if (ob && !ob->text && ob->kind == cn) { found = true; break; }
                 }
-                if (cmr.negated_condition ? found : !found) { condition_met = false; break; }
+                if (!found) { all_found = false; break; }
             }
-            if (!condition_met) continue;
+            if (!(cmr.negated_condition ? !all_found : all_found)) continue;
             // Spawn target if not already present.
             bool already = false;
             for (ObjectId other : world.at(o->pos)) {
@@ -381,7 +381,7 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
             if (!o || o->text) continue;
             for (auto const& ctr : rs.conditional_transform_rules()) {
                 if (ctr.subject != o->kind) continue;
-                bool condition_met = true;
+                bool all_found = true;
                 for (Kind cn : ctr.condition_nouns) {
                     bool found = false;
                     for (ObjectId other : world.at(o->pos)) {
@@ -389,9 +389,9 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
                         Object const* ob = world.get(other);
                         if (ob && !ob->text && ob->kind == cn) { found = true; break; }
                     }
-                    if (ctr.negated_condition ? found : !found) { condition_met = false; break; }
+                    if (!found) { all_found = false; break; }
                 }
-                if (condition_met) cond_targets[id].push_back(ctr.target);
+                if (ctr.negated_condition ? !all_found : all_found) cond_targets[id].push_back(ctr.target);
             }
         }
         for (auto& [id, targets] : cond_targets) {

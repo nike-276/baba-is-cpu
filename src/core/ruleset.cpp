@@ -509,7 +509,8 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
     if (!o->text) {
         for (auto const& cr : cond_rules_) {
             if (cr.subject != o->kind || cr.property != property) continue;
-            bool condition_met = true;
+            // ON A AND B: grant if ALL present. NOT ON A AND B: grant if NOT ALL present.
+            bool all_found = true;
             for (Kind cn : cr.condition_nouns) {
                 bool found = false;
                 for (ObjectId other : world.at(o->pos)) {
@@ -517,8 +518,9 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
                     Object const* ob = world.get(other);
                     if (ob && !ob->text && ob->kind == cn) { found = true; break; }
                 }
-                if (cr.negated_condition ? found : !found) { condition_met = false; break; }
+                if (!found) { all_found = false; break; }
             }
+            bool condition_met = cr.negated_condition ? !all_found : all_found;
             if (condition_met) return true;
         }
     }

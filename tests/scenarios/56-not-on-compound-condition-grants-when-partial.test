@@ -1,0 +1,28 @@
+# CART NOT ON TRACK AND BABA IS AUTO: cart has AUTO when on track but NOT on baba.
+# The negated compound ON condition revokes AUTO only when ALL named nouns co-present.
+# If cart is on track but baba is elsewhere, cart still has AUTO and should move.
+
+[setup]
+version 1
+name "not-on compound: partial co-presence still grants property"
+
+text 0 0 cart
+text 1 0 not
+text 2 0 on
+text 3 0 track
+text 4 0 and
+text 5 0 baba
+text 6 0 is
+text 7 0 auto
+
+object 5 5 track right
+object 5 5 cart right
+object 9 9 baba right
+
+[inputs]
+input right
+
+[expected]
+count cart 1
+at 6 5 cart
+not_won
