@@ -1,0 +1,29 @@
+# KEKE IS REVERT: a Keke that was never transformed has original_kind==current_kind.
+# REVERT does nothing — Keke stays Keke. Other transforms (KEKE IS BABA) apply normally.
+
+[setup]
+version 1
+name "revert: no-op when object was never transformed"
+
+text 0 0 keke
+text 1 0 is
+text 2 0 revert
+
+text 0 1 keke
+text 1 1 is
+text 2 1 baba
+
+text 0 2 baba
+text 1 2 is
+text 2 2 you
+
+object 5 5 keke right
+
+[inputs]
+input wait
+
+[expected]
+count keke 0
+count baba 1
+at 5 5 baba
+not_won

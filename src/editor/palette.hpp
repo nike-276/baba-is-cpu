@@ -259,6 +259,7 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::P_Still,     true, "T:still");
     add(K::P_Shift,     true, "T:shift");
     add(K::P_Swap,       true, "T:swap");
+    add(K::P_Revert,     true, "T:revert");
     add(K::P_Nudgeright, true, "T:nudgeright");
     add(K::P_Nudgeup,    true, "T:nudgeup");
     add(K::P_Nudgeleft,  true, "T:nudgeleft");

@@ -41,7 +41,7 @@ ObjectId do_spawn(World& world, Coord pos, Kind kind, bool text, Direction facin
 void do_destroy(World& world, ObjectId id, std::vector<Change>& log) {
     Object const* o = world.get(id);
     if (!o) return;
-    log.push_back(Change::destroy(id, o->pos, o->kind, o->text, o->facing));
+    log.push_back(Change::destroy(id, o->pos, o->kind, o->original_kind, o->text, o->facing));
     world.destroy(id);
 }
 
@@ -480,6 +480,52 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
             targets.erase(std::unique(targets.begin(), targets.end()), targets.end());
             Object const* o = world.get(id);
             if (o) pending.push_back({id, o->pos, o->facing, targets});
+        }
+    }
+
+    // REVERT: override any pending transform for objects that have REVERT and whose
+    // original_kind differs from their current kind. X IS X disables REVERT.
+    {
+        std::unordered_set<Kind> self_kinds;
+        for (auto const& tr : rs.transform_rules())
+            if (tr.from == tr.to) self_kinds.insert(tr.from);
+
+        // Returns true if kind k has P_Revert via a non-negated property rule.
+        auto kind_has_revert = [&](Kind k) -> bool {
+            for (auto const& pr : rs.property_rules())
+                if (pr.subject == k && pr.property == Kind::P_Revert && !pr.negated)
+                    return true;
+            return false;
+        };
+
+        std::map<ObjectId, size_t> idx;
+        for (size_t i = 0; i < pending.size(); ++i) idx[pending[i].id] = i;
+
+        // Phase A: pending transforms whose target kind has REVERT — intercept them
+        // so the object reverts to original_kind instead of becoming the target.
+        for (size_t i = 0; i < pending.size(); ++i) {
+            auto& entry = pending[i];
+            if (entry.targets.size() != 1) continue;
+            Kind target = entry.targets[0];
+            if (!kind_has_revert(target)) continue;
+            if (self_kinds.count(target)) continue;
+            Object const* o = world.get(entry.id);
+            if (!o || o->text) continue;
+            if (o->original_kind == target) continue; // already at original, no-op
+            entry.targets = {o->original_kind};
+        }
+
+        // Phase B: objects currently a reverting kind not covered by a pending transform.
+        for (ObjectId id : world.all_ids()) {
+            Object const* o = world.get(id);
+            if (!o || o->text) continue;
+            if (!rs.object_has_property(world, id, Kind::P_Revert)) continue;
+            if (self_kinds.count(o->kind)) continue;
+            if (o->original_kind == o->kind) continue;
+            XEntry e{id, o->pos, o->facing, {o->original_kind}};
+            auto it = idx.find(id);
+            if (it != idx.end()) pending[it->second] = e;
+            else { idx[id] = pending.size(); pending.push_back(e); }
         }
     }
 

@@ -43,6 +43,7 @@ struct Change {
 
     // Destroy snapshot — enough to re-spawn on undo
     Kind       obj_kind{Kind::None};
+    Kind       obj_original_kind{Kind::None};
     bool       obj_text{false};
     Direction  obj_facing{Direction::Right};
     Coord      obj_pos{};
@@ -74,14 +75,15 @@ struct Change {
         return c;
     }
 
-    static Change destroy(ObjectId id, Coord pos, Kind k, bool text, Direction facing) {
+    static Change destroy(ObjectId id, Coord pos, Kind k, Kind orig_k, bool text, Direction facing) {
         Change c;
-        c.kind       = ChangeKind::Destroy;
-        c.id         = id;
-        c.obj_pos    = pos;
-        c.obj_kind   = k;
-        c.obj_text   = text;
-        c.obj_facing = facing;
+        c.kind              = ChangeKind::Destroy;
+        c.id                = id;
+        c.obj_pos           = pos;
+        c.obj_kind          = k;
+        c.obj_original_kind = orig_k;
+        c.obj_text          = text;
+        c.obj_facing        = facing;
         return c;
     }
 

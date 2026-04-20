@@ -124,6 +124,7 @@ enum class Kind : std::uint16_t {
     P_Still,
     P_Shift,
     P_Swap,
+    P_Revert,
     P_Nudgeright, // move right each tick without changing facing
     P_Nudgeup,    // move up each tick without changing facing
     P_Nudgeleft,  // move left each tick without changing facing
