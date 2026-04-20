@@ -655,7 +655,7 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
             const int ROW_H = 14;
             const int PAD   = 6;
             const int PW    = 270;
-            const int PH    = PAD + ROW_H + PAD + N * ROW_H + PAD + ROW_H + PAD;
+            const int PH    = PAD + ROW_H + PAD + N * ROW_H + PAD + ROW_H + ROW_H + PAD;
             const int PX    = WIN_W - rules_w - PW - 4;
             const int PY    = 4;
 
@@ -683,6 +683,14 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
                 std::snprintf(row, sizeof(row), "%-22s %5.1f  %3.0f%%",
                               s.name, s.mean_us(), pct);
                 DrawText(row, PX + PAD, row_y, FONT, col);
+                row_y += ROW_H;
+            }
+            // Object count row.
+            {
+                std::size_t obj_count = ed.world().all_ids().size();
+                char obj[64];
+                std::snprintf(obj, sizeof(obj), "%-22s %5zu", "objects", obj_count);
+                DrawText(obj, PX + PAD, row_y, FONT, LIGHTGRAY);
                 row_y += ROW_H;
             }
             // Total row.

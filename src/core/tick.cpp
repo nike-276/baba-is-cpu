@@ -146,6 +146,24 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
 // UP/DOWN/LEFT/RIGHT set the facing of matching objects; no movement.
 
 void apply_directional(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    static constexpr Kind kDirProps[] = {
+        Kind::P_Left, Kind::P_Right, Kind::P_Up, Kind::P_Down,
+    };
+    auto is_dir = [](Kind p) {
+        for (Kind d : kDirProps) if (p == d) return true;
+        return false;
+    };
+    bool any = false;
+    for (auto const& r : rs.property_rules())
+        if (!r.negated && is_dir(r.property)) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.conditional_rules())
+            if (is_dir(r.property)) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.global_condition_property_rules())
+            if (is_dir(r.property)) { any = true; break; }
+    if (!any) return;
+
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
@@ -175,6 +193,25 @@ void fall_slide(World& world, ObjectId id, Coord step_v, RuleSet const& rs,
 }
 
 void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    static constexpr Kind kAutoProps[] = {
+        Kind::P_Move, Kind::P_Auto,
+        Kind::P_Fall, Kind::P_Fallup, Kind::P_Fallleft, Kind::P_Fallright,
+    };
+    auto is_auto = [](Kind p) {
+        for (Kind a : kAutoProps) if (p == a) return true;
+        return false;
+    };
+    bool any = false;
+    for (auto const& r : rs.property_rules())
+        if (!r.negated && is_auto(r.property)) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.conditional_rules())
+            if (is_auto(r.property)) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.global_condition_property_rules())
+            if (is_auto(r.property)) { any = true; break; }
+    if (!any) return;
+
     struct Mover { ObjectId id; Coord step_v; bool slide; bool flip_on_block; };
     std::vector<Mover> movers;
 
@@ -215,6 +252,17 @@ void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) 
 // one step in the SHIFT object's facing direction (respects STOP/STILL).
 
 void apply_shift(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    bool any = false;
+    for (auto const& r : rs.property_rules())
+        if (!r.negated && r.property == Kind::P_Shift) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.conditional_rules())
+            if (r.property == Kind::P_Shift) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.global_condition_property_rules())
+            if (r.property == Kind::P_Shift) { any = true; break; }
+    if (!any) return;
+
     std::vector<ObjectId> shifters;
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
@@ -255,6 +303,8 @@ void apply_shift(World& world, RuleSet const& rs, std::vector<Change>& log) {
 void apply_swap(World& world, RuleSet const& rs,
                 std::unordered_set<ObjectId> const& initial_swap,
                 std::vector<Change>& log) {
+    if (initial_swap.empty()) return;
+
     // Build original-position map from Move entries recorded so far.
     // emplace guarantees we capture the *first* Move per object (its true origin).
     std::unordered_map<ObjectId, Coord> original_pos;
@@ -709,6 +759,25 @@ void apply_has(World& world, RuleSet const& rs,
 // one tile in the named direction. Does not change facing on block (unlike MOVE).
 
 void apply_nudge(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    static constexpr Kind kNudgeProps[] = {
+        Kind::P_Nudgeright, Kind::P_Nudgeup,
+        Kind::P_Nudgeleft,  Kind::P_Nudgedown,
+    };
+    auto is_nudge = [](Kind p) {
+        for (Kind n : kNudgeProps) if (p == n) return true;
+        return false;
+    };
+    bool any = false;
+    for (auto const& r : rs.property_rules())
+        if (!r.negated && is_nudge(r.property)) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.conditional_rules())
+            if (is_nudge(r.property)) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.global_condition_property_rules())
+            if (is_nudge(r.property)) { any = true; break; }
+    if (!any) return;
+
     static constexpr std::pair<Kind, Direction> kPasses[] = {
         {Kind::P_Nudgeright, Direction::Right},
         {Kind::P_Nudgeup,    Direction::Up},
