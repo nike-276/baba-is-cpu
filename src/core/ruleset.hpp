@@ -93,29 +93,33 @@ struct HasRule {
     Kind target;
 };
 
-// NOUN ON/NOT ON … IS PROPERTY: `subject` has `property` only when
-// ALL condition_nouns are present AND ALL forbidden_nouns are absent.
-// Supports mixed ON/NOT ON chains: e.g. NOUN ON X AND NOT ON Y IS P.
+// One clause in a compound ON-condition.
+// nouns: ALL must co-occupy the tile (AND-joined within clause).
+// negated: if true, requires that NOT all nouns are present.
+struct CondClause {
+    std::vector<Kind> nouns;  // ALL must be present (or absent if negated)
+    bool negated{false};      // true → require NOT all present
+};
+
+// NOUN ON NOUN [AND NOUN]* [AND [NOT] ON NOUN [AND NOUN]*]* IS PROPERTY:
+// `subject` has `property` only when ALL clauses pass.
 struct ConditionalPropertyRule {
     Kind subject;
-    std::vector<Kind> condition_nouns;  // ALL must be present (ON nouns)
-    std::vector<Kind> forbidden_nouns;  // ALL must be absent (NOT ON nouns)
+    std::vector<CondClause> clauses;  // ALL clauses must pass
     Kind property;
 };
 
-// NOUN ON/NOT ON … IS NOUN: conditional transform.
+// NOUN ON ... IS NOUN: conditional transform.
 struct ConditionalTransformRule {
     Kind subject;
-    std::vector<Kind> condition_nouns;
-    std::vector<Kind> forbidden_nouns;
+    std::vector<CondClause> clauses;
     Kind target;
 };
 
-// NOUN ON/NOT ON … MAKE NOUN: conditional spawn.
+// NOUN ON ... MAKE NOUN: conditional spawn.
 struct ConditionalMakeRule {
     Kind subject;
-    std::vector<Kind> condition_nouns;
-    std::vector<Kind> forbidden_nouns;
+    std::vector<CondClause> clauses;
     Kind target;
 };
 

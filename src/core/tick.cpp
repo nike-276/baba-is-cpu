@@ -336,29 +336,23 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
         for (ObjectId id : world.all_ids()) {
             Object const* o = world.get(id);
             if (!o || o->text || o->kind != cmr.subject) continue;
-            // ALL condition_nouns must be present AND ALL forbidden_nouns must be absent.
-            bool met = true;
-            for (Kind cn : cmr.condition_nouns) {
-                bool found = false;
-                for (ObjectId other : world.at(o->pos)) {
-                    if (other == id) continue;
-                    Object const* ob = world.get(other);
-                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                }
-                if (!found) { met = false; break; }
-            }
-            if (met) {
-                for (Kind cn : cmr.forbidden_nouns) {
+            // ALL clauses must pass.
+            bool all_clauses_pass = true;
+            for (auto const& clause : cmr.clauses) {
+                bool all_found = true;
+                for (Kind cn : clause.nouns) {
                     bool found = false;
                     for (ObjectId other : world.at(o->pos)) {
                         if (other == id) continue;
                         Object const* ob = world.get(other);
                         if (ob && !ob->text && ob->kind == cn) { found = true; break; }
                     }
-                    if (found) { met = false; break; }
+                    if (!found) { all_found = false; break; }
                 }
+                bool clause_pass = clause.negated ? !all_found : all_found;
+                if (!clause_pass) { all_clauses_pass = false; break; }
             }
-            if (!met) continue;
+            if (!all_clauses_pass) continue;
             // Spawn target if not already present.
             bool already = false;
             for (ObjectId other : world.at(o->pos)) {
@@ -412,28 +406,22 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
             if (!o || o->text) continue;
             for (auto const& ctr : rs.conditional_transform_rules()) {
                 if (ctr.subject != o->kind) continue;
-                bool met = true;
-                for (Kind cn : ctr.condition_nouns) {
-                    bool found = false;
-                    for (ObjectId other : world.at(o->pos)) {
-                        if (other == id) continue;
-                        Object const* ob = world.get(other);
-                        if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                    }
-                    if (!found) { met = false; break; }
-                }
-                if (met) {
-                    for (Kind cn : ctr.forbidden_nouns) {
+                bool all_clauses_pass = true;
+                for (auto const& clause : ctr.clauses) {
+                    bool all_found = true;
+                    for (Kind cn : clause.nouns) {
                         bool found = false;
                         for (ObjectId other : world.at(o->pos)) {
                             if (other == id) continue;
                             Object const* ob = world.get(other);
                             if (ob && !ob->text && ob->kind == cn) { found = true; break; }
                         }
-                        if (found) { met = false; break; }
+                        if (!found) { all_found = false; break; }
                     }
+                    bool clause_pass = clause.negated ? !all_found : all_found;
+                    if (!clause_pass) { all_clauses_pass = false; break; }
                 }
-                if (met) cond_targets[id].push_back(ctr.target);
+                if (all_clauses_pass) cond_targets[id].push_back(ctr.target);
             }
         }
         for (auto& [id, targets] : cond_targets) {

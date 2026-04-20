@@ -1,11 +1,10 @@
-# CART NOT ON TRACK AND BABA IS AUTO: cart has AUTO only when BOTH track and baba
-# are absent from its tile.  AND distributes over NOT ON, so each noun independently
-# must be absent.
-# Here cart is ON track → NOT ON TRACK fails → no AUTO → cart cannot move.
+# CART NOT ON TRACK AND BABA IS AUTO: cart has AUTO when on track but NOT on baba.
+# The negated compound ON condition revokes AUTO only when ALL named nouns co-present.
+# If cart is on track but baba is elsewhere, cart still has AUTO and should move.
 
 [setup]
 version 1
-name "not-on compound: cart on track lacks AUTO because track is present"
+name "not-on compound: partial co-presence still grants property"
 
 text 0 0 cart
 text 1 0 not
@@ -25,5 +24,5 @@ input right
 
 [expected]
 count cart 1
-at 5 5 cart
+at 6 5 cart
 not_won
