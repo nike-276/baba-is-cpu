@@ -363,14 +363,14 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
     }
     if (xmap.empty() && rs.conditional_transform_rules().empty() && rs.facing_transform_rules().empty()) return;
 
-    struct XEntry { ObjectId id; Coord pos; Direction facing; std::vector<Kind> targets; };
+    struct XEntry { ObjectId id; Coord pos; Direction facing; std::vector<Kind> targets; Kind original_kind{Kind::None}; };
     std::vector<XEntry> pending;
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
         auto it = xmap.find(o->kind);
         if (it != xmap.end()) {
-            pending.push_back({id, o->pos, o->facing, it->second});
+            pending.push_back({id, o->pos, o->facing, it->second, o->original_kind});
         }
     }
 
@@ -403,7 +403,7 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
             std::sort(targets.begin(), targets.end());
             targets.erase(std::unique(targets.begin(), targets.end()), targets.end());
             Object const* o = world.get(id);
-            if (o) pending.push_back({id, o->pos, o->facing, targets});
+            if (o) pending.push_back({id, o->pos, o->facing, targets, o->original_kind});
         }
     }
 
@@ -441,7 +441,7 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
             std::sort(targets.begin(), targets.end());
             targets.erase(std::unique(targets.begin(), targets.end()), targets.end());
             Object const* o = world.get(id);
-            if (o) pending.push_back({id, o->pos, o->facing, targets});
+            if (o) pending.push_back({id, o->pos, o->facing, targets, o->original_kind});
         }
     }
 
@@ -498,7 +498,9 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
         } else {
             do_destroy(world, e.id, log);
             for (Kind target : e.targets) {
-                do_spawn(world, e.pos, target, /*text=*/false, e.facing, log);
+                ObjectId nid = do_spawn(world, e.pos, target, /*text=*/false, e.facing, log);
+                if (e.original_kind != Kind::None)
+                    world.set_original_kind(nid, e.original_kind);
             }
         }
     }
