@@ -3,8 +3,6 @@
 #include "ruleset.hpp"
 
 #include <algorithm>
-#include <chrono>
-#include <cstdio>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
@@ -838,25 +836,11 @@ void apply_play(World const& world, RuleSet const& rs,
 // ── apply_tick (9-phase pipeline) ─────────────────────────────────────────
 
 TickReport apply_tick(World& world, Input input) {
-    using Clock = std::chrono::steady_clock;
-    using Ms    = std::chrono::duration<double, std::milli>;
-    static int tick_num = 0;
-    ++tick_num;
-    auto t0 = Clock::now();
-    auto phase = [&](const char* name, auto t_start) {
-        auto ms = std::chrono::duration_cast<Ms>(Clock::now() - t_start).count();
-        if (ms >= 1.0)
-            std::fprintf(stderr, "  [tick %d] %-20s %6.1f ms\n", tick_num, name, ms);
-        return Clock::now();
-    };
-
     TickReport report;
     std::vector<Change>& log = report.changes;
 
     // Phase 1: PARSE_INITIAL
-    auto tp = Clock::now();
     RuleSet rs = RuleSet::parse(world);
-    tp = phase("parse_initial", tp);
 
     // Snapshot objects that have SWAP at tick-start so apply_swap doesn't
     // spuriously activate conditional SWAP acquired mid-tick by landing on the
@@ -872,7 +856,6 @@ TickReport apply_tick(World& world, Input input) {
 
     // Phase 1.5: APPLY_DIRECTIONAL — set facing of UP/DOWN/LEFT/RIGHT objects
     apply_directional(world, rs, log);
-    tp = phase("directional", tp);
 
     // Phase 2: APPLY_INPUT
     if (input.kind == InputKind::Move) {
@@ -887,112 +870,54 @@ TickReport apply_tick(World& world, Input input) {
             if (try_move(world, yid, step_v, rs, log)) report.moved_count++;
         }
     }
-    tp = phase("input", tp);
 
     // Phase 2.5: APPLY_AUTO_MOVE
     apply_auto_move(world, rs, log);
-    tp = phase("auto_move", tp);
 
     // Phase 2.53: APPLY_NUDGE
     apply_nudge(world, rs, log);
-    tp = phase("nudge", tp);
 
     // Phase 2.55: APPLY_FEAR
     apply_fear(world, rs, log);
-    tp = phase("fear", tp);
 
     // Phase 2.6: APPLY_SHIFT
     apply_shift(world, rs, log);
-    tp = phase("shift", tp);
 
     // Phase 2.7: APPLY_SWAP
     apply_swap(world, rs, initial_swap, log);
-    tp = phase("swap", tp);
 
     // Phase 3: PARSE_POST_MOVE
     rs = RuleSet::parse(world);
-    tp = phase("parse_post_move", tp);
 
     // Phase 3.5: APPLY_FOLLOW
     apply_follow(world, rs, log);
-    tp = phase("follow", tp);
 
     // Phase 4: TRANSFORM
     apply_transforms(world, rs, log);
-    tp = phase("transform", tp);
 
     // Phase 5: PARSE_POST_TRANSFORM
     rs = RuleSet::parse(world);
-    tp = phase("parse_post_xform", tp);
 
     // Phase 6: DESTRUCT
     std::size_t const pre_destruct = log.size();
     apply_destructions(world, rs, log);
-    tp = phase("destruct", tp);
 
     // Phase 6.1: HAS (spawn on destruction, before APPLY_MAKE)
     apply_has(world, rs, log, pre_destruct);
-    tp = phase("has", tp);
 
     // Phase 6.5: APPLY_MAKE
     apply_make(world, rs, log);
-    tp = phase("make", tp);
 
     // Phase 7: PARSE_POST_DESTRUCT
     rs = RuleSet::parse(world);
-    tp = phase("parse_post_destruct", tp);
 
     // Phase 7.5: APPLY_PLAY
     apply_play(world, rs, report.sound_events);
-    tp = phase("play", tp);
 
     // Phase 8: CHECK_WIN
     report.won = check_win(world, rs);
-    tp = phase("check_win", tp);
 
     // Phase 9: COMMIT — changes are already in report.changes; caller pushes to undo stack
-
-    // Per-tick summary + hotspot tiles.
-    {
-        auto total_ms = std::chrono::duration_cast<Ms>(Clock::now() - t0).count();
-        std::size_t n_obj = world.object_count();
-        std::size_t n_text = 0;
-        for (ObjectId id : world.all_ids())
-            if (auto const* o = world.get(id); o && o->text) ++n_text;
-
-        // Collect the top-5 tiles by object count.
-        struct Hot { Coord c; std::size_t n; };
-        std::vector<Hot> hot;
-        for (Coord c : world.all_cells()) {
-            std::size_t n = world.at(c).size();
-            if (n > 1) hot.push_back({c, n});
-        }
-        std::sort(hot.begin(), hot.end(), [](Hot const& a, Hot const& b){ return a.n > b.n; });
-        if (hot.size() > 5) hot.resize(5);
-
-        std::fprintf(stderr,
-            "[tick %4d] %6.1f ms  objs=%-5zu text=%-4zu changes=%-5zu",
-            tick_num, total_ms, n_obj, n_text, log.size());
-        if (!hot.empty()) {
-            std::fprintf(stderr, "  hotspots:");
-            for (auto const& h : hot) {
-                // Print what kinds are stacked there.
-                std::fprintf(stderr, " (%d,%d)x%zu[", h.c.x, h.c.y, h.n);
-                std::unordered_map<Kind, int> counts;
-                for (ObjectId id : world.at(h.c))
-                    if (auto const* o = world.get(id)) counts[o->kind]++;
-                bool first = true;
-                for (auto const& [k, cnt] : counts) {
-                    if (!first) std::fprintf(stderr, "+");
-                    if (cnt > 1) std::fprintf(stderr, "%dx", cnt);
-                    std::fprintf(stderr, "%s", kind_name(k).data());
-                    first = false;
-                }
-                std::fprintf(stderr, "]");
-            }
-        }
-        std::fprintf(stderr, "\n");
-    }
 
     return report;
 }
