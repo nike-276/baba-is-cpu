@@ -1,0 +1,45 @@
+version 1
+name "schematics/rulesmem.schem"
+origin -5 5
+
+text -5 5 track
+text -4 5 on
+text -3 5 baba
+text -2 5 is
+text -1 5 shift
+text -5 6 car
+text -4 6 and
+text -3 6 cart
+text -2 6 is
+text -1 6 auto
+text -5 8 car
+text -4 8 and
+text -3 8 cart
+text -2 8 on
+text -1 8 sun
+text 0 8 is
+text 1 8 up
+text -5 9 car
+text -4 9 and
+text -3 9 cart
+text -2 9 on
+text -1 9 moon
+text 0 9 is
+text 1 9 down
+text -5 10 car
+text -4 10 and
+text -3 10 cart
+text -2 10 on
+text -1 10 planet
+text 0 10 is
+text 1 10 left
+text -5 11 car
+text -4 11 and
+text -3 11 cart
+text -2 11 on
+text -1 11 star
+text 0 11 is
+text 1 11 right
+text -5 13 lift
+text -4 13 make
+text -3 13 cart

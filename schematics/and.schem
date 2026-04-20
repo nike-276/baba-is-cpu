@@ -1,0 +1,10 @@
+version 1
+name "schematics/and.schem"
+origin 10 -2
+
+object 10 -2 cloud right
+object 10 -1 door up
+object 10 0 box right
+object 10 0 sun right
+tag 10 0 input
+tag 10 -2 output
