@@ -57,6 +57,32 @@ make test       # scenario tests only
 ./build/babaiwt tests/scenarios/01-baba-is-you.test
 ```
 
+### Profile the tick pipeline
+
+```sh
+./build/babaiwt --bench <path.level|path.test> [N=500]
+```
+
+Runs N wait-ticks (after a 10-tick warm-up) and prints a table of where time goes, sorted by total cost:
+
+```
+=== Benchmark — 1000 ticks ===
+Phase                     min(µs)  mean(µs)  max(µs)  total(ms)     %
+--------------------------------------------------------------------
+parse_post_destruct            0.9       1.2      35.7       1.24   14%
+apply_destruct                 0.9       1.2       3.9       1.22   14%
+parse_post_transform           0.8       1.2       2.0       1.19   13%
+parse_post_move                0.8       1.2       1.8       1.17   13%
+parse_initial                  0.8       1.1       3.4       1.07   12%
+apply_nudge                    0.7       0.9       1.7       0.90   10%
+apply_follow                   0.5       0.7       4.7       0.70    8%
+...
+--------------------------------------------------------------------
+TOTAL                          6.8       9.0      44.5       9.03  100%
+```
+
+Both `.level` and `.test` files are accepted. Run against your actual slow level for accurate numbers — rule count and object density both affect results significantly.
+
 ---
 
 ## Editor controls
