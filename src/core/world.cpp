@@ -61,6 +61,13 @@ bool World::flip_text(ObjectId id) {
     return true;
 }
 
+bool World::set_original_kind(ObjectId id, Kind orig_kind) {
+    auto it = objects_.find(id);
+    if (it == objects_.end()) return false;
+    it->second.original_kind = orig_kind;
+    return true;
+}
+
 bool World::destroy(ObjectId id) {
     auto it = objects_.find(id);
     if (it == objects_.end()) return false;

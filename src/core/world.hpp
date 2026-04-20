@@ -34,8 +34,9 @@ public:
     bool move(ObjectId id, Coord new_pos);
     bool face(ObjectId id, Direction d);
     bool destroy(ObjectId id);
-    bool retype(ObjectId id, Kind new_kind);     // change kind in place; same id/pos/facing
-    bool flip_text(ObjectId id);                 // toggle text bool in place (IS TEXT)
+    bool retype(ObjectId id, Kind new_kind);             // change kind in place; same id/pos/facing
+    bool flip_text(ObjectId id);                         // toggle text bool in place (IS TEXT)
+    bool set_original_kind(ObjectId id, Kind orig_kind); // set original_kind without changing current kind
 
     // Read-only access.
     Object const* get(ObjectId id) const;
