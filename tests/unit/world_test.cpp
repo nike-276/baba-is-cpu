@@ -134,7 +134,7 @@ TEST(World, respawn_restores_original_id) {
     // After destroy, id is gone.
     CHECK(w.get(id) == nullptr);
     // respawn must bring it back with the SAME id.
-    w.respawn(id, {3, 3}, Kind::N_Baba, false, Direction::Right);
+    w.respawn(id, {3, 3}, Kind::N_Baba, Kind::N_Baba, false, Direction::Right);
     auto const* o = w.get(id);
     CHECK(o != nullptr);
     CHECK((o->pos == Coord{3, 3}));
@@ -147,7 +147,7 @@ TEST(World, respawn_does_not_advance_next_id) {
     auto id = w.spawn({0, 0}, Kind::N_Wall, false);
     ObjectId before = w.next_id_preview();
     w.destroy(id);
-    w.respawn(id, {0, 0}, Kind::N_Wall, false, Direction::Right);
+    w.respawn(id, {0, 0}, Kind::N_Wall, Kind::N_Wall, false, Direction::Right);
     // next_id_ must not change — we are not allocating a new slot.
     CHECK_EQ(w.next_id_preview(), before);
 }
@@ -157,7 +157,7 @@ TEST(World, respawn_appears_in_grid) {
     auto id = w.spawn({7, 2}, Kind::N_Rock, false);
     w.destroy(id);
     CHECK_FALSE(w.occupied({7, 2}));
-    w.respawn(id, {7, 2}, Kind::N_Rock, false, Direction::Right);
+    w.respawn(id, {7, 2}, Kind::N_Rock, Kind::N_Rock, false, Direction::Right);
     CHECK(w.occupied({7, 2}));
     auto const& cell = w.at({7, 2});
     CHECK_EQ(cell.size(), std::size_t{1});
@@ -168,7 +168,7 @@ TEST(World, subsequent_spawn_still_gets_fresh_id_after_respawn) {
     World w;
     auto a = w.spawn({0, 0}, Kind::N_Baba, false);  // id=0
     w.destroy(a);
-    w.respawn(a, {0, 0}, Kind::N_Baba, false, Direction::Right);
+    w.respawn(a, {0, 0}, Kind::N_Baba, Kind::N_Baba, false, Direction::Right);
     // A regular spawn must still get a fresh monotonic id, not reuse a.
     auto b = w.spawn({1, 0}, Kind::N_Wall, false);
     CHECK_NE(a, b);

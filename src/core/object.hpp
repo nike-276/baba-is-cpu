@@ -15,6 +15,7 @@ struct Object {
     ObjectId  id{kInvalidId};
     Coord     pos{};
     Kind      kind{Kind::None};
+    Kind      original_kind{Kind::None};  // kind at first spawn; unchanged by retype
     bool      text{false};
     Direction facing{Direction::Right};
 };

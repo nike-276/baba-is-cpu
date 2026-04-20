@@ -38,7 +38,7 @@ bool Simulator::step_back() {
             case ChangeKind::Destroy:
                 // Inverse of destroy: restore original id so paired Move
                 // records in the same tick can target it correctly.
-                world_.respawn(c.id, c.obj_pos, c.obj_kind, c.obj_text, c.obj_facing);
+                world_.respawn(c.id, c.obj_pos, c.obj_kind, c.obj_original_kind, c.obj_text, c.obj_facing);
                 break;
             case ChangeKind::Retype:
                 world_.retype(c.id, c.from_kind);

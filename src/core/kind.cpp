@@ -141,6 +141,7 @@ constexpr std::array kTable = {
     Entry{"still",     Kind::P_Still},
     Entry{"shift",     Kind::P_Shift},
     Entry{"swap",      Kind::P_Swap},
+    Entry{"revert",    Kind::P_Revert},
 };
 
 }  // namespace

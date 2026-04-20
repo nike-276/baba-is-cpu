@@ -1,0 +1,29 @@
+# BABA IS KEKE, KEKE IS REVERT: Baba becomes Keke, then Keke reverts to Baba.
+# After one tick the object should be back to Baba (oscillation tick 1).
+
+[setup]
+version 1
+name "revert: object transforms back to original kind"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 keke
+
+text 0 1 keke
+text 1 1 is
+text 2 1 revert
+
+text 0 2 baba
+text 1 2 is
+text 2 2 you
+
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+count baba 1
+count keke 0
+at 5 5 baba
+not_won

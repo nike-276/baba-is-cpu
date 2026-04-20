@@ -12,13 +12,13 @@ std::vector<ObjectId> const& World::empty_cell_() {
 
 ObjectId World::spawn(Coord pos, Kind kind, bool text, Direction facing) {
     ObjectId id = next_id_++;
-    objects_.emplace(id, Object{id, pos, kind, text, facing});
+    objects_.emplace(id, Object{id, pos, kind, kind, text, facing});
     grid_[pos].push_back(id);
     return id;
 }
 
-void World::respawn(ObjectId id, Coord pos, Kind kind, bool text, Direction facing) {
-    objects_.emplace(id, Object{id, pos, kind, text, facing});
+void World::respawn(ObjectId id, Coord pos, Kind kind, Kind original_kind, bool text, Direction facing) {
+    objects_.emplace(id, Object{id, pos, kind, original_kind, text, facing});
     grid_[pos].push_back(id);
 }
 
