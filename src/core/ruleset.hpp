@@ -62,29 +62,34 @@ struct FacingTransformRule {
     bool negated{false};
 };
 
-// NOUN ON NOUN [AND NOUN]* IS PROPERTY: `subject` has `property` only when
-// sharing a tile with ALL of the condition_nouns (or NONE if negated).
+// One clause in a compound ON-condition.
+// nouns: ALL must co-occupy the tile (AND-joined within clause).
+// negated: if true, requires that NOT all nouns are present.
+struct CondClause {
+    std::vector<Kind> nouns;  // ALL must be present (or absent if negated)
+    bool negated{false};      // true → require NOT all present
+};
+
+// NOUN ON NOUN [AND NOUN]* [AND [NOT] ON NOUN [AND NOUN]*]* IS PROPERTY:
+// `subject` has `property` only when ALL clauses pass.
 struct ConditionalPropertyRule {
     Kind subject;
-    std::vector<Kind> condition_nouns;  // ALL must be present (or absent if negated)
+    std::vector<CondClause> clauses;  // ALL clauses must pass
     Kind property;
-    bool negated_condition{false};
 };
 
-// NOUN ON NOUN [AND NOUN]* IS NOUN: conditional transform.
+// NOUN ON ... IS NOUN: conditional transform.
 struct ConditionalTransformRule {
     Kind subject;
-    std::vector<Kind> condition_nouns;
+    std::vector<CondClause> clauses;
     Kind target;
-    bool negated_condition{false};
 };
 
-// NOUN ON NOUN [AND NOUN]* MAKE NOUN: conditional spawn.
+// NOUN ON ... MAKE NOUN: conditional spawn.
 struct ConditionalMakeRule {
     Kind subject;
-    std::vector<Kind> condition_nouns;
+    std::vector<CondClause> clauses;
     Kind target;
-    bool negated_condition{false};
 };
 
 class RuleSet {

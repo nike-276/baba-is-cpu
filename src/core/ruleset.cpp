@@ -44,13 +44,16 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
     auto bak = [&](Coord c) -> Coord { return {c.x - step_dir.x, c.y - step_dir.y}; };
 
     // Guard: don't start a rule from inside an AND-chained noun list.
-    // This covers two cases:
+    // This covers several cases:
     //   subject chains: "BABA AND KEKE IS P" — don't start from KEKE
     //   condition chains: "X ON A AND B IS P" — don't start from B
-    // Walk backwards through (noun AND)* chains; if O_On is reached we're in
-    // a condition list; if we walked any AND-noun pair without finding O_On
-    // we're in a subject list. Either way, skip — the rule was already parsed
-    // starting from the first noun.
+    //   mixed-polarity condition chains: "X ON A AND NOT ON B AND C IS P" —
+    //     don't start from C (which follows "AND" but is a condition noun,
+    //     not a new subject)
+    // Walk backwards through (noun AND)* chains; if O_On/O_Facing is reached
+    // we're in a condition list; if we walked any AND-noun pair without finding
+    // O_On we're in a subject list. Either way, skip — the rule was already
+    // parsed starting from the first noun.
     {
         Coord cur = bak(start);
         bool walked_and_chain = false;
@@ -61,7 +64,15 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             if (*k != Kind::O_And) break;
             Coord noun_pos = bak(cur);
             auto nk = at(noun_pos);
-            if (!nk || !is_noun(*nk)) break;
+            if (!nk || !is_noun(*nk)) {
+                // Check for AND NOT ON pattern — we're inside a condition clause list.
+                if (nk && *nk == Kind::O_Not) {
+                    Coord on_pos = bak(noun_pos);
+                    auto ok = at(on_pos);
+                    if (ok && *ok == Kind::O_On) return;  // in condition clause list
+                }
+                break;
+            }
             walked_and_chain = true;
             cur = bak(noun_pos);
         }
@@ -167,60 +178,85 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         return;
     }
 
-    // ── NOUN ON NOUN [AND NOUN]* IS/MAKE PREDICATE ─────────────────────────
-    if (*op_tok == Kind::O_On) {
-        cursor = adv(cursor);
-        auto cond_noun = at(cursor);
-        if (!cond_noun || !is_noun(*cond_noun)) return;
-        std::vector<Kind> conditions;
-        conditions.push_back(*cond_noun);
-        cursor = adv(cursor);
-        // AND loop for additional condition nouns.
-        while (true) {
-            auto k = at(cursor);
-            if (!k || *k != Kind::O_And) break;
-            Coord next = adv(cursor);
-            auto nt = at(next);
-            if (!nt || !is_noun(*nt)) break;
-            conditions.push_back(*nt);
-            cursor = adv(next);
+    // ── NOUN [NOT] ON ... [AND [NOT] ON ...]* IS/MAKE PREDICATE ───────────
+    // Unified handler for compound ON conditions with mixed polarity.
+    // op_tok is O_On for "NOUN ON ..." or O_Not for "NOUN NOT ON ..."
+    // (the O_Not case for FACING is handled separately below).
+    {
+        bool is_cond_on = (*op_tok == Kind::O_On);
+        bool is_cond_not_on = false;
+        if (*op_tok == Kind::O_Not) {
+            // Peek: NOT must be followed by ON (not FACING, not IS, etc.)
+            Coord peek = adv(cursor);
+            auto pk = at(peek);
+            is_cond_not_on = (pk && *pk == Kind::O_On);
         }
-
-        auto verb2 = at(cursor);
-        if (!verb2) return;
-
-        // NOUN ON … MAKE NOUN [AND NOUN]*
-        if (*verb2 == Kind::O_Make) {
-            cursor = adv(cursor);
-            auto t0 = at(cursor);
-            if (!t0 || !is_noun(*t0)) return;
-            std::vector<Kind> targets;
-            targets.push_back(*t0);
-            cursor = adv(cursor);
+        if (is_cond_on || is_cond_not_on) {
+            // Parse one or more condition clauses.
+            std::vector<CondClause> clauses;
+            Coord clause_cursor = cursor;
             while (true) {
-                auto k = at(cursor);
-                if (!k || *k != Kind::O_And) break;
-                Coord next = adv(cursor);
-                auto nt = at(next);
-                if (!nt || !is_noun(*nt)) break;
-                targets.push_back(*nt);
-                cursor = adv(next);
+                auto clause_tok = at(clause_cursor);
+                if (!clause_tok) break;
+                bool clause_neg = false;
+                if (*clause_tok == Kind::O_Not) {
+                    clause_neg = true;
+                    clause_cursor = adv(clause_cursor);
+                    clause_tok = at(clause_cursor);
+                    if (!clause_tok || *clause_tok != Kind::O_On) break; // malformed
+                }
+                if (*clause_tok != Kind::O_On) break;
+                clause_cursor = adv(clause_cursor);
+                auto cn = at(clause_cursor);
+                if (!cn || !is_noun(*cn)) break;
+                CondClause cl;
+                cl.negated = clause_neg;
+                cl.nouns.push_back(*cn);
+                clause_cursor = adv(clause_cursor);
+                // AND NOUN* within this clause (nouns only, not another clause)
+                while (true) {
+                    auto ak = at(clause_cursor);
+                    if (!ak || *ak != Kind::O_And) break;
+                    Coord after_and = adv(clause_cursor);
+                    auto nt = at(after_and);
+                    if (!nt || !is_noun(*nt)) break; // AND NOT or AND IS etc — end inner loop
+                    cl.nouns.push_back(*nt);
+                    clause_cursor = adv(after_and);
+                }
+                clauses.push_back(std::move(cl));
+                // Check if next tokens are AND [NOT] ON (another clause)
+                auto ak = at(clause_cursor);
+                if (!ak || *ak != Kind::O_And) break;
+                Coord after_and = adv(clause_cursor);
+                auto after_and_tok = at(after_and);
+                if (!after_and_tok) break;
+                if (*after_and_tok == Kind::O_On) {
+                    clause_cursor = after_and; // consume AND, next iter starts at ON
+                    continue;
+                }
+                if (*after_and_tok == Kind::O_Not) {
+                    Coord after_not = adv(after_and);
+                    auto after_not_tok = at(after_not);
+                    if (after_not_tok && *after_not_tok == Kind::O_On) {
+                        clause_cursor = after_and; // consume AND, next iter starts at NOT ON
+                        continue;
+                    }
+                }
+                break; // AND is not followed by [NOT] ON → end of condition clauses
             }
-            for (Kind n : subjects)
-                for (Kind t : targets)
-                    cond_make_out.push_back({n, conditions, t, false});
-            return;
-        }
+            if (clauses.empty()) return; // no valid clause parsed
 
-        if (*verb2 != Kind::O_Is) return;
-        cursor = adv(cursor);
+            cursor = clause_cursor;
+            auto verb2 = at(cursor);
+            if (!verb2) return;
 
-        // Conditional transform: NOUN ON … IS NOUN [AND NOUN]*
-        {
-            auto pred = at(cursor);
-            if (pred && is_noun(*pred)) {
+            // NOUN ON … MAKE NOUN [AND NOUN]*
+            if (*verb2 == Kind::O_Make) {
+                cursor = adv(cursor);
+                auto t0 = at(cursor);
+                if (!t0 || !is_noun(*t0)) return;
                 std::vector<Kind> targets;
-                targets.push_back(*pred);
+                targets.push_back(*t0);
                 cursor = adv(cursor);
                 while (true) {
                     auto k = at(cursor);
@@ -233,49 +269,74 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 }
                 for (Kind n : subjects)
                     for (Kind t : targets)
-                        if (n != t)
-                            cond_xform_out.push_back({n, conditions, t, false});
+                        cond_make_out.push_back({n, clauses, t});
                 return;
             }
-        }
 
-        // Conditional property: NOUN ON … IS [NOT] PROPERTY [AND …]
-        struct PropEntry { Kind prop; bool neg; };
-        std::vector<PropEntry> props;
-        auto parse_one_prop_local = [&]() -> bool {
-            auto k = at(cursor);
-            if (!k) return false;
-            bool neg = false;
-            if (*k == Kind::O_Not) {
-                neg = true;
-                cursor = adv(cursor);
-                k = at(cursor);
-                if (!k || !is_property(*k)) return false;
+            if (*verb2 != Kind::O_Is) return;
+            cursor = adv(cursor);
+
+            // Conditional transform: NOUN ON … IS NOUN [AND NOUN]*
+            {
+                auto pred = at(cursor);
+                if (pred && is_noun(*pred)) {
+                    std::vector<Kind> targets;
+                    targets.push_back(*pred);
+                    cursor = adv(cursor);
+                    while (true) {
+                        auto k = at(cursor);
+                        if (!k || *k != Kind::O_And) break;
+                        Coord next = adv(cursor);
+                        auto nt = at(next);
+                        if (!nt || !is_noun(*nt)) break;
+                        targets.push_back(*nt);
+                        cursor = adv(next);
+                    }
+                    for (Kind n : subjects)
+                        for (Kind t : targets)
+                            if (n != t)
+                                cond_xform_out.push_back({n, clauses, t});
+                    return;
+                }
             }
-            if (!is_property(*k)) return false;
-            props.push_back({*k, neg});
-            cursor = adv(cursor);
-            return true;
-        };
-        if (!parse_one_prop_local()) return;
-        while (true) {
-            auto k = at(cursor);
-            if (!k || *k != Kind::O_And) break;
-            cursor = adv(cursor);
-            if (!parse_one_prop_local()) { cursor = bak(cursor); break; }
+
+            // Conditional property: NOUN ON … IS [NOT] PROPERTY [AND …]
+            struct PropEntry { Kind prop; bool neg; };
+            std::vector<PropEntry> props;
+            auto parse_one_prop_local = [&]() -> bool {
+                auto k = at(cursor);
+                if (!k) return false;
+                bool neg = false;
+                if (*k == Kind::O_Not) {
+                    neg = true;
+                    cursor = adv(cursor);
+                    k = at(cursor);
+                    if (!k || !is_property(*k)) return false;
+                }
+                if (!is_property(*k)) return false;
+                props.push_back({*k, neg});
+                cursor = adv(cursor);
+                return true;
+            };
+            if (!parse_one_prop_local()) return;
+            while (true) {
+                auto k = at(cursor);
+                if (!k || *k != Kind::O_And) break;
+                cursor = adv(cursor);
+                if (!parse_one_prop_local()) { cursor = bak(cursor); break; }
+            }
+            for (Kind n : subjects)
+                for (auto const& pe : props)
+                    if (!pe.neg) cond_out.push_back({n, clauses, pe.prop});
+            return;
         }
-        for (Kind n : subjects)
-            for (auto const& pe : props)
-                if (!pe.neg) cond_out.push_back({n, conditions, pe.prop, false});
-        return;
     }
 
-    // ── NOUN NOT ON NOUN [AND NOUN]* IS/MAKE PREDICATE ────────────────────
+    // ── NOUN NOT FACING <cond> IS NOUN|PROPERTY ────────────────────────────
     if (*op_tok == Kind::O_Not) {
         cursor = adv(cursor);
         auto on_check = at(cursor);
 
-        // ── NOUN NOT FACING <cond> IS NOUN|PROPERTY ───────────────────────
         if (on_check && *on_check == Kind::O_Facing) {
             cursor = adv(cursor);
             auto cond_k = at(cursor);
@@ -302,106 +363,9 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             return;
         }
 
-        if (!on_check || *on_check != Kind::O_On) return;
-        cursor = adv(cursor);
-        auto cond_n = at(cursor);
-        if (!cond_n || !is_noun(*cond_n)) return;
-        std::vector<Kind> conditions;
-        conditions.push_back(*cond_n);
-        cursor = adv(cursor);
-        // AND loop for additional condition nouns.
-        while (true) {
-            auto k = at(cursor);
-            if (!k || *k != Kind::O_And) break;
-            Coord next = adv(cursor);
-            auto nt = at(next);
-            if (!nt || !is_noun(*nt)) break;
-            conditions.push_back(*nt);
-            cursor = adv(next);
-        }
-
-        auto verb2 = at(cursor);
-        if (!verb2) return;
-
-        // NOUN NOT ON … MAKE NOUN [AND NOUN]*
-        if (*verb2 == Kind::O_Make) {
-            cursor = adv(cursor);
-            auto t0 = at(cursor);
-            if (!t0 || !is_noun(*t0)) return;
-            std::vector<Kind> targets;
-            targets.push_back(*t0);
-            cursor = adv(cursor);
-            while (true) {
-                auto k = at(cursor);
-                if (!k || *k != Kind::O_And) break;
-                Coord next = adv(cursor);
-                auto nt = at(next);
-                if (!nt || !is_noun(*nt)) break;
-                targets.push_back(*nt);
-                cursor = adv(next);
-            }
-            for (Kind n : subjects)
-                for (Kind t : targets)
-                    cond_make_out.push_back({n, conditions, t, /*negated=*/true});
-            return;
-        }
-
-        if (*verb2 != Kind::O_Is) return;
-        cursor = adv(cursor);
-
-        // Negated conditional transform: NOUN NOT ON … IS NOUN [AND NOUN]*
-        {
-            auto pred = at(cursor);
-            if (pred && is_noun(*pred)) {
-                std::vector<Kind> targets;
-                targets.push_back(*pred);
-                cursor = adv(cursor);
-                while (true) {
-                    auto k = at(cursor);
-                    if (!k || *k != Kind::O_And) break;
-                    Coord nxt = adv(cursor);
-                    auto nt = at(nxt);
-                    if (!nt || !is_noun(*nt)) break;
-                    targets.push_back(*nt);
-                    cursor = adv(nxt);
-                }
-                for (Kind n : subjects)
-                    for (Kind t : targets)
-                        if (n != t)
-                            cond_xform_out.push_back({n, conditions, t, /*negated=*/true});
-                return;
-            }
-        }
-
-        // Negated conditional property: NOUN NOT ON … IS [NOT] PROPERTY [AND …]
-        struct PropEntryN { Kind prop; bool neg; };
-        std::vector<PropEntryN> props;
-        auto parse_prop_neg = [&]() -> bool {
-            auto k = at(cursor);
-            if (!k) return false;
-            bool neg = false;
-            if (*k == Kind::O_Not) {
-                neg = true;
-                cursor = adv(cursor);
-                k = at(cursor);
-                if (!k || !is_property(*k)) return false;
-            }
-            if (!is_property(*k)) return false;
-            props.push_back({*k, neg});
-            cursor = adv(cursor);
-            return true;
-        };
-        if (!parse_prop_neg()) return;
-        while (true) {
-            auto k = at(cursor);
-            if (!k || *k != Kind::O_And) break;
-            cursor = adv(cursor);
-            if (!parse_prop_neg()) { cursor = bak(cursor); break; }
-        }
-        for (Kind n : subjects)
-            for (auto const& pe : props)
-                if (!pe.neg) cond_out.push_back({n, conditions, pe.prop, /*negated=*/true});
-        return;
+        // Not O_On and not O_Facing after O_Not — fall through to IS handling below.
+        // We need to un-advance cursor since we advanced past O_Not already.
+        cursor = bak(cursor);
     }
 
     // Must be IS.
@@ -568,19 +532,23 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
     if (!o->text) {
         for (auto const& cr : cond_rules_) {
             if (cr.subject != o->kind || cr.property != property) continue;
-            // ON A AND B: grant if ALL present. NOT ON A AND B: grant if NOT ALL present.
-            bool all_found = true;
-            for (Kind cn : cr.condition_nouns) {
-                bool found = false;
-                for (ObjectId other : world.at(o->pos)) {
-                    if (other == id) continue;
-                    Object const* ob = world.get(other);
-                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+            // ALL clauses must pass. Each clause: ON → all nouns present; NOT ON → not all present.
+            bool all_clauses_pass = true;
+            for (auto const& clause : cr.clauses) {
+                bool all_found = true;
+                for (Kind cn : clause.nouns) {
+                    bool found = false;
+                    for (ObjectId other : world.at(o->pos)) {
+                        if (other == id) continue;
+                        Object const* ob = world.get(other);
+                        if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                    }
+                    if (!found) { all_found = false; break; }
                 }
-                if (!found) { all_found = false; break; }
+                bool clause_pass = clause.negated ? !all_found : all_found;
+                if (!clause_pass) { all_clauses_pass = false; break; }
             }
-            bool condition_met = cr.negated_condition ? !all_found : all_found;
-            if (condition_met) return true;
+            if (all_clauses_pass) return true;
         }
 
         // Check FACING rules (NOUN [NOT] FACING <cond> IS PROPERTY).

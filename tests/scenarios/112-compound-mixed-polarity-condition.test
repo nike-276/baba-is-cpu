@@ -1,0 +1,40 @@
+# BOOK ON TILE AND NOT ON CAR AND CART IS WEAK:
+# Mixed-polarity compound ON condition. Clause 1: ON TILE (positive).
+# Clause 2: NOT ON CAR AND CART (negated — condition fails when BOTH car AND cart present).
+# With book+tile+car but no cart: clause 1 passes (tile present), clause 2 passes
+# (not all of {car,cart} present since cart is absent) → book IS WEAK.
+# BABA stepping onto the book tile should destroy the book (WEAK behaviour).
+
+[setup]
+version 1
+name "compound mixed-polarity ON condition: book on tile+car (no cart) is weak"
+
+text 0 0 book
+text 1 0 on
+text 2 0 tile
+text 3 0 and
+text 4 0 not
+text 5 0 on
+text 6 0 car
+text 7 0 and
+text 8 0 cart
+text 9 0 is
+text 10 0 weak
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 tile right
+object 5 5 car right
+object 5 5 book right
+
+object 4 5 baba right
+
+[inputs]
+input right
+
+[expected]
+count book 0
+count baba 1
+not_won
