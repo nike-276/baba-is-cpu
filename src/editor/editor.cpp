@@ -58,7 +58,7 @@ bool Editor::delete_all_at(Coord pos) {
     std::vector<ObjectId> to_delete{ids.begin(), ids.end()};
     for (ObjectId id : to_delete) {
         Object const* o = sim_.world().get(id);
-        if (o) changes.push_back(Change::destroy(id, o->pos, o->kind, o->text, o->facing));
+        if (o) changes.push_back(Change::destroy(id, o->pos, o->kind, o->original_kind, o->text, o->facing));
     }
     for (ObjectId id : to_delete) sim_.world().destroy(id);
 
@@ -79,7 +79,7 @@ bool Editor::undo_edit() {
                 sim_.world().destroy(c.id);
                 break;
             case ChangeKind::Destroy:
-                sim_.world().respawn(c.id, c.obj_pos, c.obj_kind, c.obj_text, c.obj_facing);
+                sim_.world().respawn(c.id, c.obj_pos, c.obj_kind, c.obj_original_kind, c.obj_text, c.obj_facing);
                 break;
             default: break;  // edit ops only produce Spawn/Destroy
         }
@@ -163,7 +163,7 @@ void Editor::cut_rect(Coord a, Coord b) {
             std::vector<ObjectId> to_delete{ids.begin(), ids.end()};
             for (ObjectId id : to_delete) {
                 Object const* o = sim_.world().get(id);
-                if (o) changes.push_back(Change::destroy(id, o->pos, o->kind, o->text, o->facing));
+                if (o) changes.push_back(Change::destroy(id, o->pos, o->kind, o->original_kind, o->text, o->facing));
             }
             for (ObjectId id : to_delete) sim_.world().destroy(id);
         }
