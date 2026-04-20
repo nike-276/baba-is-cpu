@@ -21,7 +21,7 @@ enum class EditorMode { Edit, Play };
 // Mode toggle: enter_play() stashes a World clone; enter_edit() restores it.
 class Editor {
 public:
-    explicit Editor(sim::Simulator sim);
+    explicit Editor(sim::Simulator sim, std::size_t undo_cap = 10'000);
 
     void enter_play();
     void enter_edit();
@@ -77,6 +77,7 @@ public:
 private:
     EditorMode      mode_{EditorMode::Edit};
     sim::Simulator  sim_;
+    std::size_t     undo_cap_{10'000};
     core::World     snapshot_{};
     bool            snapshot_valid_{false};
 

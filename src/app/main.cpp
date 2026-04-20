@@ -11,6 +11,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -22,8 +23,11 @@ void usage() {
         "\n"
         "Usage:\n"
         "  babaiwt --test <path.test> [<path.test>...]  Run scenario tests\n"
-        "  babaiwt --edit [<path.level>]               Open GUI editor\n"
-        "  babaiwt --play <path.level>                 Open GUI in play mode\n"
+        "  babaiwt --edit [--no-undo] [<path.level>]   Open GUI editor\n"
+        "  babaiwt --play [--no-undo] <path.level>     Open GUI in play mode\n"
+        "\n"
+        "Options:\n"
+        "  --no-undo   Disable undo history (saves memory on large/long levels)\n"
         "\n"
         "Exit status:\n"
         "  0 = all scenarios passed (or clean GUI exit)\n"
@@ -56,8 +60,12 @@ int main(int argc, char** argv) {
 
     if (cmd == "--edit" || cmd == "--play") {
         std::string level_path;
-        if (argc >= 3) level_path = argv[2];
-        return baba::app::run_gui(level_path);
+        std::size_t undo_cap = 10'000;
+        for (int i = 2; i < argc; ++i) {
+            if (std::strcmp(argv[i], "--no-undo") == 0) { undo_cap = 0; }
+            else if (level_path.empty())                { level_path = argv[i]; }
+        }
+        return baba::app::run_gui(level_path, undo_cap);
     }
 
     // Legacy / CI path: --test or bare file paths.

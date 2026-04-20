@@ -118,7 +118,7 @@ void play_sound_events(std::vector<core::SoundEvent> const& events) {
 }  // namespace
 
 // ── Main loop ─────────────────────────────────────────────────────────────
-int run_gui(std::string const& level_path) {
+int run_gui(std::string const& level_path, std::size_t undo_cap) {
     const int WIN_W = 1280;
     const int WIN_H = 720;
     InitWindow(WIN_W, WIN_H, "baba-is-true editor");
@@ -126,7 +126,7 @@ int run_gui(std::string const& level_path) {
     SetTargetFPS(60);
     SetExitKey(0);
 
-    editor::Editor ed(sim::Simulator(core::World{}));
+    editor::Editor ed(sim::Simulator(core::World{}, undo_cap), undo_cap);
     if (!level_path.empty()) {
         if (!ed.load_level(level_path))
             std::fprintf(stderr, "babaiwt: failed to load '%s'\n", level_path.c_str());
@@ -257,7 +257,7 @@ int run_gui(std::string const& level_path) {
         }
 
         if (state.request_new) {
-            ed            = editor::Editor(sim::Simulator(core::World{}));
+            ed            = editor::Editor(sim::Simulator(core::World{}, undo_cap), undo_cap);
             status_msg    = "New level";
             status_frames = 60;
         }

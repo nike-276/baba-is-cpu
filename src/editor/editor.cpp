@@ -10,7 +10,8 @@ namespace baba::editor {
 
 using namespace baba::core;
 
-Editor::Editor(sim::Simulator sim) : sim_{std::move(sim)} {}
+Editor::Editor(sim::Simulator sim, std::size_t undo_cap)
+    : sim_{std::move(sim)}, undo_cap_{undo_cap} {}
 
 void Editor::enter_play() {
     if (mode_ == EditorMode::Play) return;
@@ -24,7 +25,7 @@ void Editor::enter_edit() {
     if (snapshot_valid_) {
         sim_.world() = snapshot_;
         // Reset tick counter by constructing a fresh Simulator from the snapshot.
-        sim_ = sim::Simulator(snapshot_);
+        sim_ = sim::Simulator(snapshot_, undo_cap_);
     }
     mode_ = EditorMode::Edit;
 }
@@ -282,7 +283,7 @@ bool Editor::load_level(std::string const& path) {
     auto result = load_level_file(path);
     if (std::holds_alternative<ParseError>(result)) return false;
     auto& loaded = std::get<LoadedLevel>(result);
-    sim_   = sim::Simulator(std::move(loaded.world));
+    sim_   = sim::Simulator(std::move(loaded.world), undo_cap_);
     path_  = path;
     dirty_ = false;
     snapshot_valid_ = false;
