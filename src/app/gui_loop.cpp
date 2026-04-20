@@ -159,6 +159,7 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
     int                      picker_sel{0};
 
     AutoTick auto_tick;
+    bool     show_bench{false};
 
     // ── Main loop ─────────────────────────────────────────────────────────
     while (!WindowShouldClose()) {
@@ -172,6 +173,8 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
         state.request_auto_tick_faster = false;
         state.request_auto_tick_slower = false;
         state.request_auto_tick_max    = false;
+        state.request_bench_toggle     = false;
+        state.request_bench_reset      = false;
         state.pending_sounds.clear();
         renderer.set_tile_px(state.tile_px);
 
@@ -296,7 +299,17 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
                 }
             }
         }
-        if (ed.mode() != editor::EditorMode::Play) auto_tick.active = false;
+        if (ed.mode() != editor::EditorMode::Play) {
+            auto_tick.active = false;
+            show_bench       = false;
+        }
+
+        // ── Benchmark overlay toggle / reset ──────────────────────────────
+        if (state.request_bench_toggle && ed.mode() == editor::EditorMode::Play) {
+            show_bench = !show_bench;
+            if (show_bench) ed.reset_bench();
+        }
+        if (state.request_bench_reset && show_bench) ed.reset_bench();
 
         // ── Handle overlay dialog input ───────────────────────────────────
         if (overlay_active && overlay != Overlay::TagSchematic && overlay != Overlay::SchematicPicker) {
@@ -624,6 +637,61 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
             DrawRectangle(palette_w, 0, WIN_W - palette_w - rules_w, 28, {40, 20, 80, 220});
             DrawText("Tag I/O: LMB=input(blue)  RMB=output(red)  MMB=clear  Enter=save  ESC=cancel",
                      palette_w + 6, 6, 13, WHITE);
+        }
+
+        // ── Benchmark overlay (play mode, F3 to toggle, R to reset) ──────
+        if (show_bench && ed.mode() == editor::EditorMode::Play) {
+            auto br = ed.bench_report();
+
+            // Build sorted index (descending by total_ns).
+            constexpr int N = static_cast<int>(core::Phase::Count);
+            int order[N];
+            for (int i = 0; i < N; ++i) order[i] = i;
+            std::sort(order, order + N, [&](int a, int b) {
+                return br.phases[a].total_ns > br.phases[b].total_ns;
+            });
+
+            const int FONT  = 12;
+            const int ROW_H = 14;
+            const int PAD   = 6;
+            const int PW    = 270;
+            const int PH    = PAD + ROW_H + PAD + N * ROW_H + PAD + ROW_H + PAD;
+            const int PX    = WIN_W - rules_w - PW - 4;
+            const int PY    = 4;
+
+            DrawRectangle(PX, PY, PW, PH, {10, 10, 10, 210});
+            DrawRectangleLinesEx({static_cast<float>(PX), static_cast<float>(PY),
+                                  static_cast<float>(PW), static_cast<float>(PH)},
+                                 1, {80, 80, 80, 200});
+
+            // Header row.
+            char hdr[64];
+            std::snprintf(hdr, sizeof(hdr), "BENCH %d ticks  [R=reset]", br.tick_count);
+            DrawText(hdr, PX + PAD, PY + PAD, FONT, YELLOW);
+
+            int row_y = PY + PAD + ROW_H + PAD;
+            for (int idx : order) {
+                auto const& s = br.phases[idx];
+                if (s.count == 0) { row_y += ROW_H; continue; }
+                double pct = br.total.total_ns > 0
+                             ? 100.0 * s.total_ns / br.total.total_ns : 0.0;
+                // Color: hot phases (>15%) in orange, warm (>5%) yellow, rest gray.
+                Color col = (pct > 15.0) ? Color{255, 140, 0, 255}
+                          : (pct > 5.0)  ? YELLOW
+                          :                LIGHTGRAY;
+                char row[80];
+                std::snprintf(row, sizeof(row), "%-22s %5.1f  %3.0f%%",
+                              s.name, s.mean_us(), pct);
+                DrawText(row, PX + PAD, row_y, FONT, col);
+                row_y += ROW_H;
+            }
+            // Total row.
+            DrawLine(PX + PAD, row_y, PX + PW - PAD, row_y, {80, 80, 80, 180});
+            row_y += 2;
+            char tot[64];
+            std::snprintf(tot, sizeof(tot), "%-22s %5.1f  100%%",
+                          "TOTAL", br.total.mean_us());
+            DrawText(tot, PX + PAD, row_y, FONT, WHITE);
         }
 
         // Paste mode instruction banner.

@@ -65,6 +65,10 @@ struct InputState {
     bool request_auto_tick_slower{false};
     bool request_auto_tick_max{false};
 
+    // Benchmark overlay requests (play mode only).
+    bool request_bench_toggle{false};  // F3 — show/hide overlay
+    bool request_bench_reset{false};   // R  — reset accumulated stats
+
     // Sound events accumulated from play_step calls this frame.
     std::vector<core::SoundEvent> pending_sounds;
 };
@@ -313,6 +317,10 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
             st.request_auto_tick_slower = true;
         if (IsKeyPressed(KEY_ZERO) || IsKeyPressed(KEY_KP_0))
             st.request_auto_tick_max = true;
+
+        // ── Benchmark overlay ────────────────────────────────────────────
+        if (IsKeyPressed(KEY_F3))  st.request_bench_toggle = true;
+        if (IsKeyPressed(KEY_R))   st.request_bench_reset  = true;
 
         // ── Play undo ────────────────────────────────────────────────────
         bool ctrl2 = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);

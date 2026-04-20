@@ -37,6 +37,10 @@ public:
     core::TickReport play_step(core::Input input);
     bool play_undo();
 
+    // Benchmark data (accumulated from play_step calls via Simulator).
+    sim::BenchReport bench_report() const { return sim_.bench_report(); }
+    void             reset_bench()        { sim_.reset_bench(); }
+
     // World read access (for renderer + input handler).
     core::World const& world() const { return sim_.world(); }
     core::RuleSet current_rules() const { return sim_.current_rules(); }
