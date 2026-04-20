@@ -3,6 +3,7 @@
 #include "ruleset.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
@@ -835,17 +836,33 @@ void apply_play(World const& world, RuleSet const& rs,
 
 // ── apply_tick (9-phase pipeline) ─────────────────────────────────────────
 
+// Wraps a block with high_resolution_clock measurements and accumulates into
+// report.timings. Two Clock::now() calls per phase add ~30–60 ns of overhead.
+#define PHASE_TIME(phase_enum, ...)                                             \
+    do {                                                                        \
+        auto _t0 = std::chrono::high_resolution_clock::now();                  \
+        { __VA_ARGS__ }                                                         \
+        auto _dt = (std::chrono::high_resolution_clock::now() - _t0).count();  \
+        report.timings.ns[static_cast<int>(phase_enum)] += _dt;                \
+        report.timings.total_ns                          += _dt;                \
+    } while (0)
+
 TickReport apply_tick(World& world, Input input) {
+    using Clock = std::chrono::high_resolution_clock;
     TickReport report;
     std::vector<Change>& log = report.changes;
 
-    // Phase 1: PARSE_INITIAL
+    // Phase 1: PARSE_INITIAL — timed manually because RuleSet has no default
+    // constructor; it must be initialised by parse(), not assigned later.
+    auto _parse1_t0 = Clock::now();
     RuleSet rs = RuleSet::parse(world);
+    {
+        auto _dt = (Clock::now() - _parse1_t0).count();
+        report.timings.ns[static_cast<int>(Phase::ParseInitial)] += _dt;
+        report.timings.total_ns += _dt;
+    }
 
-    // Snapshot objects that have SWAP at tick-start so apply_swap doesn't
-    // spuriously activate conditional SWAP acquired mid-tick by landing on the
-    // condition noun (e.g. "BABA ON FLAG IS SWAP" must not fire the same tick
-    // baba first reaches the flag tile via fall_slide).
+    // Snapshot SWAP objects before any movement phases.
     std::unordered_set<ObjectId> initial_swap;
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
@@ -854,72 +871,106 @@ TickReport apply_tick(World& world, Input input) {
             initial_swap.insert(id);
     }
 
-    // Phase 1.5: APPLY_DIRECTIONAL — set facing of UP/DOWN/LEFT/RIGHT objects
-    apply_directional(world, rs, log);
+    // Phase 1.5: APPLY_DIRECTIONAL
+    PHASE_TIME(Phase::Directional, {
+        apply_directional(world, rs, log);
+    });
 
     // Phase 2: APPLY_INPUT
-    if (input.kind == InputKind::Move) {
-        Coord step_v = step(input.dir);
-
-        std::vector<ObjectId> you_ids;
-        for (ObjectId id : world.all_ids())
-            if (rs.object_has_property(world, id, Kind::P_You)) you_ids.push_back(id);
-
-        for (ObjectId yid : you_ids) {
-            do_face(world, yid, input.dir, log);
-            if (try_move(world, yid, step_v, rs, log)) report.moved_count++;
+    PHASE_TIME(Phase::Input, {
+        if (input.kind == InputKind::Move) {
+            Coord step_v = step(input.dir);
+            std::vector<ObjectId> you_ids;
+            for (ObjectId id : world.all_ids())
+                if (rs.object_has_property(world, id, Kind::P_You)) you_ids.push_back(id);
+            for (ObjectId yid : you_ids) {
+                do_face(world, yid, input.dir, log);
+                if (try_move(world, yid, step_v, rs, log)) report.moved_count++;
+            }
         }
-    }
+    });
 
     // Phase 2.5: APPLY_AUTO_MOVE
-    apply_auto_move(world, rs, log);
+    PHASE_TIME(Phase::AutoMove, {
+        apply_auto_move(world, rs, log);
+    });
 
     // Phase 2.53: APPLY_NUDGE
-    apply_nudge(world, rs, log);
+    PHASE_TIME(Phase::Nudge, {
+        apply_nudge(world, rs, log);
+    });
 
     // Phase 2.55: APPLY_FEAR
-    apply_fear(world, rs, log);
+    PHASE_TIME(Phase::Fear, {
+        apply_fear(world, rs, log);
+    });
 
     // Phase 2.6: APPLY_SHIFT
-    apply_shift(world, rs, log);
+    PHASE_TIME(Phase::Shift, {
+        apply_shift(world, rs, log);
+    });
 
     // Phase 2.7: APPLY_SWAP
-    apply_swap(world, rs, initial_swap, log);
+    PHASE_TIME(Phase::Swap, {
+        apply_swap(world, rs, initial_swap, log);
+    });
 
     // Phase 3: PARSE_POST_MOVE
-    rs = RuleSet::parse(world);
+    PHASE_TIME(Phase::ParsePostMove, {
+        rs = RuleSet::parse(world);
+    });
 
     // Phase 3.5: APPLY_FOLLOW
-    apply_follow(world, rs, log);
+    PHASE_TIME(Phase::Follow, {
+        apply_follow(world, rs, log);
+    });
 
     // Phase 4: TRANSFORM
-    apply_transforms(world, rs, log);
+    PHASE_TIME(Phase::Transform, {
+        apply_transforms(world, rs, log);
+    });
 
     // Phase 5: PARSE_POST_TRANSFORM
-    rs = RuleSet::parse(world);
+    PHASE_TIME(Phase::ParsePostTransform, {
+        rs = RuleSet::parse(world);
+    });
 
     // Phase 6: DESTRUCT
-    std::size_t const pre_destruct = log.size();
-    apply_destructions(world, rs, log);
+    std::size_t pre_destruct = log.size();
+    PHASE_TIME(Phase::Destruct, {
+        pre_destruct = log.size();
+        apply_destructions(world, rs, log);
+    });
 
-    // Phase 6.1: HAS (spawn on destruction, before APPLY_MAKE)
-    apply_has(world, rs, log, pre_destruct);
+    // Phase 6.1: HAS
+    PHASE_TIME(Phase::Has, {
+        apply_has(world, rs, log, pre_destruct);
+    });
 
     // Phase 6.5: APPLY_MAKE
-    apply_make(world, rs, log);
+    PHASE_TIME(Phase::Make, {
+        apply_make(world, rs, log);
+    });
 
     // Phase 7: PARSE_POST_DESTRUCT
-    rs = RuleSet::parse(world);
+    PHASE_TIME(Phase::ParsePostDestruct, {
+        rs = RuleSet::parse(world);
+    });
 
     // Phase 7.5: APPLY_PLAY
-    apply_play(world, rs, report.sound_events);
+    PHASE_TIME(Phase::Play, {
+        apply_play(world, rs, report.sound_events);
+    });
 
     // Phase 8: CHECK_WIN
-    report.won = check_win(world, rs);
+    PHASE_TIME(Phase::CheckWin, {
+        report.won = check_win(world, rs);
+    });
 
-    // Phase 9: COMMIT — changes are already in report.changes; caller pushes to undo stack
-
+    // Phase 9: COMMIT — changes are already in report.changes
     return report;
 }
+
+#undef PHASE_TIME
 
 }  // namespace baba::core

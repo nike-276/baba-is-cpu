@@ -19,9 +19,26 @@
 #include "kind.hpp"
 #include "world.hpp"
 
+#include <array>
+#include <cstdint>
 #include <vector>
 
 namespace baba::core {
+
+// Named phases of the tick pipeline, used as indices into PhaseTimings.
+enum class Phase : int {
+    ParseInitial = 0,
+    Directional, Input, AutoMove, Nudge, Fear, Shift, Swap,
+    ParsePostMove, Follow, Transform, ParsePostTransform,
+    Destruct, Has, Make, ParsePostDestruct, Play, CheckWin,
+    Count  // sentinel
+};
+
+// Per-tick nanosecond timings for each phase. Always populated by apply_tick.
+struct PhaseTimings {
+    std::array<std::int64_t, static_cast<int>(Phase::Count)> ns{};
+    std::int64_t total_ns{0};
+};
 
 enum class InputKind : std::uint8_t {
     Wait = 0,
@@ -53,6 +70,7 @@ struct TickReport {
     int  moved_count{0};              // how many YOU objects actually moved
     std::vector<Change>     changes;  // all mutations this tick, in forward order
     std::vector<SoundEvent> sound_events;
+    PhaseTimings            timings;  // nanosecond breakdown by phase
 };
 
 // Forward-tick the world once. Mutates `world` in place. Pure with respect
