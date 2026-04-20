@@ -16,7 +16,8 @@ public:
     explicit UndoBuffer(std::size_t cap = 10'000) : cap_{cap} {}
 
     void push(std::vector<core::Change> changes) {
-        if (changes.empty()) return;  // no-op ticks don't consume undo slots
+        if (cap_ == 0) return;         // undo disabled
+        if (changes.empty()) return;   // no-op ticks don't consume undo slots
         if (ring_.size() >= cap_) ring_.pop_back();
         ring_.push_front(std::move(changes));
     }
