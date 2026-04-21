@@ -1,0 +1,37 @@
+# POWERED BABA EAT HEDGE: baba eats hedge on the tick that POWER becomes active.
+# Clock IS AUTO, starts adjacent to flag (right of it). On tick 1 the clock
+# auto-moves right onto the flag → POWER activates mid-tick → baba eats hedge.
+
+[setup]
+version 1
+name "powered eat: baba eats hedge when power active"
+
+text 0 0 clock
+text 1 0 is
+text 2 0 auto
+
+text 0 1 clock
+text 1 1 on
+text 2 1 flag
+text 3 1 is
+text 4 1 power
+
+text 0 2 powered
+text 1 2 baba
+text 2 2 eat
+text 3 2 hedge
+
+object 4 5 clock right
+object 5 5 flag right
+
+object 8 8 baba right
+object 8 8 hedge right
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 clock
+at 8 8 baba
+not_at 8 8 hedge
+not_won

@@ -221,6 +221,7 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::N_Ufo,     true, "T:ufo");     add(K::N_Vase,    true, "T:vase");
     add(K::N_Vine,    true, "T:vine");    add(K::N_What,    true, "T:what");
     add(K::N_Worm,    true, "T:worm");    add(K::N_Yes,     true, "T:yes");
+    add(K::N_Text,    true, "T:text");
 
     // Text: operators
     add(K::O_Is,   true, "T:is");
@@ -267,6 +268,7 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::P_Power,      true, "T:power");
     add(K::P_Power2,     true, "T:power2");
     add(K::P_Power3,     true, "T:power3");
+    add(K::P_Word,       true, "T:word");
     add(K::O_Powered,    true, "T:powered");
     add(K::O_Powered2,   true, "T:powered2");
     add(K::O_Powered3,   true, "T:powered3");

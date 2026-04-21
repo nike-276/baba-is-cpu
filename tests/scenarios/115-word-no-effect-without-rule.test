@@ -1,0 +1,25 @@
+# Without FLAG IS WORD, a non-text flag object does NOT form rules.
+# Flag at (5,0) + text "IS WIN" at (6,0)-(7,0) should NOT produce FLAG IS WIN.
+# Baba walks onto the flag but does not win.
+
+[setup]
+version 1
+name "word: no flag is word means object doesn't form rules"
+
+object 5 0 flag right
+text 6 0 is
+text 7 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 4 5 baba right
+object 5 5 flag right
+
+[inputs]
+input right
+
+[expected]
+at 5 5 baba
+not_won

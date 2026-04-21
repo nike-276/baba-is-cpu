@@ -1,0 +1,31 @@
+# BABA ON FLAG IS WORD: a baba object sitting on a flag acts as the BABA text tile.
+# The baba-on-flag at (5,0) + text "IS WIN" at (6,0)-(7,0) forms BABA IS WIN.
+# Keke (YOU) walks onto another baba → wins.
+
+[setup]
+version 1
+name "word: conditional ON grants WORD property"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 flag
+text 3 0 is
+text 4 0 word
+
+object 5 0 baba right
+object 5 0 flag right
+text 6 0 is
+text 7 0 win
+
+text 0 1 keke
+text 1 1 is
+text 2 1 you
+
+object 4 5 keke right
+object 5 5 baba right
+
+[inputs]
+input right
+
+[expected]
+won

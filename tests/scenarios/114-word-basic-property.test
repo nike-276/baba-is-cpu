@@ -1,0 +1,28 @@
+# FLAG IS WORD: non-text flag objects act as the word FLAG in rule formation.
+# A non-text flag at (5,0) followed by text "IS WIN" at (6,0)-(7,0) forms FLAG IS WIN.
+# Another non-text flag at (5,5) is the WIN target.
+
+[setup]
+version 1
+name "word: flag object acts as FLAG text tile"
+
+text 0 0 flag
+text 1 0 is
+text 2 0 word
+
+object 5 0 flag right
+text 6 0 is
+text 7 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 4 5 baba right
+object 5 5 flag right
+
+[inputs]
+input right
+
+[expected]
+won

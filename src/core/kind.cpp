@@ -172,6 +172,7 @@ constexpr std::array kTable = {
     Entry{"power",       Kind::P_Power},
     Entry{"power2",      Kind::P_Power2},
     Entry{"power3",      Kind::P_Power3},
+    Entry{"word",        Kind::P_Word},
 };
 
 }  // namespace

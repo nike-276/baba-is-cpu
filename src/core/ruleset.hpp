@@ -146,6 +146,26 @@ struct GlobalConditionPropertyRule {
     std::vector<Condition> conditions;
 };
 
+// [NOT] POWEREDx [AND [NOT] POWEREDy]* NOUN [ON/NOT ON NOUN]* EAT NOUN [AND NOUN]*.
+// Power conditions AND optional spatial ON clauses both must hold.
+struct GlobalConditionEatRule {
+    using Condition = GlobalConditionPropertyRule::Condition;
+    Kind subject;
+    Kind target;
+    std::vector<Condition>  conditions;  // POWERED prefix conditions
+    std::vector<CondClause> on_clauses;  // optional ON spatial conditions (empty = none)
+};
+
+// [NOT] POWEREDx [AND [NOT] POWEREDy]* NOUN [ON/NOT ON NOUN]* MAKE NOUN [AND NOUN]*.
+// Mirrors GlobalConditionEatRule: power conditions AND optional spatial ON clauses.
+struct GlobalConditionMakeRule {
+    using Condition = GlobalConditionPropertyRule::Condition;
+    Kind subject;
+    Kind target;
+    std::vector<Condition>  conditions;
+    std::vector<CondClause> on_clauses;
+};
+
 class RuleSet {
 public:
     RuleSet() = default;
@@ -172,6 +192,8 @@ public:
     std::vector<FacingPropertyRule>           const& facing_rules()                    const { return facing_rules_; }
     std::vector<FacingTransformRule>          const& facing_transform_rules()           const { return facing_transforms_; }
     std::vector<GlobalConditionPropertyRule>  const& global_condition_property_rules()  const { return global_cond_rules_; }
+    std::vector<GlobalConditionEatRule>       const& global_condition_eat_rules()       const { return global_cond_eat_rules_; }
+    std::vector<GlobalConditionMakeRule>      const& global_condition_make_rules()      const { return global_cond_make_rules_; }
     std::vector<HasRule>                      const& has_rules()                        const { return has_rules_; }
     std::vector<FollowRule>                   const& follow_rules()                     const { return follow_rules_; }
     std::vector<FearRule>                     const& fear_rules()                       const { return fear_rules_; }
@@ -181,6 +203,11 @@ public:
     // `property` at runtime. Conservative for conditional rules. Used for
     // tick-phase early-exit guards to skip expensive all_cells() passes.
     bool any_grants(Kind property) const { return granted_props_.count(property) != 0; }
+
+    // True if any live non-text object currently has power_prop active
+    // (unconditional or via an ON condition). Used by tick phases to evaluate
+    // GlobalConditionEatRule and similar. Never recurses into global_cond_rules_.
+    bool any_has_power_kind(World const& world, Kind power_prop) const;
 
 private:
     std::vector<PropertyRule>             rules_;
@@ -194,6 +221,8 @@ private:
     std::vector<FacingPropertyRule>           facing_rules_;
     std::vector<FacingTransformRule>          facing_transforms_;
     std::vector<GlobalConditionPropertyRule>  global_cond_rules_;
+    std::vector<GlobalConditionEatRule>       global_cond_eat_rules_;
+    std::vector<GlobalConditionMakeRule>      global_cond_make_rules_;
     std::vector<HasRule>                      has_rules_;
     std::vector<FollowRule>                   follow_rules_;
     std::vector<FearRule>                     fear_rules_;
@@ -202,10 +231,6 @@ private:
     std::unordered_set<std::uint32_t> index_;
     // Set of every property Kind potentially grantable by any rule (for any_grants()).
     std::unordered_set<Kind> granted_props_;
-
-    // Returns true if any live non-text object has `power_prop` (unconditional or via ON).
-    // Never recurses into global_cond_rules_ to avoid infinite loops.
-    bool any_has_power_kind(World const& world, Kind power_prop) const;
 
     static std::uint32_t key_(Kind noun, Kind property) {
         return (static_cast<std::uint32_t>(noun) << 16) |

@@ -132,6 +132,7 @@ enum class Kind : std::uint16_t {
     P_Power,   // makes the global POWERED condition true
     P_Power2,  // makes the global POWERED2 condition true (channel 2)
     P_Power3,  // makes the global POWERED3 condition true (channel 3)
+    P_Word,    // object acts as its own text tile in rule formation
 
     Count_,
 };
@@ -143,7 +144,7 @@ constexpr bool is_operator(Kind k) {
     return k >= Kind::O_Is && k <= Kind::O_Play;
 }
 constexpr bool is_property(Kind k) {
-    return k >= Kind::P_You && k <= Kind::P_Power3;
+    return k >= Kind::P_You && k <= Kind::P_Word;
 }
 // PLAY parameter token predicates.
 constexpr bool is_note_token(Kind k) {

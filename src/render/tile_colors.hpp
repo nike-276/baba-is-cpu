@@ -112,6 +112,7 @@ inline const char* object_label(core::Kind k) {
         case K::N_Ufo:     return "UFO";    case K::N_Vase:    return "VASE";
         case K::N_Vine:    return "VINE";   case K::N_What:    return "WHAT";
         case K::N_Worm:    return "WORM";   case K::N_Yes:     return "YES";
+        case K::N_Text:    return "TEXT";
         default:           return "???";
     }
 }

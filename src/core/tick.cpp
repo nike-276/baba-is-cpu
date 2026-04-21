@@ -70,6 +70,19 @@ bool do_flip_text(World& world, ObjectId id, std::vector<Change>& log) {
     return true;
 }
 
+// TEXT IS NOUN: convert a text tile back to a non-text object of target_kind.
+// Retypes if target_kind differs from the current kind.
+bool do_unflip_text(World& world, ObjectId id, Kind target_kind, std::vector<Change>& log) {
+    Object const* o = world.get(id);
+    if (!o || !o->text) return false;
+    Kind old_kind = o->kind;
+    log.push_back(Change::flip_text(id));
+    world.flip_text(id);
+    if (target_kind != Kind::None && target_kind != old_kind)
+        do_retype(world, id, target_kind, log);
+    return true;
+}
+
 // ── APPLY_INPUT helpers ────────────────────────────────────────────────────
 
 bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
@@ -422,7 +435,8 @@ void apply_swap(World& world, RuleSet const& rs,
 // ── APPLY_MAKE phase ───────────────────────────────────────────────────────
 
 void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
-    bool any = !rs.make_rules().empty() || !rs.conditional_make_rules().empty();
+    bool any = !rs.make_rules().empty() || !rs.conditional_make_rules().empty()
+             || !rs.global_condition_make_rules().empty();
     if (!any) return;
 
     std::vector<Coord> cells = world.all_cells();
@@ -475,6 +489,45 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
             if (!already) do_spawn(world, o->pos, cmr.target, false, o->facing, log);
         }
     }
+
+    // Global condition MAKE rules: [NOT] POWEREDx NOUN [ON …] MAKE NOUN
+    for (auto const& gcmr : rs.global_condition_make_rules()) {
+        bool all_met = true;
+        for (auto const& cond : gcmr.conditions) {
+            bool pw_exists = rs.any_has_power_kind(world, cond.power_kind);
+            if (cond.negated ? pw_exists : !pw_exists) { all_met = false; break; }
+        }
+        if (!all_met) continue;
+
+        bool has_on = !gcmr.on_clauses.empty();
+        for (ObjectId id : world.all_ids()) {
+            Object const* o = world.get(id);
+            if (!o || o->text || o->kind != gcmr.subject) continue;
+            if (has_on) {
+                bool all_pass = true;
+                for (auto const& clause : gcmr.on_clauses) {
+                    bool all_found = true;
+                    for (Kind cn : clause.nouns) {
+                        bool found = false;
+                        for (ObjectId oid : world.at(o->pos)) {
+                            if (oid == id) continue;
+                            Object const* ob = world.get(oid);
+                            if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                        }
+                        if (!found) { all_found = false; break; }
+                    }
+                    if (!(clause.negated ? !all_found : all_found)) { all_pass = false; break; }
+                }
+                if (!all_pass) continue;
+            }
+            bool already = false;
+            for (ObjectId oid : world.at(o->pos)) {
+                Object const* ob = world.get(oid);
+                if (ob && !ob->text && ob->kind == gcmr.target) { already = true; break; }
+            }
+            if (!already) do_spawn(world, o->pos, gcmr.target, false, o->facing, log);
+        }
+    }
 }
 
 // ── TRANSFORM phase ────────────────────────────────────────────────────────
@@ -501,8 +554,10 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
     std::vector<XEntry> pending;
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
-        if (!o || o->text) continue;
-        auto it = xmap.find(o->kind);
+        if (!o) continue;
+        // Text objects match the N_Text subject; non-text objects match their own kind.
+        Kind lookup = o->text ? Kind::N_Text : o->kind;
+        auto it = xmap.find(lookup);
         if (it != xmap.end()) {
             pending.push_back({id, o->pos, o->facing, it->second, o->original_kind});
         }
@@ -631,8 +686,28 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
     }
 
     for (auto const& e : pending) {
-        if (!world.get(e.id)) continue;
-        if (e.targets.size() == 1) {
+        Object const* o = world.get(e.id);
+        if (!o) continue;
+
+        if (o->text) {
+            // TEXT IS NOUN: unflip text tiles to non-text objects.
+            if (e.targets.size() == 1) {
+                Kind t = e.targets[0];
+                if (t != Kind::N_Text)
+                    do_unflip_text(world, e.id, t, log);
+                // TEXT IS TEXT: X IS X protection removed this from xmap; no-op here.
+            } else {
+                // Multi-target TEXT IS A AND B: destroy and respawn as non-text objects.
+                do_destroy(world, e.id, log);
+                for (Kind t : e.targets) {
+                    if (t != Kind::N_Text) {
+                        ObjectId nid = do_spawn(world, e.pos, t, /*text=*/false, e.facing, log);
+                        if (e.original_kind != Kind::None)
+                            world.set_original_kind(nid, e.original_kind);
+                    }
+                }
+            }
+        } else if (e.targets.size() == 1) {
             if (e.targets[0] == Kind::N_Text)
                 do_flip_text(world, e.id, log);
             else
@@ -762,6 +837,75 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             }
         }
 
+        destroy_set(doomed);
+    }
+
+    // b2. POWERED [ON] EAT — [NOT] POWEREDx NOUN [ON/NOT ON NOUN]* EAT NOUN
+    {
+        std::unordered_set<ObjectId> doomed;
+        for (auto const& gcer : rs.global_condition_eat_rules()) {
+            // Check power conditions first (cheap global check).
+            bool all_met = true;
+            for (auto const& cond : gcer.conditions) {
+                bool pw_exists = rs.any_has_power_kind(world, cond.power_kind);
+                if (cond.negated ? pw_exists : !pw_exists) { all_met = false; break; }
+            }
+            if (!all_met) continue;
+
+            Kind eater = gcer.subject;
+            Kind target = gcer.target;
+            bool has_on = !gcer.on_clauses.empty();
+
+            for (Coord c : world.all_cells()) {
+                // For ON-conditioned rules, at least one eater on this tile must
+                // satisfy all ON clauses (same logic as ConditionalEatRule).
+                if (has_on) {
+                    bool condition_met = false;
+                    for (ObjectId id : world.at(c)) {
+                        Object const* o = world.get(id);
+                        if (!o || o->text || o->kind != eater) continue;
+                        bool all_pass = true;
+                        for (auto const& clause : gcer.on_clauses) {
+                            bool all_found = true;
+                            for (Kind cn : clause.nouns) {
+                                bool found = false;
+                                for (ObjectId oid : world.at(c)) {
+                                    if (oid == id) continue;
+                                    Object const* ob = world.get(oid);
+                                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                                }
+                                if (!found) { all_found = false; break; }
+                            }
+                            bool pass = clause.negated ? !all_found : all_found;
+                            if (!pass) { all_pass = false; break; }
+                        }
+                        if (all_pass) { condition_met = true; break; }
+                    }
+                    if (!condition_met) continue;
+                }
+
+                if (eater == target) {
+                    std::vector<ObjectId> same;
+                    for (ObjectId id : world.at(c)) {
+                        Object const* o = world.get(id);
+                        if (o && !o->text && o->kind == eater) same.push_back(id);
+                    }
+                    if (same.size() >= 2)
+                        for (ObjectId id : same) doomed.insert(id);
+                } else {
+                    bool has_eater = false;
+                    for (ObjectId id : world.at(c)) {
+                        Object const* o = world.get(id);
+                        if (o && !o->text && o->kind == eater) { has_eater = true; break; }
+                    }
+                    if (!has_eater) continue;
+                    for (ObjectId id : world.at(c)) {
+                        Object const* o = world.get(id);
+                        if (o && !o->text && o->kind == target) doomed.insert(id);
+                    }
+                }
+            }
+        }
         destroy_set(doomed);
     }
 
