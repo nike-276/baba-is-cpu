@@ -672,16 +672,18 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
         }
 
         // Phase B: objects currently a reverting kind not covered by a pending transform.
-        for (ObjectId id : world.all_ids()) {
-            Object const* o = world.get(id);
-            if (!o || o->text) continue;
-            if (!rs.object_has_property(world, id, Kind::P_Revert)) continue;
-            if (self_kinds.count(o->kind)) continue;
-            if (o->original_kind == o->kind) continue;
-            XEntry e{id, o->pos, o->facing, {o->original_kind}};
-            auto it = idx.find(id);
-            if (it != idx.end()) pending[it->second] = e;
-            else { idx[id] = pending.size(); pending.push_back(e); }
+        if (rs.any_grants(Kind::P_Revert)) {
+            for (ObjectId id : world.all_ids()) {
+                Object const* o = world.get(id);
+                if (!o || o->text) continue;
+                if (!rs.object_has_property(world, id, Kind::P_Revert)) continue;
+                if (self_kinds.count(o->kind)) continue;
+                if (o->original_kind == o->kind) continue;
+                XEntry e{id, o->pos, o->facing, {o->original_kind}};
+                auto it = idx.find(id);
+                if (it != idx.end()) pending[it->second] = e;
+                else { idx[id] = pending.size(); pending.push_back(e); }
+            }
         }
     }
 
@@ -974,6 +976,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
 // ── CHECK_WIN ──────────────────────────────────────────────────────────────
 
 bool check_win(World const& world, RuleSet const& rs) {
+    if (!rs.any_grants(Kind::P_You) || !rs.any_grants(Kind::P_Win)) return false;
     for (Coord c : world.all_cells()) {
         auto const& ids = world.at(c);
         bool has_you{false}, has_win{false};
