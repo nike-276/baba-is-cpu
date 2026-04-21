@@ -679,8 +679,9 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
     // Capture tiles that received a moving object this tick (for WEAK check below).
     // Read log before any destructions add to it.
     std::unordered_set<Coord, CoordHash> arrived;
-    for (auto const& c : log) {
-        if (c.kind == ChangeKind::Move) arrived.insert(c.to_pos);
+    if (rs.any_grants(Kind::P_Weak)) {
+        for (auto const& c : log)
+            if (c.kind == ChangeKind::Move) arrived.insert(c.to_pos);
     }
 
     // a. SINK

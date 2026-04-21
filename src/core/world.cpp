@@ -10,16 +10,58 @@ std::vector<ObjectId> const& World::empty_cell_() {
     return kEmpty;
 }
 
+void World::add_id_(ObjectId id) {
+    id_to_idx_[id] = ids_vec_.size();
+    ids_vec_.push_back(id);
+}
+
+void World::remove_id_(ObjectId id) {
+    auto it = id_to_idx_.find(id);
+    if (it == id_to_idx_.end()) return;
+    std::size_t idx = it->second;
+    id_to_idx_.erase(it);
+    if (idx != ids_vec_.size() - 1) {
+        ObjectId last = ids_vec_.back();
+        ids_vec_[idx] = last;
+        id_to_idx_[last] = idx;
+    }
+    ids_vec_.pop_back();
+}
+
+void World::add_cell_(Coord c) {
+    cell_to_idx_[c] = cells_vec_.size();
+    cells_vec_.push_back(c);
+}
+
+void World::remove_cell_(Coord c) {
+    auto it = cell_to_idx_.find(c);
+    if (it == cell_to_idx_.end()) return;
+    std::size_t idx = it->second;
+    cell_to_idx_.erase(it);
+    if (idx != cells_vec_.size() - 1) {
+        Coord last = cells_vec_.back();
+        cells_vec_[idx] = last;
+        cell_to_idx_[last] = idx;
+    }
+    cells_vec_.pop_back();
+}
+
 ObjectId World::spawn(Coord pos, Kind kind, bool text, Direction facing) {
     ObjectId id = next_id_++;
     objects_.emplace(id, Object{id, pos, kind, kind, text, facing});
-    grid_[pos].push_back(id);
+    add_id_(id);
+    auto [it, inserted] = grid_.try_emplace(pos);
+    it->second.push_back(id);
+    if (inserted) add_cell_(pos);
     return id;
 }
 
 void World::respawn(ObjectId id, Coord pos, Kind kind, Kind original_kind, bool text, Direction facing) {
     objects_.emplace(id, Object{id, pos, kind, original_kind, text, facing});
-    grid_[pos].push_back(id);
+    add_id_(id);
+    auto [it, inserted] = grid_.try_emplace(pos);
+    it->second.push_back(id);
+    if (inserted) add_cell_(pos);
 }
 
 bool World::move(ObjectId id, Coord new_pos) {
@@ -32,10 +74,16 @@ bool World::move(ObjectId id, Coord new_pos) {
     if (cell_it != grid_.end()) {
         auto& v = cell_it->second;
         v.erase(std::remove(v.begin(), v.end(), id), v.end());
-        if (v.empty()) grid_.erase(cell_it);
+        if (v.empty()) {
+            grid_.erase(cell_it);
+            remove_cell_(old_pos);
+        }
     }
 
-    grid_[new_pos].push_back(id);
+    auto [new_cell_it, inserted] = grid_.try_emplace(new_pos);
+    new_cell_it->second.push_back(id);
+    if (inserted) add_cell_(new_pos);
+
     it->second.pos = new_pos;
     return true;
 }
@@ -73,11 +121,15 @@ bool World::destroy(ObjectId id) {
     if (it == objects_.end()) return false;
     Coord pos = it->second.pos;
     objects_.erase(it);
+    remove_id_(id);
     auto cell_it = grid_.find(pos);
     if (cell_it != grid_.end()) {
         auto& v = cell_it->second;
         v.erase(std::remove(v.begin(), v.end(), id), v.end());
-        if (v.empty()) grid_.erase(cell_it);
+        if (v.empty()) {
+            grid_.erase(cell_it);
+            remove_cell_(pos);
+        }
     }
     return true;
 }
@@ -96,23 +148,7 @@ bool World::occupied(Coord pos) const {
     return grid_.find(pos) != grid_.end();
 }
 
-std::vector<ObjectId> World::all_ids() const {
-    std::vector<ObjectId> ids;
-    ids.reserve(objects_.size());
-    for (auto const& [id, _] : objects_) ids.push_back(id);
-    std::sort(ids.begin(), ids.end());
-    return ids;
-}
-
-std::vector<Coord> World::all_cells() const {
-    std::vector<Coord> cells;
-    cells.reserve(grid_.size());
-    for (auto const& [c, _] : grid_) cells.push_back(c);
-    std::sort(cells.begin(), cells.end(), [](Coord a, Coord b) {
-        if (a.y != b.y) return a.y < b.y;
-        return a.x < b.x;
-    });
-    return cells;
-}
+std::vector<ObjectId> const& World::all_ids()   const { return ids_vec_;   }
+std::vector<Coord>    const& World::all_cells()  const { return cells_vec_; }
 
 }  // namespace baba::core

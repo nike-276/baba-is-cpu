@@ -1,6 +1,8 @@
 #include "check.hpp"
 #include "core/world.hpp"
 
+#include <algorithm>
+
 using namespace baba::core;
 
 TEST(World, spawn_assigns_monotonic_ids) {
@@ -99,19 +101,21 @@ TEST(World, mutators_return_false_on_unknown_id) {
     CHECK_FALSE(w.destroy(ObjectId{99}));
 }
 
-TEST(World, all_ids_returns_ascending_order) {
+TEST(World, all_ids_contains_all_live_objects) {
     World w;
     w.spawn({0, 0}, Kind::N_Baba, false);
     w.spawn({1, 0}, Kind::N_Wall, false);
     w.spawn({2, 0}, Kind::N_Rock, false);
     auto ids = w.all_ids();
     CHECK_EQ(ids.size(), std::size_t{3});
-    CHECK_EQ(ids[0], ObjectId{0});
-    CHECK_EQ(ids[1], ObjectId{1});
-    CHECK_EQ(ids[2], ObjectId{2});
+    auto sorted = ids;
+    std::sort(sorted.begin(), sorted.end());
+    CHECK_EQ(sorted[0], ObjectId{0});
+    CHECK_EQ(sorted[1], ObjectId{1});
+    CHECK_EQ(sorted[2], ObjectId{2});
 }
 
-TEST(World, all_cells_returns_ascending_y_then_x) {
+TEST(World, all_cells_contains_all_occupied_cells) {
     World w;
     w.spawn({2, 1}, Kind::N_Wall, false);
     w.spawn({0, 0}, Kind::N_Wall, false);
@@ -119,10 +123,14 @@ TEST(World, all_cells_returns_ascending_y_then_x) {
     w.spawn({0, 1}, Kind::N_Wall, false);
     auto cells = w.all_cells();
     CHECK_EQ(cells.size(), std::size_t{4});
-    CHECK(cells[0] == (Coord{0, 0}));
-    CHECK(cells[1] == (Coord{0, 1}));
-    CHECK(cells[2] == (Coord{1, 1}));
-    CHECK(cells[3] == (Coord{2, 1}));
+    auto sorted = cells;
+    std::sort(sorted.begin(), sorted.end(), [](Coord a, Coord b) {
+        return a.y != b.y ? a.y < b.y : a.x < b.x;
+    });
+    CHECK((sorted[0] == Coord{0, 0}));
+    CHECK((sorted[1] == Coord{0, 1}));
+    CHECK((sorted[2] == Coord{1, 1}));
+    CHECK((sorted[3] == Coord{2, 1}));
 }
 
 // ── respawn (undo-of-Destroy) ────────────────────────────────────────────────

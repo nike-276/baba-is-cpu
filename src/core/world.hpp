@@ -43,9 +43,9 @@ public:
     std::vector<ObjectId> const& at(Coord pos) const;
     bool occupied(Coord pos) const;
 
-    // Iteration. Both return ascending-id order for determinism.
-    std::vector<ObjectId> all_ids() const;
-    std::vector<Coord>    all_cells() const;  // ascending (y, x); only non-empty
+    // Iteration. Order is unordered but stable within a run.
+    std::vector<ObjectId> const& all_ids()   const;
+    std::vector<Coord>    const& all_cells() const;  // non-empty cells only
 
     std::size_t object_count() const { return objects_.size(); }
     std::size_t cell_count()   const { return grid_.size();    }
@@ -56,6 +56,16 @@ private:
     std::unordered_map<ObjectId, Object>                          objects_;
     std::unordered_map<Coord, std::vector<ObjectId>, CoordHash>   grid_;
     ObjectId                                                       next_id_{0};
+
+    std::vector<ObjectId>                            ids_vec_;
+    std::unordered_map<ObjectId, std::size_t>        id_to_idx_;
+    std::vector<Coord>                               cells_vec_;
+    std::unordered_map<Coord, std::size_t, CoordHash> cell_to_idx_;
+
+    void add_id_(ObjectId id);
+    void remove_id_(ObjectId id);
+    void add_cell_(Coord c);
+    void remove_cell_(Coord c);
 
     static std::vector<ObjectId> const& empty_cell_();
 };
