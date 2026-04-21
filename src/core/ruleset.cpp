@@ -817,6 +817,13 @@ RuleSet RuleSet::parse(World const& world) {
     for (auto const& r : rs.rules_) {
         rs.index_.insert(key_(r.subject, r.property));
     }
+
+    // Build granted_props_: every property Kind potentially grantable by any rule.
+    for (auto const& r   : rs.rules_)            rs.granted_props_.insert(r.property);
+    for (auto const& cr  : rs.cond_rules_)        rs.granted_props_.insert(cr.property);
+    for (auto const& fr  : rs.facing_rules_)      rs.granted_props_.insert(fr.property);
+    for (auto const& gcr : rs.global_cond_rules_) rs.granted_props_.insert(gcr.property);
+
     return rs;
 }
 

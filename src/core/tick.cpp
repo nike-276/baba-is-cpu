@@ -211,12 +211,25 @@ void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) 
             if (is_auto(r.property)) { any = true; break; }
     if (!any) return;
 
+    // Kind-prefilter: only kinds that appear as subject in an auto-move rule can
+    // ever receive MOVE or AUTO. Skip other kinds with a single hash lookup.
+    std::unordered_set<Kind> auto_kinds;
+    for (auto const& r : rs.property_rules())
+        if (!r.negated && is_auto(r.property)) auto_kinds.insert(r.subject);
+    for (auto const& r : rs.conditional_rules())
+        if (is_auto(r.property)) auto_kinds.insert(r.subject);
+    for (auto const& r : rs.facing_rules())
+        if (is_auto(r.property)) auto_kinds.insert(r.subject);
+    for (auto const& r : rs.global_condition_property_rules())
+        if (is_auto(r.property)) auto_kinds.insert(r.subject);
+
     struct Mover { ObjectId id; Coord step_v; bool flip_on_block; };
     std::vector<Mover> movers;
 
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
+        if (!auto_kinds.count(o->kind)) continue;
         if (rs.object_has_property(world, id, Kind::P_Still)) continue;
         // FALL overrides MOVE/AUTO: falling objects are handled in apply_fall.
         if (rs.object_has_property(world, id, Kind::P_Fall)      ||
@@ -262,12 +275,23 @@ void apply_fall(World& world, RuleSet const& rs, std::vector<Change>& log) {
             if (is_fall(r.property)) { any = true; break; }
     if (!any) return;
 
+    std::unordered_set<Kind> fall_kinds;
+    for (auto const& r : rs.property_rules())
+        if (!r.negated && is_fall(r.property)) fall_kinds.insert(r.subject);
+    for (auto const& r : rs.conditional_rules())
+        if (is_fall(r.property)) fall_kinds.insert(r.subject);
+    for (auto const& r : rs.facing_rules())
+        if (is_fall(r.property)) fall_kinds.insert(r.subject);
+    for (auto const& r : rs.global_condition_property_rules())
+        if (is_fall(r.property)) fall_kinds.insert(r.subject);
+
     struct Faller { ObjectId id; Coord step_v; };
     std::vector<Faller> fallers;
 
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
+        if (!fall_kinds.count(o->kind)) continue;
         if (rs.object_has_property(world, id, Kind::P_Still)) continue;
         if (rs.object_has_property(world, id, Kind::P_Fall))
             fallers.push_back({id, step(Direction::Down)});
@@ -660,7 +684,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
     }
 
     // a. SINK
-    {
+    if (rs.any_grants(Kind::P_Sink)) {
         std::unordered_set<ObjectId> doomed;
         for (Coord c : world.all_cells()) {
             auto const& cell = world.at(c);
@@ -741,7 +765,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
     }
 
     // c. HOT / MELT (re-labeled; was b)
-    {
+    if (rs.any_grants(Kind::P_Hot) && rs.any_grants(Kind::P_Melt)) {
         std::unordered_set<ObjectId> doomed;
         for (Coord c : world.all_cells()) {
             auto const& cell = world.at(c);
@@ -769,7 +793,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
     }
 
     // e. DEFEAT
-    {
+    if (rs.any_grants(Kind::P_Defeat) && rs.any_grants(Kind::P_You)) {
         std::unordered_set<ObjectId> doomed;
         for (Coord c : world.all_cells()) {
             auto const& cell = world.at(c);
@@ -784,7 +808,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
     }
 
     // f. OPEN / SHUT
-    {
+    if (rs.any_grants(Kind::P_Open) && rs.any_grants(Kind::P_Shut)) {
         std::unordered_set<ObjectId> doomed;
         for (Coord c : world.all_cells()) {
             auto const& cell = world.at(c);

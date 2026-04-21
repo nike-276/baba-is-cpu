@@ -177,6 +177,11 @@ public:
     std::vector<FearRule>                     const& fear_rules()                       const { return fear_rules_; }
     std::vector<PlayRule>                     const& play_rules()                       const { return play_rules_; }
 
+    // O(1): true if ANY non-negated rule (including conditional) could grant
+    // `property` at runtime. Conservative for conditional rules. Used for
+    // tick-phase early-exit guards to skip expensive all_cells() passes.
+    bool any_grants(Kind property) const { return granted_props_.count(property) != 0; }
+
 private:
     std::vector<PropertyRule>             rules_;
     std::vector<TransformRule>            transforms_;
@@ -195,6 +200,8 @@ private:
     std::vector<PlayRule>                     play_rules_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
+    // Set of every property Kind potentially grantable by any rule (for any_grants()).
+    std::unordered_set<Kind> granted_props_;
 
     // Returns true if any live non-text object has `power_prop` (unconditional or via ON).
     // Never recurses into global_cond_rules_ to avoid infinite loops.
