@@ -450,31 +450,44 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
              || !rs.global_condition_make_rules().empty();
     if (!any) return;
 
-    std::vector<Coord> cells = world.all_cells();
+    // Build kind→{cells, ids} index once (same O(objects) pass as apply_destructions).
+    // Unconditional MAKE uses kind_cells; conditional/global MAKE uses kind_ids.
+    std::unordered_map<Kind, std::vector<Coord>>    kind_cells;
+    std::unordered_map<Kind, std::vector<ObjectId>> kind_ids;
+    for (Coord c : world.all_cells()) {
+        for (ObjectId id : world.at(c)) {
+            Object const* o = world.get(id);
+            if (!o || o->text) continue;
+            kind_cells[o->kind].push_back(c);
+            kind_ids[o->kind].push_back(id);
+        }
+    }
 
-    // Unconditional MAKE rules.
+    // Unconditional MAKE rules: iterate only cells containing the "from" kind.
     for (auto const& mr : rs.make_rules()) {
-        for (Coord c : cells) {
+        auto it = kind_cells.find(mr.from);
+        if (it == kind_cells.end()) continue;
+        for (Coord c : it->second) {
             bool has_to = false;
             Direction src_facing = Direction::Right;
-            bool has_from = false;
             for (ObjectId id : world.at(c)) {
                 Object const* o = world.get(id);
                 if (!o || o->text) continue;
-                if (o->kind == mr.from) { has_from = true; src_facing = o->facing; }
+                if (o->kind == mr.from) src_facing = o->facing;
                 if (o->kind == mr.to)   has_to = true;
             }
-            if (has_from && !has_to)
+            if (!has_to)
                 do_spawn(world, c, mr.to, /*text=*/false, src_facing, log);
         }
     }
 
-    // Conditional MAKE rules (ON/NOT ON).
+    // Conditional MAKE rules (ON/NOT ON): iterate only objects of the subject kind.
     for (auto const& cmr : rs.conditional_make_rules()) {
-        for (ObjectId id : world.all_ids()) {
+        auto it = kind_ids.find(cmr.subject);
+        if (it == kind_ids.end()) continue;
+        for (ObjectId id : it->second) {
             Object const* o = world.get(id);
-            if (!o || o->text || o->kind != cmr.subject) continue;
-            // ALL clauses must pass.
+            if (!o) continue;
             bool all_clauses_pass = true;
             for (auto const& clause : cmr.clauses) {
                 bool all_found = true;
@@ -491,7 +504,6 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
                 if (!clause_pass) { all_clauses_pass = false; break; }
             }
             if (!all_clauses_pass) continue;
-            // Spawn target if not already present.
             bool already = false;
             for (ObjectId other : world.at(o->pos)) {
                 Object const* ob = world.get(other);
@@ -510,10 +522,12 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
         }
         if (!all_met) continue;
 
+        auto it = kind_ids.find(gcmr.subject);
+        if (it == kind_ids.end()) continue;
         bool has_on = !gcmr.on_clauses.empty();
-        for (ObjectId id : world.all_ids()) {
+        for (ObjectId id : it->second) {
             Object const* o = world.get(id);
-            if (!o || o->text || o->kind != gcmr.subject) continue;
+            if (!o) continue;
             if (has_on) {
                 bool all_pass = true;
                 for (auto const& clause : gcmr.on_clauses) {
@@ -777,6 +791,11 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
 
     // Build kind→cells index once for all cell-scanning sub-phases.
     // One O(objects) pass replaces O(rules × all_cells) scans per sub-phase.
+    // Diagnosis (cpu.level, 1000 ticks): destruct remains ~48% of total even after
+    // this index because the dominant EAT-rule subjects (tile=512, donut=512) are
+    // dense enough that kind_cells[subject].size() ≈ all_cells().size(), giving
+    // near-zero filtering benefit. A cell-change (arrived) filter isn't valid for
+    // unconditional EAT since it fires on every co-occupying tick, not just arrivals.
     std::unordered_map<Kind, std::vector<Coord>> kind_cells;
     {
         bool need = rs.any_grants(Kind::P_Sink)
@@ -1263,6 +1282,31 @@ TickReport apply_tick(World& world, Input input) {
         report.timings.total_ns += _dt;
     }
 
+    // log index of the last completed parse; used by text_dirty to check only
+    // changes that occurred after the most recent parse.
+    std::size_t last_parse_mark = 0;
+
+    // Returns true iff any change at log[from..end) could affect the active rule set.
+    // Checked before each post-parse to skip re-parse when rules can't change.
+    // Non-text objects with a WORD property act as text tiles during parsing, so
+    // their movement also invalidates the cached rule set.
+    auto text_dirty = [&](std::size_t from) -> bool {
+        bool word_possible = rs.any_grants(Kind::P_Word);
+        for (std::size_t i = from; i < log.size(); ++i) {
+            auto const& c = log[i];
+            if (c.kind == ChangeKind::FlipText) return true;
+            if (c.kind == ChangeKind::Destroy && c.obj_text) return true;
+            if (c.kind == ChangeKind::Move || c.kind == ChangeKind::Spawn) {
+                Object const* o = world.get(c.id);
+                if (!o) continue;
+                if (o->text) return true;
+                if (word_possible && rs.object_has_property(world, c.id, Kind::P_Word))
+                    return true;
+            }
+        }
+        return false;
+    };
+
     // Snapshot SWAP objects before any movement phases.
     std::unordered_set<ObjectId> initial_swap;
     for (ObjectId id : world.all_ids()) {
@@ -1316,9 +1360,13 @@ TickReport apply_tick(World& world, Input input) {
         apply_swap(world, rs, initial_swap, log);
     });
 
-    // Phase 3: PARSE_POST_MOVE
+    // Phase 3: PARSE_POST_MOVE — skip when no text object moved/spawned/destroyed
+    // since ParseInitial; static rule tiles never change, saving ~700ms/tick.
     PHASE_TIME(Phase::ParsePostMove, {
-        rs = RuleSet::parse(world);
+        if (text_dirty(last_parse_mark)) {
+            rs = RuleSet::parse(world);
+            last_parse_mark = log.size();
+        }
     });
 
     // Phase 3.5: APPLY_FOLLOW
@@ -1331,9 +1379,12 @@ TickReport apply_tick(World& world, Input input) {
         apply_transforms(world, rs, log);
     });
 
-    // Phase 5: PARSE_POST_TRANSFORM
+    // Phase 5: PARSE_POST_TRANSFORM — skip when no text object changed since last parse.
     PHASE_TIME(Phase::ParsePostTransform, {
-        rs = RuleSet::parse(world);
+        if (text_dirty(last_parse_mark)) {
+            rs = RuleSet::parse(world);
+            last_parse_mark = log.size();
+        }
     });
 
     // Phase 5.5: APPLY_FALL — after TRANSFORM so REVERT resolves before objects slide.
@@ -1358,9 +1409,12 @@ TickReport apply_tick(World& world, Input input) {
         apply_make(world, rs, log);
     });
 
-    // Phase 7: PARSE_POST_DESTRUCT
+    // Phase 7: PARSE_POST_DESTRUCT — skip when no text object changed since last parse.
     PHASE_TIME(Phase::ParsePostDestruct, {
-        rs = RuleSet::parse(world);
+        if (text_dirty(last_parse_mark)) {
+            rs = RuleSet::parse(world);
+            last_parse_mark = log.size();
+        }
     });
 
     // Phase 7.5: APPLY_PLAY
