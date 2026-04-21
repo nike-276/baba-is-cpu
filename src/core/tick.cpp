@@ -195,7 +195,6 @@ void fall_slide(World& world, ObjectId id, Coord step_v, RuleSet const& rs,
 void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) {
     static constexpr Kind kAutoProps[] = {
         Kind::P_Move, Kind::P_Auto,
-        Kind::P_Fall, Kind::P_Fallup, Kind::P_Fallleft, Kind::P_Fallright,
     };
     auto is_auto = [](Kind p) {
         for (Kind a : kAutoProps) if (p == a) return true;
@@ -212,38 +211,77 @@ void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) 
             if (is_auto(r.property)) { any = true; break; }
     if (!any) return;
 
-    struct Mover { ObjectId id; Coord step_v; bool slide; bool flip_on_block; };
+    struct Mover { ObjectId id; Coord step_v; bool flip_on_block; };
     std::vector<Mover> movers;
 
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
         if (rs.object_has_property(world, id, Kind::P_Still)) continue;
-        // FALL* overrides MOVE/AUTO — a sliding object ignores self-propulsion.
-        if (rs.object_has_property(world, id, Kind::P_Fall))
-            movers.push_back({id, step(Direction::Down),  true, false});
-        else if (rs.object_has_property(world, id, Kind::P_Fallup))
-            movers.push_back({id, step(Direction::Up),    true, false});
-        else if (rs.object_has_property(world, id, Kind::P_Fallleft))
-            movers.push_back({id, step(Direction::Left),  true, false});
-        else if (rs.object_has_property(world, id, Kind::P_Fallright))
-            movers.push_back({id, step(Direction::Right), true, false});
-        else if (rs.object_has_property(world, id, Kind::P_Move))
-            movers.push_back({id, step(o->facing), false, true});
+        // FALL overrides MOVE/AUTO: falling objects are handled in apply_fall.
+        if (rs.object_has_property(world, id, Kind::P_Fall)      ||
+            rs.object_has_property(world, id, Kind::P_Fallup)    ||
+            rs.object_has_property(world, id, Kind::P_Fallleft)  ||
+            rs.object_has_property(world, id, Kind::P_Fallright)) continue;
+        if (rs.object_has_property(world, id, Kind::P_Move))
+            movers.push_back({id, step(o->facing), true});
         else if (rs.object_has_property(world, id, Kind::P_Auto))
-            movers.push_back({id, step(o->facing), false, false});
+            movers.push_back({id, step(o->facing), false});
     }
 
     for (auto const& m : movers) {
         Object const* o = world.get(m.id);
         if (!o) continue;
-        if (m.slide) {
-            fall_slide(world, m.id, m.step_v, rs, log);
-        } else {
-            if (!try_move(world, m.id, m.step_v, rs, log)) {
-                if (m.flip_on_block) do_face(world, m.id, opposite(o->facing), log);
-            }
+        if (!try_move(world, m.id, m.step_v, rs, log)) {
+            if (m.flip_on_block) do_face(world, m.id, opposite(o->facing), log);
         }
+    }
+}
+
+// ── APPLY_FALL phase ──────────────────────────────────────────────────────────
+// FALL* runs after TRANSFORM so that REVERT (and other IS transforms) resolve
+// before objects slide. Wiki Order of Operations: fallblock() follows
+// domovement()+REVERT+IS transforms.
+
+void apply_fall(World& world, RuleSet const& rs, std::vector<Change>& log) {
+    static constexpr Kind kFallProps[] = {
+        Kind::P_Fall, Kind::P_Fallup, Kind::P_Fallleft, Kind::P_Fallright,
+    };
+    auto is_fall = [](Kind p) {
+        for (Kind f : kFallProps) if (p == f) return true;
+        return false;
+    };
+    bool any = false;
+    for (auto const& r : rs.property_rules())
+        if (!r.negated && is_fall(r.property)) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.conditional_rules())
+            if (is_fall(r.property)) { any = true; break; }
+    if (!any)
+        for (auto const& r : rs.global_condition_property_rules())
+            if (is_fall(r.property)) { any = true; break; }
+    if (!any) return;
+
+    struct Faller { ObjectId id; Coord step_v; };
+    std::vector<Faller> fallers;
+
+    for (ObjectId id : world.all_ids()) {
+        Object const* o = world.get(id);
+        if (!o || o->text) continue;
+        if (rs.object_has_property(world, id, Kind::P_Still)) continue;
+        if (rs.object_has_property(world, id, Kind::P_Fall))
+            fallers.push_back({id, step(Direction::Down)});
+        else if (rs.object_has_property(world, id, Kind::P_Fallup))
+            fallers.push_back({id, step(Direction::Up)});
+        else if (rs.object_has_property(world, id, Kind::P_Fallleft))
+            fallers.push_back({id, step(Direction::Left)});
+        else if (rs.object_has_property(world, id, Kind::P_Fallright))
+            fallers.push_back({id, step(Direction::Right)});
+    }
+
+    for (auto const& f : fallers) {
+        if (!world.get(f.id)) continue;
+        fall_slide(world, f.id, f.step_v, rs, log);
     }
 }
 
@@ -638,22 +676,67 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
 
     // b. EAT — NOUN EAT NOUN: for each rule, destroy target-kind objects on tiles
     //    that also contain a subject-kind object. Subject survives.
+    //    Self-eat (subject == target): all die if ≥2 copies on tile; nothing if only 1.
     {
         std::unordered_set<ObjectId> doomed;
-        for (auto const& er : rs.eat_rules()) {
-            for (Coord c : world.all_cells()) {
+        auto eat_on_tile = [&](Coord c, Kind eater, Kind target) {
+            if (eater == target) {
+                // Self-eat: all die when there are ≥2 on the tile.
+                std::vector<ObjectId> same;
+                for (ObjectId id : world.at(c)) {
+                    Object const* o = world.get(id);
+                    if (o && !o->text && o->kind == eater) same.push_back(id);
+                }
+                if (same.size() >= 2)
+                    for (ObjectId id : same) doomed.insert(id);
+            } else {
                 bool has_eater = false;
                 for (ObjectId id : world.at(c)) {
                     Object const* o = world.get(id);
-                    if (o && !o->text && o->kind == er.subject) { has_eater = true; break; }
+                    if (o && !o->text && o->kind == eater) { has_eater = true; break; }
                 }
-                if (!has_eater) continue;
+                if (!has_eater) return;
                 for (ObjectId id : world.at(c)) {
                     Object const* o = world.get(id);
-                    if (o && !o->text && o->kind == er.target) doomed.insert(id);
+                    if (o && !o->text && o->kind == target) doomed.insert(id);
                 }
             }
+        };
+
+        for (auto const& er : rs.eat_rules())
+            for (Coord c : world.all_cells())
+                eat_on_tile(c, er.subject, er.target);
+
+        for (auto const& er : rs.conditional_eat_rules()) {
+            for (Coord c : world.all_cells()) {
+                // At least one subject object must satisfy all ON clauses when
+                // evaluated against OTHER objects on the tile (skip self).
+                bool condition_met = false;
+                for (ObjectId id : world.at(c)) {
+                    Object const* o = world.get(id);
+                    if (!o || o->text || o->kind != er.subject) continue;
+                    bool all_pass = true;
+                    for (auto const& clause : er.clauses) {
+                        bool all_found = true;
+                        for (Kind cn : clause.nouns) {
+                            bool found = false;
+                            for (ObjectId oid : world.at(c)) {
+                                if (oid == id) continue;  // skip the subject itself
+                                Object const* ob = world.get(oid);
+                                if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                            }
+                            if (!found) { all_found = false; break; }
+                        }
+                        bool pass = clause.negated ? !all_found : all_found;
+                        if (!pass) { all_pass = false; break; }
+                    }
+                    if (all_pass) { condition_met = true; break; }
+                }
+                if (!condition_met) continue;
+                eat_on_tile(c, er.subject, er.target);
+            }
         }
+
         destroy_set(doomed);
     }
 
@@ -1002,6 +1085,11 @@ TickReport apply_tick(World& world, Input input) {
     // Phase 5: PARSE_POST_TRANSFORM
     PHASE_TIME(Phase::ParsePostTransform, {
         rs = RuleSet::parse(world);
+    });
+
+    // Phase 5.5: APPLY_FALL — after TRANSFORM so REVERT resolves before objects slide.
+    PHASE_TIME(Phase::Fall, {
+        apply_fall(world, rs, log);
     });
 
     // Phase 6: DESTRUCT

@@ -1,17 +1,23 @@
 // core/tick.hpp — apply one tick of simulation given a player input.
 //
 // Full 10-phase pipeline:
-//   1.  PARSE_INITIAL
-//   1.5 APPLY_DIRECTIONAL — set facing of UP/DOWN/LEFT/RIGHT objects
-//   2.  APPLY_INPUT       — move every YOU object; resolve push chain (PUSH / STOP)
-//   2.5 APPLY_AUTO_MOVE   — self-propelled: MOVE (push+flip), AUTO (push+no flip), FALL* (slide+no push)
-//   3.  PARSE_POST_MOVE
-//   4.  TRANSFORM        — apply X IS Y transformation rules
-//   5.  PARSE_POST_TRANSFORM
-//   6.  DESTRUCT         — SINK / EAT / HOT+MELT / WEAK / DEFEAT / OPEN+SHUT
-//   7.  PARSE_POST_DESTRUCT
-//   8.  CHECK_WIN        — any (YOU, WIN) co-tile triggers `won`
-//   9.  COMMIT           — TickReport.changes carries all mutations for undo stack
+//   1.   PARSE_INITIAL
+//   1.5  APPLY_DIRECTIONAL  — set facing of UP/DOWN/LEFT/RIGHT objects
+//   2.   APPLY_INPUT        — move every YOU object; resolve push chain (PUSH / STOP)
+//   2.5  APPLY_AUTO_MOVE    — self-propelled: MOVE (push+flip), AUTO (push+no flip)
+//   2.53 APPLY_NUDGE
+//   2.55 APPLY_FEAR
+//   2.6  APPLY_SHIFT
+//   2.7  APPLY_SWAP
+//   3.   PARSE_POST_MOVE
+//   3.5  APPLY_FOLLOW
+//   4.   TRANSFORM          — apply X IS Y transformation rules + REVERT
+//   5.   PARSE_POST_TRANSFORM
+//   5.5  APPLY_FALL         — FALL* slides after REVERT resolves (wiki Order of Ops)
+//   6.   DESTRUCT           — SINK / EAT / HOT+MELT / WEAK / DEFEAT / OPEN+SHUT
+//   7.   PARSE_POST_DESTRUCT
+//   8.   CHECK_WIN          — any (YOU, WIN) co-tile triggers `won`
+//   9.   COMMIT             — TickReport.changes carries all mutations for undo stack
 #pragma once
 
 #include "change.hpp"
@@ -30,7 +36,7 @@ enum class Phase : int {
     ParseInitial = 0,
     Directional, Input, AutoMove, Nudge, Fear, Shift, Swap,
     ParsePostMove, Follow, Transform, ParsePostTransform,
-    Destruct, Has, Make, ParsePostDestruct, Play, CheckWin,
+    Fall, Destruct, Has, Make, ParsePostDestruct, Play, CheckWin,
     Count  // sentinel
 };
 

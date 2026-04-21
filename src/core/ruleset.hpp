@@ -123,6 +123,13 @@ struct ConditionalMakeRule {
     Kind target;
 };
 
+// NOUN ON ... EAT NOUN: conditional destruction.
+struct ConditionalEatRule {
+    Kind subject;
+    std::vector<CondClause> clauses;
+    Kind target;
+};
+
 // [NOT] POWEREDx [AND [NOT] POWEREDy]* NOUN IS PROPERTY.
 // Each Condition checks one POWER channel; ALL conditions must hold (AND semantics).
 // negated=true → condition met when NO object has power_kind.
@@ -161,6 +168,7 @@ public:
     std::vector<ConditionalPropertyRule>      const& conditional_rules()                const { return cond_rules_; }
     std::vector<ConditionalTransformRule>     const& conditional_transform_rules()      const { return cond_transforms_; }
     std::vector<ConditionalMakeRule>          const& conditional_make_rules()           const { return cond_makes_; }
+    std::vector<ConditionalEatRule>           const& conditional_eat_rules()            const { return cond_eats_; }
     std::vector<FacingPropertyRule>           const& facing_rules()                    const { return facing_rules_; }
     std::vector<FacingTransformRule>          const& facing_transform_rules()           const { return facing_transforms_; }
     std::vector<GlobalConditionPropertyRule>  const& global_condition_property_rules()  const { return global_cond_rules_; }
@@ -177,6 +185,7 @@ private:
     std::vector<ConditionalPropertyRule>  cond_rules_;
     std::vector<ConditionalTransformRule> cond_transforms_;
     std::vector<ConditionalMakeRule>      cond_makes_;
+    std::vector<ConditionalEatRule>       cond_eats_;
     std::vector<FacingPropertyRule>           facing_rules_;
     std::vector<FacingTransformRule>          facing_transforms_;
     std::vector<GlobalConditionPropertyRule>  global_cond_rules_;

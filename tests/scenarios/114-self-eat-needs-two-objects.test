@@ -1,0 +1,26 @@
+# BEAN EAT BEAN: a single bean on a tile must NOT be destroyed.
+# The eater needs a target — if there is only one bean, nothing is eaten.
+# Bug: the original code marks all beans as doomed when any bean is the eater,
+# so a lone bean would eat itself.
+
+[setup]
+version 1
+name "self-eat requires a second copy to eat"
+
+text 0 0 bean
+text 1 0 eat
+text 2 0 bean
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 bean right
+
+[inputs]
+input wait
+
+[expected]
+count bean 1
+at 5 5 bean
+not_won

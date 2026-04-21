@@ -1,0 +1,31 @@
+# BEAN ON BEAN EAT WALL: with only ONE bean on the tile, the ON BEAN condition
+# is not satisfied, so the wall must survive.
+
+[setup]
+version 1
+name "conditional eat: wall survives when condition not met"
+
+text 0 0 bean
+text 1 0 on
+text 2 0 bean
+text 3 0 eat
+text 4 0 wall
+
+text 0 1 wall
+text 1 1 is
+text 2 1 stop
+
+text 0 2 baba
+text 1 2 is
+text 2 2 you
+
+object 5 5 bean right
+object 5 5 wall right
+
+[inputs]
+input wait
+
+[expected]
+count wall 1
+count bean 1
+not_won

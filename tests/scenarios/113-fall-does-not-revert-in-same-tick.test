@@ -1,0 +1,54 @@
+# REVERT should happen before FALL within the same tick (wiki Order of Operations).
+# If fall runs before REVERT, a baba that falls onto keke (triggering REVERT) would
+# immediately lose its YOU status in the same tick, and CHECK_WIN would see a rock
+# (not YOU) on the flag — no win. With the correct ordering, REVERT runs first
+# (baba is not yet on keke, so no revert), then FALL moves baba onto keke+flag,
+# and CHECK_WIN fires with baba (YOU) on flag (WIN) — win on tick 1.
+#
+# Setup: rock at (8,0), keke+flag at (8,4), wall at (8,5).
+# Rules: ROCK IS BABA, BABA IS YOU, BABA IS FALL, BABA ON KEKE IS REVERT, FLAG IS WIN.
+# Tick 1 (correct): TRANSFORM rock->baba (not on keke yet, no revert), then FALL
+#   slides baba to (8,4). CHECK_WIN: baba(YOU)+flag(WIN) -> won.
+# Tick 1 (wrong/old): FALL first (rock has no FALL, stays), TRANSFORM rock->baba,
+#   CHECK_WIN: baba at (8,0) != flag at (8,4) -> not won.
+
+[setup]
+version 1
+name "fall does not revert in the same tick (REVERT before FALL)"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 baba
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+text 0 2 baba
+text 1 2 is
+text 2 2 fall
+
+text 0 3 baba
+text 1 3 on
+text 2 3 keke
+text 3 3 is
+text 4 3 revert
+
+text 0 4 flag
+text 1 4 is
+text 2 4 win
+
+text 0 5 wall
+text 1 5 is
+text 2 5 stop
+
+object 8 0 rock right
+object 8 4 keke right
+object 8 4 flag right
+object 8 5 wall right
+
+[inputs]
+input wait
+
+[expected]
+won

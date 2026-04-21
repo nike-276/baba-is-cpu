@@ -1,0 +1,24 @@
+# BEAN EAT BEAN with two beans on the same tile: both die.
+
+[setup]
+version 1
+name "self-eat with two copies kills all"
+
+text 0 0 bean
+text 1 0 eat
+text 2 0 bean
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 bean right
+object 5 5 bean right
+
+[inputs]
+input wait
+
+[expected]
+count bean 0
+not_at 5 5 bean
+not_won

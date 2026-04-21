@@ -37,6 +37,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<ConditionalPropertyRule>& cond_out,
                 std::vector<ConditionalTransformRule>& cond_xform_out,
                 std::vector<ConditionalMakeRule>& cond_make_out,
+                std::vector<ConditionalEatRule>& cond_eat_out,
                 std::vector<FacingPropertyRule>& facing_out,
                 std::vector<FacingTransformRule>& facing_xform_out,
                 std::vector<GlobalConditionPropertyRule>& global_cond_out,
@@ -452,6 +453,29 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 return;
             }
 
+            // NOUN ON … EAT NOUN [AND NOUN]*
+            if (*verb2 == Kind::O_Eat) {
+                cursor = adv(cursor);
+                auto t0 = at(cursor);
+                if (!t0 || !is_noun(*t0)) return;
+                std::vector<Kind> targets;
+                targets.push_back(*t0);
+                cursor = adv(cursor);
+                while (true) {
+                    auto k = at(cursor);
+                    if (!k || *k != Kind::O_And) break;
+                    Coord next = adv(cursor);
+                    auto nt = at(next);
+                    if (!nt || !is_noun(*nt)) break;
+                    targets.push_back(*nt);
+                    cursor = adv(next);
+                }
+                for (Kind n : subjects)
+                    for (Kind t : targets)
+                        cond_eat_out.push_back({n, clauses, t});
+                return;
+            }
+
             if (*verb2 != Kind::O_Is) return;
             cursor = adv(cursor);
 
@@ -662,8 +686,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_, rs.play_rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_, rs.play_rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_, rs.play_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_, rs.play_rules_);
     }
 
     // Deduplicate verb-operator rules before further processing.
@@ -691,6 +715,25 @@ RuleSet RuleSet::parse(World const& world) {
             if (seen.insert(key2).second) deduped.push_back(er);
         }
         rs.eats_ = std::move(deduped);
+    }
+    {
+        std::vector<ConditionalEatRule> deduped;
+        for (auto const& er : rs.cond_eats_) {
+            bool dup = false;
+            for (auto const& ex : deduped) {
+                if (ex.subject == er.subject && ex.target == er.target
+                    && ex.clauses.size() == er.clauses.size()) {
+                    bool same = true;
+                    for (size_t i = 0; i < er.clauses.size(); ++i) {
+                        if (er.clauses[i].negated != ex.clauses[i].negated ||
+                            er.clauses[i].nouns   != ex.clauses[i].nouns)  { same = false; break; }
+                    }
+                    if (same) { dup = true; break; }
+                }
+            }
+            if (!dup) deduped.push_back(er);
+        }
+        rs.cond_eats_ = std::move(deduped);
     }
     {
         std::vector<GlobalConditionPropertyRule> deduped;
