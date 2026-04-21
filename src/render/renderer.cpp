@@ -446,7 +446,7 @@ void Renderer::draw_hud(std::string const& mode_label, std::string const& filena
     const char* hint = (mode_label == "PLAY")
         ? "P:auto  +/-:speed  0:max  arrows:move  Z:undo  ESC:edit"
         : "LMB:place  Sh+drag:select  RMB:del  Ctrl+R:rotate  Ctrl+B:abstract  Enter:play  Ctrl+S/O/I";
-    DrawText(hint, w - MeasureText(hint, 11) - 8, h - 20, 11, DARKGRAY);
+    DrawText(hint, (w - MeasureText(hint, 11))/2, h - 18, 11, WHITE);
 }
 
 void Renderer::draw_dialog(std::string const& prompt, std::string const& text,

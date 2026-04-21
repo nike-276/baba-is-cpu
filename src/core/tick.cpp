@@ -177,9 +177,20 @@ void apply_directional(World& world, RuleSet const& rs, std::vector<Change>& log
             if (is_dir(r.property)) { any = true; break; }
     if (!any) return;
 
+    std::unordered_set<Kind> dir_kinds;
+    for (auto const& r : rs.property_rules())
+        if (!r.negated && is_dir(r.property)) dir_kinds.insert(r.subject);
+    for (auto const& r : rs.conditional_rules())
+        if (is_dir(r.property)) dir_kinds.insert(r.subject);
+    for (auto const& r : rs.facing_rules())
+        if (is_dir(r.property)) dir_kinds.insert(r.subject);
+    for (auto const& r : rs.global_condition_property_rules())
+        if (is_dir(r.property)) dir_kinds.insert(r.subject);
+
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
+        if (!dir_kinds.count(o->kind)) continue;
         if      (rs.object_has_property(world, id, Kind::P_Left))  do_face(world, id, Direction::Left,  log);
         else if (rs.object_has_property(world, id, Kind::P_Right)) do_face(world, id, Direction::Right, log);
         else if (rs.object_has_property(world, id, Kind::P_Up))    do_face(world, id, Direction::Up,    log);
@@ -673,9 +684,20 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
 
         // Phase B: objects currently a reverting kind not covered by a pending transform.
         if (rs.any_grants(Kind::P_Revert)) {
+            std::unordered_set<Kind> revert_subjects;
+            for (auto const& r : rs.property_rules())
+                if (!r.negated && r.property == Kind::P_Revert) revert_subjects.insert(r.subject);
+            for (auto const& r : rs.conditional_rules())
+                if (r.property == Kind::P_Revert) revert_subjects.insert(r.subject);
+            for (auto const& r : rs.facing_rules())
+                if (r.property == Kind::P_Revert) revert_subjects.insert(r.subject);
+            for (auto const& r : rs.global_condition_property_rules())
+                if (r.property == Kind::P_Revert) revert_subjects.insert(r.subject);
+
             for (ObjectId id : world.all_ids()) {
                 Object const* o = world.get(id);
                 if (!o || o->text) continue;
+                if (!revert_subjects.count(o->kind)) continue;
                 if (!rs.object_has_property(world, id, Kind::P_Revert)) continue;
                 if (self_kinds.count(o->kind)) continue;
                 if (o->original_kind == o->kind) continue;
@@ -753,6 +775,44 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         for (ObjectId id : sorted) do_destroy(world, id, log);
     };
 
+    // Build kind→cells index once for all cell-scanning sub-phases.
+    // One O(objects) pass replaces O(rules × all_cells) scans per sub-phase.
+    std::unordered_map<Kind, std::vector<Coord>> kind_cells;
+    {
+        bool need = rs.any_grants(Kind::P_Sink)
+                 || !rs.eat_rules().empty()
+                 || !rs.conditional_eat_rules().empty()
+                 || !rs.global_condition_eat_rules().empty()
+                 || (rs.any_grants(Kind::P_Hot) && rs.any_grants(Kind::P_Melt))
+                 || (rs.any_grants(Kind::P_Defeat) && rs.any_grants(Kind::P_You))
+                 || (rs.any_grants(Kind::P_Open) && rs.any_grants(Kind::P_Shut));
+        if (need) {
+            for (Coord c : world.all_cells())
+                for (ObjectId id : world.at(c)) {
+                    Object const* o = world.get(id);
+                    if (o && !o->text) kind_cells[o->kind].push_back(c);
+                }
+        }
+    }
+
+    // Helper: collect candidate cells for a given property by scanning rule subjects.
+    // Inserts into out_cells; caller deduplicates via unordered_set as needed.
+    auto candidate_cells = [&](Kind prop, std::unordered_set<Coord, CoordHash>& out_cells) {
+        auto add = [&](Kind subject) {
+            auto it = kind_cells.find(subject);
+            if (it != kind_cells.end())
+                for (Coord c : it->second) out_cells.insert(c);
+        };
+        for (auto const& r : rs.property_rules())
+            if (!r.negated && r.property == prop) add(r.subject);
+        for (auto const& r : rs.conditional_rules())
+            if (r.property == prop) add(r.subject);
+        for (auto const& r : rs.facing_rules())
+            if (r.property == prop) add(r.subject);
+        for (auto const& r : rs.global_condition_property_rules())
+            if (r.property == prop) add(r.subject);
+    };
+
     // Capture tiles that received a moving object this tick (for WEAK check below).
     // Read log before any destructions add to it.
     std::unordered_set<Coord, CoordHash> arrived;
@@ -761,10 +821,12 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             if (c.kind == ChangeKind::Move) arrived.insert(c.to_pos);
     }
 
-    // a. SINK
+    // a. SINK — only check cells that contain an object whose kind can be SINK.
     if (rs.any_grants(Kind::P_Sink)) {
+        std::unordered_set<Coord, CoordHash> sink_cells;
+        candidate_cells(Kind::P_Sink, sink_cells);
         std::unordered_set<ObjectId> doomed;
-        for (Coord c : world.all_cells()) {
+        for (Coord c : sink_cells) {
             auto const& cell = world.at(c);
             if (cell.size() < 2) continue;
             bool any_sink = false;
@@ -805,12 +867,18 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             }
         };
 
-        for (auto const& er : rs.eat_rules())
-            for (Coord c : world.all_cells())
+        // Iterate only cells containing the subject kind instead of all_cells.
+        for (auto const& er : rs.eat_rules()) {
+            auto it = kind_cells.find(er.subject);
+            if (it == kind_cells.end()) continue;
+            for (Coord c : it->second)
                 eat_on_tile(c, er.subject, er.target);
+        }
 
         for (auto const& er : rs.conditional_eat_rules()) {
-            for (Coord c : world.all_cells()) {
+            auto it = kind_cells.find(er.subject);
+            if (it == kind_cells.end()) continue;
+            for (Coord c : it->second) {
                 // At least one subject object must satisfy all ON clauses when
                 // evaluated against OTHER objects on the tile (skip self).
                 bool condition_met = false;
@@ -858,7 +926,10 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             Kind target = gcer.target;
             bool has_on = !gcer.on_clauses.empty();
 
-            for (Coord c : world.all_cells()) {
+            // Iterate only cells containing the eater kind.
+            auto it = kind_cells.find(eater);
+            if (it == kind_cells.end()) continue;
+            for (Coord c : it->second) {
                 // For ON-conditioned rules, at least one eater on this tile must
                 // satisfy all ON clauses (same logic as ConditionalEatRule).
                 if (has_on) {
@@ -911,10 +982,12 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         destroy_set(doomed);
     }
 
-    // c. HOT / MELT (re-labeled; was b)
+    // c. HOT / MELT — only check cells with a potential HOT-kind object.
     if (rs.any_grants(Kind::P_Hot) && rs.any_grants(Kind::P_Melt)) {
+        std::unordered_set<Coord, CoordHash> hot_cells;
+        candidate_cells(Kind::P_Hot, hot_cells);
         std::unordered_set<ObjectId> doomed;
-        for (Coord c : world.all_cells()) {
+        for (Coord c : hot_cells) {
             auto const& cell = world.at(c);
             bool any_hot = false, any_melt = false;
             for (ObjectId id : cell) {
@@ -939,10 +1012,12 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         destroy_set(doomed);
     }
 
-    // e. DEFEAT
+    // e. DEFEAT — only check cells with a potential DEFEAT-kind object.
     if (rs.any_grants(Kind::P_Defeat) && rs.any_grants(Kind::P_You)) {
+        std::unordered_set<Coord, CoordHash> defeat_cells;
+        candidate_cells(Kind::P_Defeat, defeat_cells);
         std::unordered_set<ObjectId> doomed;
-        for (Coord c : world.all_cells()) {
+        for (Coord c : defeat_cells) {
             auto const& cell = world.at(c);
             bool any_defeat = false;
             for (ObjectId id : cell)
@@ -954,10 +1029,12 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         destroy_set(doomed);
     }
 
-    // f. OPEN / SHUT
+    // f. OPEN / SHUT — only check cells with a potential OPEN-kind object.
     if (rs.any_grants(Kind::P_Open) && rs.any_grants(Kind::P_Shut)) {
+        std::unordered_set<Coord, CoordHash> open_cells;
+        candidate_cells(Kind::P_Open, open_cells);
         std::unordered_set<ObjectId> doomed;
-        for (Coord c : world.all_cells()) {
+        for (Coord c : open_cells) {
             auto const& cell = world.at(c);
             bool any_open = false, any_shut = false;
             for (ObjectId id : cell) {

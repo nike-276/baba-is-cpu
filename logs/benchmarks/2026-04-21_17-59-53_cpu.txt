@@ -1,0 +1,32 @@
+Benchmark Run
+=============
+Timestamp: 2026-04-21 17:59:53
+Git:       59c6019
+Level:     cpu.level
+Ticks:     1000
+
+=== Benchmark — 1000 ticks ===
+Phase                     min(µs)  mean(µs)  max(µs)  total(ms)     %
+--------------------------------------------------------------------
+apply_destruct              5936.9    7554.1   33384.5    7554.06   48%
+apply_auto_move             1289.8    1839.0   18743.9    1838.97   12%
+apply_fall                   835.2    1090.6    6383.2    1090.64    7%
+apply_directional            663.3     852.2    4496.0     852.19    5%
+apply_make                   697.5     843.0    3314.2     843.00    5%
+parse_post_destruct          647.6     733.2    4014.6     733.16    5%
+parse_post_move              647.8     728.2    3023.0     728.20    5%
+parse_post_transform         638.0     715.4    2919.3     715.42    5%
+parse_initial                617.5     700.7    6823.6     700.69    4%
+apply_shift                  353.5     470.3    2909.2     470.30    3%
+apply_transform              158.0     183.1     441.6     183.09    1%
+apply_swap                    15.2      23.0     177.5      23.05    0%
+apply_nudge                    0.1       0.2       5.0       0.25    0%
+check_win                      0.0       0.0       1.8       0.05    0%
+apply_input                    0.0       0.0       3.4       0.04    0%
+apply_follow                   0.0       0.0       3.0       0.03    0%
+apply_fear                     0.0       0.0       4.0       0.03    0%
+apply_has                      0.0       0.0       0.2       0.02    0%
+apply_play                     0.0       0.0       0.1       0.02    0%
+--------------------------------------------------------------------
+TOTAL                      13373.8   15733.2   51472.2   15733.19  100%
+
