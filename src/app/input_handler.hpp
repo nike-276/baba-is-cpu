@@ -71,6 +71,13 @@ struct InputState {
 
     // Sound events accumulated from play_step calls this frame.
     std::vector<core::SoundEvent> pending_sounds;
+
+    // Key-repeat state for play-mode movement.
+    // Seconds until next move fires while a direction key is held.
+    int   held_key{0};           // raylib KEY_ constant currently held, or 0
+    float repeat_cooldown{0.0f}; // seconds until next repeat tick
+    static constexpr float kRepeatDelay{0.25f};   // initial delay before repeat starts
+    static constexpr float kRepeatInterval{0.08f}; // interval between repeat ticks
 };
 
 inline void poll_input(editor::Editor& ed, InputState& st) {
@@ -297,16 +304,45 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         auto accumulate_sounds = [&](core::TickReport rep) {
             for (auto& e : rep.sound_events) st.pending_sounds.push_back(std::move(e));
         };
-        if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D))
-            accumulate_sounds(ed.play_step(core::Input::move(core::Direction::Right)));
-        if (IsKeyPressed(KEY_LEFT)  || IsKeyPressed(KEY_A))
-            accumulate_sounds(ed.play_step(core::Input::move(core::Direction::Left)));
-        if (IsKeyPressed(KEY_UP)    || IsKeyPressed(KEY_W))
-            accumulate_sounds(ed.play_step(core::Input::move(core::Direction::Up)));
-        if (IsKeyPressed(KEY_DOWN)  || IsKeyPressed(KEY_S))
-            accumulate_sounds(ed.play_step(core::Input::move(core::Direction::Down)));
-        if (IsKeyPressed(KEY_SPACE))
-            accumulate_sounds(ed.play_step(core::Input::wait()));
+        // Map held direction keys to a move input (first matching key wins).
+        struct { int key; core::Input inp; } const kMoveKeys[] = {
+            {KEY_RIGHT, core::Input::move(core::Direction::Right)},
+            {KEY_D,     core::Input::move(core::Direction::Right)},
+            {KEY_LEFT,  core::Input::move(core::Direction::Left)},
+            {KEY_A,     core::Input::move(core::Direction::Left)},
+            {KEY_UP,    core::Input::move(core::Direction::Up)},
+            {KEY_W,     core::Input::move(core::Direction::Up)},
+            {KEY_DOWN,  core::Input::move(core::Direction::Down)},
+            {KEY_S,     core::Input::move(core::Direction::Down)},
+            {KEY_SPACE, core::Input::wait()},
+        };
+
+        float dt = GetFrameTime();
+        int active_key = 0;
+        core::Input active_inp = core::Input::wait();
+        for (auto const& km : kMoveKeys) {
+            if (IsKeyDown(km.key)) { active_key = km.key; active_inp = km.inp; break; }
+        }
+
+        bool fired = false;
+        if (active_key != 0) {
+            if (active_key != st.held_key) {
+                // New key — fire immediately and start repeat timer.
+                st.held_key = active_key;
+                st.repeat_cooldown = InputState::kRepeatDelay;
+                fired = true;
+            } else {
+                st.repeat_cooldown -= dt;
+                if (st.repeat_cooldown <= 0.0f) {
+                    st.repeat_cooldown += InputState::kRepeatInterval;
+                    fired = true;
+                }
+            }
+        } else {
+            st.held_key = 0;
+            st.repeat_cooldown = 0.0f;
+        }
+        if (fired) accumulate_sounds(ed.play_step(active_inp));
 
         // ── Auto-tick controls ───────────────────────────────────────────
         if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_F5))
