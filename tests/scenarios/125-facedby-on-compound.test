@@ -1,0 +1,30 @@
+# WALL ON BABA AND FACEDBY KEKE IS WIN: mixed ON+FACEDBY compound condition.
+# Wall is subject. Baba is co-located (ON satisfied). Keke faces wall (FACEDBY satisfied).
+# Baba is YOU and sits on wall tile, triggering win.
+
+[setup]
+version 1
+name "facedby + on compound condition grants win"
+
+text 0 0 wall
+text 1 0 on
+text 2 0 baba
+text 3 0 and
+text 4 0 facedby
+text 5 0 keke
+text 6 0 is
+text 7 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 wall right
+object 5 5 baba right
+object 4 5 keke right
+
+[inputs]
+input wait
+
+[expected]
+won

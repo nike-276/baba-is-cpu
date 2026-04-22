@@ -1,0 +1,34 @@
+# WALL ON BABA AND FACEDBY KEKE AND FACEDBY ME IS WIN: three-clause compound.
+# Wall needs: baba co-located, keke facing it from left, me facing it from right.
+# Keke at (4,5) facing right: aimed at (5,5)=wall. Me at (6,5) facing left: aimed at (5,5)=wall.
+
+[setup]
+version 1
+name "facedby three-way compound: on + facedby + facedby"
+
+text 0 0 wall
+text 1 0 on
+text 2 0 baba
+text 3 0 and
+text 4 0 facedby
+text 5 0 keke
+text 6 0 and
+text 7 0 facedby
+text 8 0 me
+text 9 0 is
+text 10 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 wall right
+object 5 5 baba right
+object 4 5 keke right
+object 6 5 me left
+
+[inputs]
+input wait
+
+[expected]
+won

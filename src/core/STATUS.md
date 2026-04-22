@@ -45,7 +45,9 @@ authoritative master checklist.
 | FOLLOW | removed | FOLLOW removed from the engine, parser, palette, and file format. `NOUN FOLLOW NOUN` no longer parses. |
 | FEAR (O_Fear) | yes (O_Fear) | `NOUN FEAR NOUN [AND NOUN]*`: move away from adjacent target; priority fwd→CW→CCW→bwd relative to facing. Phase 2.55 `apply_fear()`. |
 | PLAY (O_Play) | yes (O_Play) | `NOUN PLAY NOTE [OCTAVE] [ACCIDENTAL]`: each non-text subject emits one `SoundEvent` per tick (phase 7.5 `apply_play()`). NOTE = O_LetterA…O_LetterG; optional OCTAVE = O_Num0…O_Num9 (default 5); optional ACCIDENTAL = O_Sharp / O_Flat. Modifiers in any order. |
-| NEAR / FACING / LONELY | deferred | |
+| FACING (O_Facing) | yes (O_Facing) | `NOUN [NOT] FACING NOUN IS PROP/NOUN`: condition on tile directly in front. Also accepts P_Left/Right/Up/Down to check own facing. Stored as `FacingPropertyRule` / `FacingTransformRule`. |
+| FACEDBY (O_FacedBy) | yes (O_FacedBy) | `NOUN [NOT] FACEDBY NOUN IS PROP/NOUN`: condition — an adjacent object of that kind must face toward the subject (i.e. `ob.pos + step(ob.facing) == subject.pos`). AND-chains with ON in the same `CondClause` vector via `CondType::FacedBy`. Evaluated by `eval_cond_clauses()` (static on `RuleSet`). |
+| NEAR / LONELY | deferred | |
 
 ## Tick-phase pipeline
 

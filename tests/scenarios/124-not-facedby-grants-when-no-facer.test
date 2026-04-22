@@ -1,0 +1,25 @@
+# BABA NOT FACEDBY KEKE IS WIN: baba wins when no keke is facing toward it.
+# No keke exists at all — NOT FACEDBY KEKE is satisfied.
+
+[setup]
+version 1
+name "not-facedby condition: absent facer grants win"
+
+text 0 0 baba
+text 1 0 not
+text 2 0 facedby
+text 3 0 keke
+text 4 0 is
+text 5 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+won

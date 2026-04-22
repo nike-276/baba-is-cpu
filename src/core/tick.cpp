@@ -423,28 +423,13 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
         }
     }
 
-    // Conditional MAKE rules (ON/NOT ON): iterate only objects of the subject kind.
+    // Conditional MAKE rules (ON/FACEDBY/NOT): iterate only objects of the subject kind.
     for (auto const& cmr : rs.conditional_make_rules()) {
         std::vector<ObjectId> subjects = world.objects_of_kind(cmr.subject);
         for (ObjectId id : subjects) {
             Object const* o = world.get(id);
             if (!o) continue;
-            bool all_clauses_pass = true;
-            for (auto const& clause : cmr.clauses) {
-                bool all_found = true;
-                for (Kind cn : clause.nouns) {
-                    bool found = false;
-                    for (ObjectId other : world.at(o->pos)) {
-                        if (other == id) continue;
-                        Object const* ob = world.get(other);
-                        if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                    }
-                    if (!found) { all_found = false; break; }
-                }
-                bool clause_pass = clause.negated ? !all_found : all_found;
-                if (!clause_pass) { all_clauses_pass = false; break; }
-            }
-            if (!all_clauses_pass) continue;
+            if (!RuleSet::eval_cond_clauses(world, id, cmr.clauses)) continue;
             bool already = false;
             for (ObjectId other : world.at(o->pos)) {
                 Object const* ob = world.get(other);
@@ -468,23 +453,7 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
         for (ObjectId id : subjects) {
             Object const* o = world.get(id);
             if (!o) continue;
-            if (has_on) {
-                bool all_pass = true;
-                for (auto const& clause : gcmr.on_clauses) {
-                    bool all_found = true;
-                    for (Kind cn : clause.nouns) {
-                        bool found = false;
-                        for (ObjectId oid : world.at(o->pos)) {
-                            if (oid == id) continue;
-                            Object const* ob = world.get(oid);
-                            if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                        }
-                        if (!found) { all_found = false; break; }
-                    }
-                    if (!(clause.negated ? !all_found : all_found)) { all_pass = false; break; }
-                }
-                if (!all_pass) continue;
-            }
+            if (has_on && !RuleSet::eval_cond_clauses(world, id, gcmr.on_clauses)) continue;
             bool already = false;
             for (ObjectId oid : world.at(o->pos)) {
                 Object const* ob = world.get(oid);
@@ -528,7 +497,7 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
         }
     }
 
-    // Conditional transforms (NOUN ON NOUN IS NOUN [AND NOUN]*): check per-object.
+    // Conditional transforms (NOUN ON/FACEDBY NOUN IS NOUN [AND NOUN]*): check per-object.
     // Collect ALL matching targets per object into one map entry so they are
     // applied atomically (like unconditional multi-target transforms), preventing
     // sequential single-target retypes from overwriting each other.
@@ -539,22 +508,8 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
             if (!o || o->text) continue;
             for (auto const& ctr : rs.conditional_transform_rules()) {
                 if (ctr.subject != o->kind) continue;
-                bool all_clauses_pass = true;
-                for (auto const& clause : ctr.clauses) {
-                    bool all_found = true;
-                    for (Kind cn : clause.nouns) {
-                        bool found = false;
-                        for (ObjectId other : world.at(o->pos)) {
-                            if (other == id) continue;
-                            Object const* ob = world.get(other);
-                            if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                        }
-                        if (!found) { all_found = false; break; }
-                    }
-                    bool clause_pass = clause.negated ? !all_found : all_found;
-                    if (!clause_pass) { all_clauses_pass = false; break; }
-                }
-                if (all_clauses_pass) cond_targets[id].push_back(ctr.target);
+                if (RuleSet::eval_cond_clauses(world, id, ctr.clauses))
+                    cond_targets[id].push_back(ctr.target);
             }
         }
         for (auto& [id, targets] : cond_targets) {
@@ -827,28 +782,14 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             std::unordered_set<Coord, CoordHash> cells;
             cells_of_kind(er.subject, cells);
             for (Coord c : cells) {
-                // At least one subject object must satisfy all ON clauses when
-                // evaluated against OTHER objects on the tile (skip self).
+                // At least one subject object must satisfy all ON/FACEDBY clauses.
                 bool condition_met = false;
                 for (ObjectId id : world.at(c)) {
                     Object const* o = world.get(id);
                     if (!o || o->text || o->kind != er.subject) continue;
-                    bool all_pass = true;
-                    for (auto const& clause : er.clauses) {
-                        bool all_found = true;
-                        for (Kind cn : clause.nouns) {
-                            bool found = false;
-                            for (ObjectId oid : world.at(c)) {
-                                if (oid == id) continue;  // skip the subject itself
-                                Object const* ob = world.get(oid);
-                                if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                            }
-                            if (!found) { all_found = false; break; }
-                        }
-                        bool pass = clause.negated ? !all_found : all_found;
-                        if (!pass) { all_pass = false; break; }
+                    if (RuleSet::eval_cond_clauses(world, id, er.clauses)) {
+                        condition_met = true; break;
                     }
-                    if (all_pass) { condition_met = true; break; }
                 }
                 if (!condition_met) continue;
                 eat_on_tile(c, er.subject, er.target);
@@ -885,22 +826,9 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
                     for (ObjectId id : world.at(c)) {
                         Object const* o = world.get(id);
                         if (!o || o->text || o->kind != eater) continue;
-                        bool all_pass = true;
-                        for (auto const& clause : gcer.on_clauses) {
-                            bool all_found = true;
-                            for (Kind cn : clause.nouns) {
-                                bool found = false;
-                                for (ObjectId oid : world.at(c)) {
-                                    if (oid == id) continue;
-                                    Object const* ob = world.get(oid);
-                                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                                }
-                                if (!found) { all_found = false; break; }
-                            }
-                            bool pass = clause.negated ? !all_found : all_found;
-                            if (!pass) { all_pass = false; break; }
+                        if (RuleSet::eval_cond_clauses(world, id, gcer.on_clauses)) {
+                            condition_met = true; break;
                         }
-                        if (all_pass) { condition_met = true; break; }
                     }
                     if (!condition_met) continue;
                 }

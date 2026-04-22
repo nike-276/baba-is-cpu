@@ -262,8 +262,8 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         while (true) {
             auto k = at(cur);
             if (!k) break;
-            if (*k == Kind::O_On || *k == Kind::O_Facing || is_pow_op_g(*k) ||
-                *k == Kind::O_Fear) return;
+            if (*k == Kind::O_On || *k == Kind::O_Facing || *k == Kind::O_FacedBy ||
+                is_pow_op_g(*k) || *k == Kind::O_Fear) return;
             // [NOT] POWEREDx acts as a prefix condition chain-starter
             if (*k == Kind::O_Not) {
                 auto after_not = at(adv(cur));
@@ -277,11 +277,11 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             // AND followed by a POWEREDx operator — part of a powered prefix chain
             if (is_pow_op_g(*nk)) return;
             if (!is_noun(*nk)) {
-                // Check for AND NOT ON pattern — we're inside a condition clause list.
+                // Check for AND NOT ON/FACEDBY pattern — we're inside a condition clause list.
                 if (*nk == Kind::O_Not) {
                     Coord on_pos = bak(noun_pos);
                     auto ok = at(on_pos);
-                    if (ok && *ok == Kind::O_On) return;  // in condition clause list
+                    if (ok && (*ok == Kind::O_On || *ok == Kind::O_FacedBy)) return;
                 }
                 break;
             }
@@ -438,20 +438,23 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
         return;
     }
 
-    // ── NOUN [NOT] ON ... [AND [NOT] ON ...]* IS/MAKE PREDICATE ───────────
-    // Unified handler for compound ON conditions with mixed polarity.
-    // op_tok is O_On for "NOUN ON ..." or O_Not for "NOUN NOT ON ..."
+    // ── NOUN [NOT] ON/FACEDBY ... [AND [NOT] ON/FACEDBY ...]* IS/MAKE PREDICATE ─
+    // Unified handler for compound ON and FACEDBY conditions with mixed polarity.
+    // op_tok is O_On/O_FacedBy for positive or O_Not for "NOUN NOT ON/FACEDBY ..."
     // (the O_Not case for FACING is handled separately below).
     {
-        bool is_cond_on = (*op_tok == Kind::O_On);
-        bool is_cond_not_on = false;
+        bool is_cond_on      = (*op_tok == Kind::O_On);
+        bool is_cond_facedby = (*op_tok == Kind::O_FacedBy);
+        bool is_cond_not_on      = false;
+        bool is_cond_not_facedby = false;
         if (*op_tok == Kind::O_Not) {
-            // Peek: NOT must be followed by ON (not FACING, not IS, etc.)
+            // Peek: NOT must be followed by ON or FACEDBY (not FACING, not IS, etc.)
             Coord peek = adv(cursor);
             auto pk = at(peek);
-            is_cond_not_on = (pk && *pk == Kind::O_On);
+            is_cond_not_on      = (pk && *pk == Kind::O_On);
+            is_cond_not_facedby = (pk && *pk == Kind::O_FacedBy);
         }
-        if (is_cond_on || is_cond_not_on) {
+        if (is_cond_on || is_cond_not_on || is_cond_facedby || is_cond_not_facedby) {
             // Parse one or more condition clauses.
             std::vector<CondClause> clauses;
             Coord clause_cursor = cursor;
@@ -463,13 +466,15 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                     clause_neg = true;
                     clause_cursor = adv(clause_cursor);
                     clause_tok = at(clause_cursor);
-                    if (!clause_tok || *clause_tok != Kind::O_On) break; // malformed
+                    if (!clause_tok || (*clause_tok != Kind::O_On && *clause_tok != Kind::O_FacedBy)) break;
                 }
-                if (*clause_tok != Kind::O_On) break;
+                if (*clause_tok != Kind::O_On && *clause_tok != Kind::O_FacedBy) break;
+                CondType clause_type = (*clause_tok == Kind::O_FacedBy) ? CondType::FacedBy : CondType::On;
                 clause_cursor = adv(clause_cursor);
                 auto cn = at(clause_cursor);
                 if (!cn || !is_noun(*cn)) break;
                 CondClause cl;
+                cl.ctype   = clause_type;
                 cl.negated = clause_neg;
                 cl.nouns.push_back(*cn);
                 clause_cursor = adv(clause_cursor);
@@ -484,25 +489,25 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                     clause_cursor = adv(after_and);
                 }
                 clauses.push_back(std::move(cl));
-                // Check if next tokens are AND [NOT] ON (another clause)
+                // Check if next tokens are AND [NOT] ON/FACEDBY (another clause)
                 auto ak = at(clause_cursor);
                 if (!ak || *ak != Kind::O_And) break;
                 Coord after_and = adv(clause_cursor);
                 auto after_and_tok = at(after_and);
                 if (!after_and_tok) break;
-                if (*after_and_tok == Kind::O_On) {
-                    clause_cursor = after_and; // consume AND, next iter starts at ON
+                if (*after_and_tok == Kind::O_On || *after_and_tok == Kind::O_FacedBy) {
+                    clause_cursor = after_and; // consume AND, next iter starts at ON/FACEDBY
                     continue;
                 }
                 if (*after_and_tok == Kind::O_Not) {
                     Coord after_not = adv(after_and);
                     auto after_not_tok = at(after_not);
-                    if (after_not_tok && *after_not_tok == Kind::O_On) {
-                        clause_cursor = after_and; // consume AND, next iter starts at NOT ON
+                    if (after_not_tok && (*after_not_tok == Kind::O_On || *after_not_tok == Kind::O_FacedBy)) {
+                        clause_cursor = after_and; // consume AND, next iter starts at NOT ON/FACEDBY
                         continue;
                     }
                 }
-                break; // AND is not followed by [NOT] ON → end of condition clauses
+                break; // AND is not followed by [NOT] ON/FACEDBY → end of condition clauses
             }
             if (clauses.empty()) return; // no valid clause parsed
 
@@ -1155,23 +1160,7 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
     // Slow path: only rules matching (subject, property) are evaluated.
     if (auto it = cond_idx_.find(k); it != cond_idx_.end()) {
         for (std::uint32_t idx : it->second) {
-            auto const& cr = cond_rules_[idx];
-            bool all_clauses_pass = true;
-            for (auto const& clause : cr.clauses) {
-                bool all_found = true;
-                for (Kind cn : clause.nouns) {
-                    bool found = false;
-                    for (ObjectId other : world.at(o->pos)) {
-                        if (other == id) continue;
-                        Object const* ob = world.get(other);
-                        if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                    }
-                    if (!found) { all_found = false; break; }
-                }
-                bool clause_pass = clause.negated ? !all_found : all_found;
-                if (!clause_pass) { all_clauses_pass = false; break; }
-            }
-            if (all_clauses_pass) return true;
+            if (eval_cond_clauses(world, id, cond_rules_[idx].clauses)) return true;
         }
     }
 
@@ -1226,38 +1215,62 @@ bool RuleSet::any_has_power_kind(World const& world, Kind power_prop) const {
         if (index_.count(key_(k, power_prop))) {
             if (!world.objects_of_kind(k).empty()) return true;
         }
-        // Conditional via ON/NOT ON. Evaluate per-object because it depends
-        // on cell contents. Never recurse into global_cond_rules_.
+        // Conditional via ON/FACEDBY. Evaluate per-object because it depends
+        // on cell or neighbor contents. Never recurse into global_cond_rules_.
         bool kind_has_cond = false;
         for (auto const& cr : cond_rules_)
             if (cr.subject == k && cr.property == power_prop) { kind_has_cond = true; break; }
         if (!kind_has_cond) continue;
 
         for (ObjectId id : world.objects_of_kind(k)) {
-            Object const* o = world.get(id);
-            if (!o) continue;
             for (auto const& cr : cond_rules_) {
                 if (cr.subject != k || cr.property != power_prop) continue;
-                bool all_clauses_pass = true;
-                for (auto const& clause : cr.clauses) {
-                    bool all_found = true;
-                    for (Kind cn : clause.nouns) {
-                        bool found = false;
-                        for (ObjectId oid : world.at(o->pos)) {
-                            if (oid == id) continue;
-                            Object const* ob = world.get(oid);
-                            if (ob && !ob->text && ob->kind == cn) { found = true; break; }
-                        }
-                        if (!found) { all_found = false; break; }
-                    }
-                    bool clause_pass = clause.negated ? !all_found : all_found;
-                    if (!clause_pass) { all_clauses_pass = false; break; }
-                }
-                if (all_clauses_pass) return true;
+                if (eval_cond_clauses(world, id, cr.clauses)) return true;
             }
         }
     }
     return false;
+}
+
+// static
+bool RuleSet::eval_cond_clauses(World const& world, ObjectId id,
+                                std::vector<CondClause> const& clauses) {
+    Object const* o = world.get(id);
+    if (!o) return false;
+    for (auto const& clause : clauses) {
+        bool all_found = true;
+        if (clause.ctype == CondType::On) {
+            // Co-location: ALL nouns must be on the same tile as the subject.
+            for (Kind cn : clause.nouns) {
+                bool found = false;
+                for (ObjectId other : world.at(o->pos)) {
+                    if (other == id) continue;
+                    Object const* ob = world.get(other);
+                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                }
+                if (!found) { all_found = false; break; }
+            }
+        } else {
+            // FacedBy: for each noun, some object of that kind on an adjacent tile
+            // must be facing toward the subject.
+            // Single objects_of_kind() probe per noun (one hash lookup vs 4 for
+            // the 4-tile scan); aimed==o->pos enforces both adjacency and direction.
+            for (Kind cn : clause.nouns) {
+                bool found = false;
+                for (ObjectId other : world.objects_of_kind(cn)) {
+                    Object const* ob = world.get(other);
+                    if (!ob || ob->text) continue;
+                    Coord aimed = {ob->pos.x + step(ob->facing).x,
+                                   ob->pos.y + step(ob->facing).y};
+                    if (aimed.x == o->pos.x && aimed.y == o->pos.y) { found = true; break; }
+                }
+                if (!found) { all_found = false; break; }
+            }
+        }
+        bool clause_pass = clause.negated ? !all_found : all_found;
+        if (!clause_pass) return false;
+    }
+    return true;
 }
 
 }  // namespace baba::core

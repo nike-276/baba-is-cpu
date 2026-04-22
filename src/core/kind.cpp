@@ -116,6 +116,7 @@ constexpr std::array kTable = {
     Entry{"make",     Kind::O_Make},
     Entry{"eat",      Kind::O_Eat},
     Entry{"facing",   Kind::O_Facing},
+    Entry{"facedby",  Kind::O_FacedBy},
     Entry{"has",      Kind::O_Has},
     Entry{"powered",  Kind::O_Powered},
     Entry{"powered2", Kind::O_Powered2},

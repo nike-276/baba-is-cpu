@@ -80,6 +80,7 @@ enum class Kind : std::uint16_t {
     O_Make,
     O_Eat,     // NOUN EAT NOUN: subject destroys target on contact
     O_Facing,  // NOUN [NOT] FACING <cond> IS PROPERTY: condition on facing tile or own direction
+    O_FacedBy, // NOUN [NOT] FACEDBY NOUN: condition — adjacent object faces toward subject
     O_Has,     // NOUN HAS NOUN [AND NOUN]*: spawn target when subject is destroyed
     O_Powered,  // prefix condition: [NOT] POWERED NOUN IS PROPERTY
     O_Powered2, // prefix condition: [NOT] POWERED2 NOUN IS PROPERTY (channel 2)

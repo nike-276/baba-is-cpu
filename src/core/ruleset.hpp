@@ -87,12 +87,14 @@ struct HasRule {
     Kind target;
 };
 
-// One clause in a compound ON-condition.
-// nouns: ALL must co-occupy the tile (AND-joined within clause).
-// negated: if true, requires that NOT all nouns are present.
+// One clause in a compound ON/FACEDBY condition.
+// nouns: ALL must satisfy the clause type (AND-joined within clause).
+// negated: if true, requires that NOT all nouns satisfy the condition.
+enum class CondType { On, FacedBy };
 struct CondClause {
-    std::vector<Kind> nouns;  // ALL must be present (or absent if negated)
-    bool negated{false};      // true → require NOT all present
+    CondType ctype{CondType::On};   // On = co-location; FacedBy = adjacent object facing subject
+    std::vector<Kind> nouns;        // ALL must be present (or absent if negated)
+    bool negated{false};            // true → require NOT all present
 };
 
 // NOUN ON NOUN [AND NOUN]* [AND [NOT] ON NOUN [AND NOUN]*]* IS PROPERTY:
@@ -215,6 +217,13 @@ public:
     // (unconditional or via an ON condition). Used by tick phases to evaluate
     // GlobalConditionEatRule and similar. Never recurses into global_cond_rules_.
     bool any_has_power_kind(World const& world, Kind power_prop) const;
+
+    // Evaluate all CondClauses for the object `id` in `world`. Returns true when
+    // every clause passes. Dispatches on CondType::On (co-location) and
+    // CondType::FacedBy (adjacent object facing toward subject). Shared across
+    // all conditional rule types in ruleset.cpp and tick.cpp.
+    static bool eval_cond_clauses(World const& world, ObjectId id,
+                                  std::vector<CondClause> const& clauses);
 
 private:
     std::vector<PropertyRule>             rules_;

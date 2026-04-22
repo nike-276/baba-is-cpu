@@ -1,0 +1,25 @@
+# BABA FACEDBY KEKE IS WIN: baba wins when keke is adjacent and facing toward baba.
+# Keke is one tile to the left of baba, facing right — aimed directly at baba.
+
+[setup]
+version 1
+name "facedby condition: adjacent facing object grants win"
+
+text 0 0 baba
+text 1 0 facedby
+text 2 0 keke
+text 3 0 is
+text 4 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 baba right
+object 4 5 keke right
+
+[inputs]
+input wait
+
+[expected]
+won

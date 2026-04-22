@@ -26,7 +26,8 @@ checklist) and any scenario file that locks the behavior down.
 | `MAKE`   | DONE     | `X MAKE Y [AND Z]*`: unconditional. `X ON … MAKE Y` / `X NOT ON … MAKE Y`: conditional. Spawns targets post-DESTRUCT. Idempotent. |
 | `EAT`    | DONE     | `X EAT Y [AND Z]*`: operator (not a property). Subject destroys listed targets on contact in DESTRUCT. |
 | `NEAR`   | DEFERRED | Same shape as `ON` but uses 8-neighborhood. |
-| `FACING` | DEFERRED | Subject must be facing a tile containing the noun. |
+| `FACING`  | DONE     | `X [NOT] FACING NOUN IS PROP/NOUN`: condition on tile directly ahead of subject. Also `FACING LEFT/RIGHT/UP/DOWN` checks own facing. Stored as `FacingPropertyRule`/`FacingTransformRule`. |
+| `FACEDBY` | DONE     | `X [NOT] FACEDBY NOUN IS PROP/NOUN`: condition — some adjacent object of the given kind must be facing toward X. AND-chains with ON in a single `CondClause` vector (via `CondType::FacedBy`). Evaluated via `eval_cond_clauses()`. |
 | `LONELY` | DEFERRED | Subject must be the only object on its tile (or in 4-neighborhood per wiki variant). |
 | `WITHOUT`| DEFERRED | Negation of `NEAR`. |
 | `HAS`    | DONE     | `X HAS Y [AND Z]*`: when X is destroyed via any DESTRUCT sub-step (SINK, EAT, HOT/MELT, WEAK, DEFEAT, OPEN/SHUT), spawns Y (and Z…) at X's tile with X's facing. Does NOT trigger on transforms. Stored as `HasRule`; processed in `apply_has()` phase 6.1. AND chains supported. `X HAS X` (self-respawn) supported. |
