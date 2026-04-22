@@ -10,6 +10,7 @@
 #include "object.hpp"
 #include "world.hpp"
 
+#include <array>
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
@@ -204,6 +205,20 @@ public:
     // tick-phase early-exit guards to skip expensive all_cells() passes.
     bool any_grants(Kind property) const { return granted_props_.count(property) != 0; }
 
+    // Categories used by subjects_affected_for_property / _verb.
+    enum class Verb : std::uint8_t { Transform, Make, Eat, Has, Fear, Play };
+
+    // Return every subject Kind that MIGHT be granted `property` at runtime
+    // (unconditional, conditional, facing, or global-conditional rule).
+    // Sorted ascending. Empty sentinel on miss. Iteration of this list into
+    // World::objects_of_kind() is the canonical pattern for per-property
+    // substages.
+    std::vector<Kind> const& subjects_for_property(Kind property) const;
+
+    // Subject kinds appearing in any rule of the given verb category
+    // (Transform/Make/Eat/Has/Fear/Play). Sorted ascending.
+    std::vector<Kind> const& subjects_for_verb(Verb v) const;
+
     // True if any live non-text object currently has power_prop active
     // (unconditional or via an ON condition). Used by tick phases to evaluate
     // GlobalConditionEatRule and similar. Never recurses into global_cond_rules_.
@@ -231,6 +246,13 @@ private:
     std::unordered_set<std::uint32_t> index_;
     // Set of every property Kind potentially grantable by any rule (for any_grants()).
     std::unordered_set<Kind> granted_props_;
+
+    // Pre-computed subject-kind unions. Keys:
+    //   subjects_per_property_[p]  = sorted subjects that might grant property p
+    //   subjects_per_verb_[v]      = sorted subjects appearing in verb category v
+    // Populated once at end of parse().
+    std::unordered_map<Kind, std::vector<Kind>>  subjects_per_property_;
+    std::array<std::vector<Kind>, 6>             subjects_per_verb_;
 
     static std::uint32_t key_(Kind noun, Kind property) {
         return (static_cast<std::uint32_t>(noun) << 16) |

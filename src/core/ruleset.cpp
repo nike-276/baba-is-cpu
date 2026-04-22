@@ -1087,7 +1087,61 @@ RuleSet RuleSet::parse(World const& world) {
     for (auto const& fr  : rs.facing_rules_)      rs.granted_props_.insert(fr.property);
     for (auto const& gcr : rs.global_cond_rules_) rs.granted_props_.insert(gcr.property);
 
+    // Subjects-per-property: for each property a rule could grant, union of
+    // subject kinds across all rule forms. Ascending-sorted for deterministic
+    // iteration.
+    {
+        std::unordered_map<Kind, std::unordered_set<Kind>> acc;
+        for (auto const& r   : rs.rules_)            acc[r.property].insert(r.subject);
+        for (auto const& cr  : rs.cond_rules_)        acc[cr.property].insert(cr.subject);
+        for (auto const& fr  : rs.facing_rules_)      acc[fr.property].insert(fr.subject);
+        for (auto const& gcr : rs.global_cond_rules_) acc[gcr.property].insert(gcr.subject);
+        for (auto const& [p, s] : acc) {
+            auto& v = rs.subjects_per_property_[p];
+            v.assign(s.begin(), s.end());
+            std::sort(v.begin(), v.end());
+        }
+    }
+
+    // Subjects-per-verb (Transform / Make / Eat / Has / Fear / Play).
+    {
+        auto build = [](RuleSet::Verb, std::unordered_set<Kind>& acc,
+                        std::vector<Kind>& out) {
+            out.assign(acc.begin(), acc.end());
+            std::sort(out.begin(), out.end());
+        };
+        std::unordered_set<Kind> xform, make, eat, has, fear, play;
+        for (auto const& r : rs.transforms_)             xform.insert(r.from);
+        for (auto const& r : rs.cond_transforms_)        xform.insert(r.subject);
+        for (auto const& r : rs.facing_transforms_)      xform.insert(r.subject);
+        for (auto const& r : rs.makes_)                  make.insert(r.from);
+        for (auto const& r : rs.cond_makes_)             make.insert(r.subject);
+        for (auto const& r : rs.global_cond_make_rules_) make.insert(r.subject);
+        for (auto const& r : rs.eats_)                   eat.insert(r.subject);
+        for (auto const& r : rs.cond_eats_)              eat.insert(r.subject);
+        for (auto const& r : rs.global_cond_eat_rules_)  eat.insert(r.subject);
+        for (auto const& r : rs.has_rules_)              has.insert(r.subject);
+        for (auto const& r : rs.fear_rules_)             fear.insert(r.subject);
+        for (auto const& r : rs.play_rules_)             play.insert(r.subject);
+        build(RuleSet::Verb::Transform, xform, rs.subjects_per_verb_[0]);
+        build(RuleSet::Verb::Make,      make,  rs.subjects_per_verb_[1]);
+        build(RuleSet::Verb::Eat,       eat,   rs.subjects_per_verb_[2]);
+        build(RuleSet::Verb::Has,       has,   rs.subjects_per_verb_[3]);
+        build(RuleSet::Verb::Fear,      fear,  rs.subjects_per_verb_[4]);
+        build(RuleSet::Verb::Play,      play,  rs.subjects_per_verb_[5]);
+    }
+
     return rs;
+}
+
+std::vector<Kind> const& RuleSet::subjects_for_property(Kind property) const {
+    static std::vector<Kind> const kEmpty;
+    auto it = subjects_per_property_.find(property);
+    return (it == subjects_per_property_.end()) ? kEmpty : it->second;
+}
+
+std::vector<Kind> const& RuleSet::subjects_for_verb(Verb v) const {
+    return subjects_per_verb_[static_cast<std::size_t>(v)];
 }
 
 bool RuleSet::has_property(Kind noun, Kind property) const {

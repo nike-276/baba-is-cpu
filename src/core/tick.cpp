@@ -159,42 +159,29 @@ bool try_move(World& world, ObjectId mover_id, Coord step_v, RuleSet const& rs,
 // UP/DOWN/LEFT/RIGHT set the facing of matching objects; no movement.
 
 void apply_directional(World& world, RuleSet const& rs, std::vector<Change>& log) {
-    static constexpr Kind kDirProps[] = {
-        Kind::P_Left, Kind::P_Right, Kind::P_Up, Kind::P_Down,
+    static constexpr std::pair<Kind, Direction> kPasses[] = {
+        {Kind::P_Left,  Direction::Left},
+        {Kind::P_Right, Direction::Right},
+        {Kind::P_Up,    Direction::Up},
+        {Kind::P_Down,  Direction::Down},
     };
-    auto is_dir = [](Kind p) {
-        for (Kind d : kDirProps) if (p == d) return true;
-        return false;
-    };
-    bool any = false;
-    for (auto const& r : rs.property_rules())
-        if (!r.negated && is_dir(r.property)) { any = true; break; }
-    if (!any)
-        for (auto const& r : rs.conditional_rules())
-            if (is_dir(r.property)) { any = true; break; }
-    if (!any)
-        for (auto const& r : rs.global_condition_property_rules())
-            if (is_dir(r.property)) { any = true; break; }
-    if (!any) return;
-
+    // Union of subject kinds across all four directional properties; iterate
+    // only these kinds via the World index.
     std::unordered_set<Kind> dir_kinds;
-    for (auto const& r : rs.property_rules())
-        if (!r.negated && is_dir(r.property)) dir_kinds.insert(r.subject);
-    for (auto const& r : rs.conditional_rules())
-        if (is_dir(r.property)) dir_kinds.insert(r.subject);
-    for (auto const& r : rs.facing_rules())
-        if (is_dir(r.property)) dir_kinds.insert(r.subject);
-    for (auto const& r : rs.global_condition_property_rules())
-        if (is_dir(r.property)) dir_kinds.insert(r.subject);
+    for (auto [prop, _] : kPasses)
+        for (Kind k : rs.subjects_for_property(prop)) dir_kinds.insert(k);
+    if (dir_kinds.empty()) return;
 
-    for (ObjectId id : world.all_ids()) {
-        Object const* o = world.get(id);
-        if (!o || o->text) continue;
-        if (!dir_kinds.count(o->kind)) continue;
-        if      (rs.object_has_property(world, id, Kind::P_Left))  do_face(world, id, Direction::Left,  log);
-        else if (rs.object_has_property(world, id, Kind::P_Right)) do_face(world, id, Direction::Right, log);
-        else if (rs.object_has_property(world, id, Kind::P_Up))    do_face(world, id, Direction::Up,    log);
-        else if (rs.object_has_property(world, id, Kind::P_Down))  do_face(world, id, Direction::Down,  log);
+    for (Kind k : dir_kinds) {
+        // Snapshot id list because do_face doesn't mutate buckets, but
+        // copying is cheap and defensive.
+        std::vector<ObjectId> ids = world.objects_of_kind(k);
+        for (ObjectId id : ids) {
+            if      (rs.object_has_property(world, id, Kind::P_Left))  do_face(world, id, Direction::Left,  log);
+            else if (rs.object_has_property(world, id, Kind::P_Right)) do_face(world, id, Direction::Right, log);
+            else if (rs.object_has_property(world, id, Kind::P_Up))    do_face(world, id, Direction::Up,    log);
+            else if (rs.object_has_property(world, id, Kind::P_Down))  do_face(world, id, Direction::Down,  log);
+        }
     }
 }
 
@@ -217,54 +204,37 @@ void fall_slide(World& world, ObjectId id, Coord step_v, RuleSet const& rs,
 }
 
 void apply_auto_move(World& world, RuleSet const& rs, std::vector<Change>& log) {
-    static constexpr Kind kAutoProps[] = {
-        Kind::P_Move, Kind::P_Auto,
-    };
-    auto is_auto = [](Kind p) {
-        for (Kind a : kAutoProps) if (p == a) return true;
-        return false;
-    };
-    bool any = false;
-    for (auto const& r : rs.property_rules())
-        if (!r.negated && is_auto(r.property)) { any = true; break; }
-    if (!any)
-        for (auto const& r : rs.conditional_rules())
-            if (is_auto(r.property)) { any = true; break; }
-    if (!any)
-        for (auto const& r : rs.global_condition_property_rules())
-            if (is_auto(r.property)) { any = true; break; }
-    if (!any) return;
-
-    // Kind-prefilter: only kinds that appear as subject in an auto-move rule can
-    // ever receive MOVE or AUTO. Skip other kinds with a single hash lookup.
+    // Union of subject kinds across MOVE and AUTO rules.
     std::unordered_set<Kind> auto_kinds;
-    for (auto const& r : rs.property_rules())
-        if (!r.negated && is_auto(r.property)) auto_kinds.insert(r.subject);
-    for (auto const& r : rs.conditional_rules())
-        if (is_auto(r.property)) auto_kinds.insert(r.subject);
-    for (auto const& r : rs.facing_rules())
-        if (is_auto(r.property)) auto_kinds.insert(r.subject);
-    for (auto const& r : rs.global_condition_property_rules())
-        if (is_auto(r.property)) auto_kinds.insert(r.subject);
+    for (Kind k : rs.subjects_for_property(Kind::P_Move)) auto_kinds.insert(k);
+    for (Kind k : rs.subjects_for_property(Kind::P_Auto)) auto_kinds.insert(k);
+    if (auto_kinds.empty()) return;
 
     struct Mover { ObjectId id; Coord step_v; bool flip_on_block; };
     std::vector<Mover> movers;
 
-    for (ObjectId id : world.all_ids()) {
-        Object const* o = world.get(id);
-        if (!o || o->text) continue;
-        if (!auto_kinds.count(o->kind)) continue;
-        if (rs.object_has_property(world, id, Kind::P_Still)) continue;
-        // FALL overrides MOVE/AUTO: falling objects are handled in apply_fall.
-        if (rs.object_has_property(world, id, Kind::P_Fall)      ||
-            rs.object_has_property(world, id, Kind::P_Fallup)    ||
-            rs.object_has_property(world, id, Kind::P_Fallleft)  ||
-            rs.object_has_property(world, id, Kind::P_Fallright)) continue;
-        if (rs.object_has_property(world, id, Kind::P_Move))
-            movers.push_back({id, step(o->facing), true});
-        else if (rs.object_has_property(world, id, Kind::P_Auto))
-            movers.push_back({id, step(o->facing), false});
+    for (Kind k : auto_kinds) {
+        for (ObjectId id : world.objects_of_kind(k)) {
+            Object const* o = world.get(id);
+            if (!o) continue;
+            if (rs.object_has_property(world, id, Kind::P_Still)) continue;
+            // FALL overrides MOVE/AUTO: falling objects are handled in apply_fall.
+            if (rs.object_has_property(world, id, Kind::P_Fall)      ||
+                rs.object_has_property(world, id, Kind::P_Fallup)    ||
+                rs.object_has_property(world, id, Kind::P_Fallleft)  ||
+                rs.object_has_property(world, id, Kind::P_Fallright)) continue;
+            if (rs.object_has_property(world, id, Kind::P_Move))
+                movers.push_back({id, step(o->facing), true});
+            else if (rs.object_has_property(world, id, Kind::P_Auto))
+                movers.push_back({id, step(o->facing), false});
+        }
     }
+
+    // Determinism: movers were appended in kind-hash order (auto_kinds is
+    // unordered_set). Sort by id so execution order matches the historical
+    // all_ids()-based iteration.
+    std::sort(movers.begin(), movers.end(),
+              [](Mover const& a, Mover const& b) { return a.id < b.id; });
 
     for (auto const& m : movers) {
         Object const* o = world.get(m.id);
@@ -284,48 +254,30 @@ void apply_fall(World& world, RuleSet const& rs, std::vector<Change>& log) {
     static constexpr Kind kFallProps[] = {
         Kind::P_Fall, Kind::P_Fallup, Kind::P_Fallleft, Kind::P_Fallright,
     };
-    auto is_fall = [](Kind p) {
-        for (Kind f : kFallProps) if (p == f) return true;
-        return false;
-    };
-    bool any = false;
-    for (auto const& r : rs.property_rules())
-        if (!r.negated && is_fall(r.property)) { any = true; break; }
-    if (!any)
-        for (auto const& r : rs.conditional_rules())
-            if (is_fall(r.property)) { any = true; break; }
-    if (!any)
-        for (auto const& r : rs.global_condition_property_rules())
-            if (is_fall(r.property)) { any = true; break; }
-    if (!any) return;
-
     std::unordered_set<Kind> fall_kinds;
-    for (auto const& r : rs.property_rules())
-        if (!r.negated && is_fall(r.property)) fall_kinds.insert(r.subject);
-    for (auto const& r : rs.conditional_rules())
-        if (is_fall(r.property)) fall_kinds.insert(r.subject);
-    for (auto const& r : rs.facing_rules())
-        if (is_fall(r.property)) fall_kinds.insert(r.subject);
-    for (auto const& r : rs.global_condition_property_rules())
-        if (is_fall(r.property)) fall_kinds.insert(r.subject);
+    for (Kind p : kFallProps)
+        for (Kind k : rs.subjects_for_property(p)) fall_kinds.insert(k);
+    if (fall_kinds.empty()) return;
 
     struct Faller { ObjectId id; Coord step_v; };
     std::vector<Faller> fallers;
 
-    for (ObjectId id : world.all_ids()) {
-        Object const* o = world.get(id);
-        if (!o || o->text) continue;
-        if (!fall_kinds.count(o->kind)) continue;
-        if (rs.object_has_property(world, id, Kind::P_Still)) continue;
-        if (rs.object_has_property(world, id, Kind::P_Fall))
-            fallers.push_back({id, step(Direction::Down)});
-        else if (rs.object_has_property(world, id, Kind::P_Fallup))
-            fallers.push_back({id, step(Direction::Up)});
-        else if (rs.object_has_property(world, id, Kind::P_Fallleft))
-            fallers.push_back({id, step(Direction::Left)});
-        else if (rs.object_has_property(world, id, Kind::P_Fallright))
-            fallers.push_back({id, step(Direction::Right)});
+    for (Kind k : fall_kinds) {
+        for (ObjectId id : world.objects_of_kind(k)) {
+            if (rs.object_has_property(world, id, Kind::P_Still)) continue;
+            if (rs.object_has_property(world, id, Kind::P_Fall))
+                fallers.push_back({id, step(Direction::Down)});
+            else if (rs.object_has_property(world, id, Kind::P_Fallup))
+                fallers.push_back({id, step(Direction::Up)});
+            else if (rs.object_has_property(world, id, Kind::P_Fallleft))
+                fallers.push_back({id, step(Direction::Left)});
+            else if (rs.object_has_property(world, id, Kind::P_Fallright))
+                fallers.push_back({id, step(Direction::Right)});
+        }
     }
+
+    std::sort(fallers.begin(), fallers.end(),
+              [](Faller const& a, Faller const& b) { return a.id < b.id; });
 
     for (auto const& f : fallers) {
         if (!world.get(f.id)) continue;
@@ -338,24 +290,17 @@ void apply_fall(World& world, RuleSet const& rs, std::vector<Change>& log) {
 // one step in the SHIFT object's facing direction (respects STOP/STILL).
 
 void apply_shift(World& world, RuleSet const& rs, std::vector<Change>& log) {
-    bool any = false;
-    for (auto const& r : rs.property_rules())
-        if (!r.negated && r.property == Kind::P_Shift) { any = true; break; }
-    if (!any)
-        for (auto const& r : rs.conditional_rules())
-            if (r.property == Kind::P_Shift) { any = true; break; }
-    if (!any)
-        for (auto const& r : rs.global_condition_property_rules())
-            if (r.property == Kind::P_Shift) { any = true; break; }
-    if (!any) return;
+    auto const& shift_subjects = rs.subjects_for_property(Kind::P_Shift);
+    if (shift_subjects.empty()) return;
 
     std::vector<ObjectId> shifters;
-    for (ObjectId id : world.all_ids()) {
-        Object const* o = world.get(id);
-        if (!o || o->text) continue;
-        if (rs.object_has_property(world, id, Kind::P_Shift))
-            shifters.push_back(id);
+    for (Kind k : shift_subjects) {
+        for (ObjectId id : world.objects_of_kind(k)) {
+            if (rs.object_has_property(world, id, Kind::P_Shift))
+                shifters.push_back(id);
+        }
     }
+    std::sort(shifters.begin(), shifters.end());
     for (ObjectId sid : shifters) {
         Object const* s = world.get(sid);
         if (!s) continue;
