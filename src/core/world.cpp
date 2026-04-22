@@ -46,10 +46,35 @@ void World::remove_cell_(Coord c) {
     cells_vec_.pop_back();
 }
 
+Kind World::bucket_for_(bool text, Kind kind) const {
+    return text ? Kind::N_Text : kind;
+}
+
+void World::add_to_bucket_(Kind bucket, ObjectId id) {
+    auto& v = kind_index_[bucket];
+    // Monotonic-id fast path: normal spawn appends; respawn (with
+    // potentially smaller id) falls through to a sorted insert.
+    if (v.empty() || v.back() < id) {
+        v.push_back(id);
+    } else {
+        v.insert(std::lower_bound(v.begin(), v.end(), id), id);
+    }
+}
+
+void World::remove_from_bucket_(Kind bucket, ObjectId id) {
+    auto it = kind_index_.find(bucket);
+    if (it == kind_index_.end()) return;
+    auto& v = it->second;
+    auto pos = std::lower_bound(v.begin(), v.end(), id);
+    if (pos != v.end() && *pos == id) v.erase(pos);
+    if (v.empty()) kind_index_.erase(it);
+}
+
 ObjectId World::spawn(Coord pos, Kind kind, bool text, Direction facing) {
     ObjectId id = next_id_++;
     objects_.emplace(id, Object{id, pos, kind, kind, text, facing});
     add_id_(id);
+    add_to_bucket_(bucket_for_(text, kind), id);
     auto [it, inserted] = grid_.try_emplace(pos);
     it->second.push_back(id);
     if (inserted) add_cell_(pos);
@@ -59,6 +84,7 @@ ObjectId World::spawn(Coord pos, Kind kind, bool text, Direction facing) {
 void World::respawn(ObjectId id, Coord pos, Kind kind, Kind original_kind, bool text, Direction facing) {
     objects_.emplace(id, Object{id, pos, kind, original_kind, text, facing});
     add_id_(id);
+    add_to_bucket_(bucket_for_(text, kind), id);
     auto [it, inserted] = grid_.try_emplace(pos);
     it->second.push_back(id);
     if (inserted) add_cell_(pos);
@@ -98,14 +124,25 @@ bool World::face(ObjectId id, Direction d) {
 bool World::retype(ObjectId id, Kind new_kind) {
     auto it = objects_.find(id);
     if (it == objects_.end()) return false;
-    it->second.kind = new_kind;
+    Object& o = it->second;
+    // Text objects live in the N_Text bucket; retype leaves them there.
+    if (!o.text && o.kind != new_kind) {
+        remove_from_bucket_(o.kind, id);
+        add_to_bucket_(new_kind, id);
+    }
+    o.kind = new_kind;
     return true;
 }
 
 bool World::flip_text(ObjectId id) {
     auto it = objects_.find(id);
     if (it == objects_.end()) return false;
-    it->second.text = !it->second.text;
+    Object& o = it->second;
+    Kind old_bucket = bucket_for_(o.text,  o.kind);
+    Kind new_bucket = bucket_for_(!o.text, o.kind);
+    remove_from_bucket_(old_bucket, id);
+    add_to_bucket_(new_bucket, id);
+    o.text = !o.text;
     return true;
 }
 
@@ -120,8 +157,10 @@ bool World::destroy(ObjectId id) {
     auto it = objects_.find(id);
     if (it == objects_.end()) return false;
     Coord pos = it->second.pos;
+    Kind bucket = bucket_for_(it->second.text, it->second.kind);
     objects_.erase(it);
     remove_id_(id);
+    remove_from_bucket_(bucket, id);
     auto cell_it = grid_.find(pos);
     if (cell_it != grid_.end()) {
         auto& v = cell_it->second;
@@ -150,5 +189,10 @@ bool World::occupied(Coord pos) const {
 
 std::vector<ObjectId> const& World::all_ids()   const { return ids_vec_;   }
 std::vector<Coord>    const& World::all_cells()  const { return cells_vec_; }
+
+std::vector<ObjectId> const& World::objects_of_kind(Kind k) const {
+    auto it = kind_index_.find(k);
+    return (it == kind_index_.end()) ? empty_cell_() : it->second;
+}
 
 }  // namespace baba::core

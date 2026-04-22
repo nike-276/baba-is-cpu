@@ -47,6 +47,12 @@ public:
     std::vector<ObjectId> const& all_ids()   const;
     std::vector<Coord>    const& all_cells() const;  // non-empty cells only
 
+    // Kind → ids reverse index. Text objects bucket into Kind::N_Text
+    // (regardless of their underlying kind). Ids within a bucket are
+    // ascending. Maintained by spawn / respawn / destroy / retype / flip_text;
+    // move / face / set_original_kind do NOT change a bucket.
+    std::vector<ObjectId> const& objects_of_kind(Kind k) const;
+
     std::size_t object_count() const { return objects_.size(); }
     std::size_t cell_count()   const { return grid_.size();    }
 
@@ -62,10 +68,18 @@ private:
     std::vector<Coord>                               cells_vec_;
     std::unordered_map<Coord, std::size_t, CoordHash> cell_to_idx_;
 
+    // Kind bucket for id lookup — keyed by (text ? N_Text : kind).
+    std::unordered_map<Kind, std::vector<ObjectId>>  kind_index_;
+
     void add_id_(ObjectId id);
     void remove_id_(ObjectId id);
     void add_cell_(Coord c);
     void remove_cell_(Coord c);
+
+    // kind_index_ maintenance.
+    Kind bucket_for_(bool text, Kind kind) const;
+    void add_to_bucket_(Kind bucket, ObjectId id);
+    void remove_from_bucket_(Kind bucket, ObjectId id);
 
     static std::vector<ObjectId> const& empty_cell_();
 };

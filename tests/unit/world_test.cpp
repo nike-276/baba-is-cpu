@@ -182,3 +182,100 @@ TEST(World, subsequent_spawn_still_gets_fresh_id_after_respawn) {
     CHECK_NE(a, b);
     CHECK_EQ(b, ObjectId{1});
 }
+
+// ── Kind index (objects_of_kind) ────────────────────────────────────────────
+
+TEST(World, objects_of_kind_empty_for_unseen_kind) {
+    World w;
+    auto const& v = w.objects_of_kind(Kind::N_Baba);
+    CHECK_EQ(v.size(), std::size_t{0});
+}
+
+TEST(World, objects_of_kind_tracks_spawns) {
+    World w;
+    auto a = w.spawn({0, 0}, Kind::N_Baba, false);
+    auto b = w.spawn({1, 0}, Kind::N_Baba, false);
+    w.spawn({2, 0}, Kind::N_Wall, false);
+    auto const& babas = w.objects_of_kind(Kind::N_Baba);
+    CHECK_EQ(babas.size(), std::size_t{2});
+    CHECK_EQ(babas[0], a);
+    CHECK_EQ(babas[1], b);
+    CHECK_EQ(w.objects_of_kind(Kind::N_Wall).size(), std::size_t{1});
+}
+
+TEST(World, objects_of_kind_text_buckets_into_ntext) {
+    World w;
+    w.spawn({0, 0}, Kind::N_Baba, /*text=*/true);   // "BABA" text tile
+    w.spawn({1, 0}, Kind::N_Baba, /*text=*/false);  // a real baba object
+    CHECK_EQ(w.objects_of_kind(Kind::N_Baba).size(), std::size_t{1});
+    CHECK_EQ(w.objects_of_kind(Kind::N_Text).size(), std::size_t{1});
+}
+
+TEST(World, objects_of_kind_destroy_removes_id) {
+    World w;
+    auto a = w.spawn({0, 0}, Kind::N_Rock, false);
+    auto b = w.spawn({1, 0}, Kind::N_Rock, false);
+    CHECK(w.destroy(a));
+    auto const& rocks = w.objects_of_kind(Kind::N_Rock);
+    CHECK_EQ(rocks.size(), std::size_t{1});
+    CHECK_EQ(rocks[0], b);
+}
+
+TEST(World, objects_of_kind_retype_moves_between_buckets) {
+    World w;
+    auto id = w.spawn({0, 0}, Kind::N_Baba, false);
+    CHECK(w.retype(id, Kind::N_Keke));
+    CHECK_EQ(w.objects_of_kind(Kind::N_Baba).size(), std::size_t{0});
+    auto const& kekes = w.objects_of_kind(Kind::N_Keke);
+    CHECK_EQ(kekes.size(), std::size_t{1});
+    CHECK_EQ(kekes[0], id);
+}
+
+TEST(World, objects_of_kind_flip_text_moves_to_ntext_and_back) {
+    World w;
+    auto id = w.spawn({0, 0}, Kind::N_Wall, /*text=*/false);
+    CHECK(w.flip_text(id));
+    CHECK_EQ(w.objects_of_kind(Kind::N_Wall).size(), std::size_t{0});
+    CHECK_EQ(w.objects_of_kind(Kind::N_Text).size(), std::size_t{1});
+
+    CHECK(w.flip_text(id));
+    CHECK_EQ(w.objects_of_kind(Kind::N_Text).size(), std::size_t{0});
+    auto const& walls = w.objects_of_kind(Kind::N_Wall);
+    CHECK_EQ(walls.size(), std::size_t{1});
+    CHECK_EQ(walls[0], id);
+}
+
+TEST(World, objects_of_kind_move_and_face_preserve_bucket) {
+    World w;
+    auto id = w.spawn({0, 0}, Kind::N_Baba, false);
+    CHECK(w.move(id, {5, 5}));
+    CHECK(w.face(id, Direction::Up));
+    auto const& babas = w.objects_of_kind(Kind::N_Baba);
+    CHECK_EQ(babas.size(), std::size_t{1});
+    CHECK_EQ(babas[0], id);
+}
+
+TEST(World, objects_of_kind_respawn_inserts_sorted) {
+    World w;
+    auto a = w.spawn({0, 0}, Kind::N_Rock, false);  // id=0
+    auto b = w.spawn({1, 0}, Kind::N_Rock, false);  // id=1
+    auto c = w.spawn({2, 0}, Kind::N_Rock, false);  // id=2
+    CHECK(w.destroy(b));
+    // Now respawn id=1 (non-monotonic w.r.t. next_id_=3): must land in the
+    // middle of the bucket to preserve ascending-id invariant.
+    w.respawn(b, {1, 0}, Kind::N_Rock, Kind::N_Rock, false, Direction::Right);
+    auto const& rocks = w.objects_of_kind(Kind::N_Rock);
+    CHECK_EQ(rocks.size(), std::size_t{3});
+    CHECK_EQ(rocks[0], a);
+    CHECK_EQ(rocks[1], b);
+    CHECK_EQ(rocks[2], c);
+}
+
+TEST(World, objects_of_kind_respawn_text_goes_to_ntext_bucket) {
+    World w;
+    auto id = w.spawn({0, 0}, Kind::N_Baba, /*text=*/true);  // BABA text tile
+    CHECK(w.destroy(id));
+    w.respawn(id, {0, 0}, Kind::N_Baba, Kind::N_Baba, /*text=*/true, Direction::Right);
+    CHECK_EQ(w.objects_of_kind(Kind::N_Baba).size(), std::size_t{0});
+    CHECK_EQ(w.objects_of_kind(Kind::N_Text).size(), std::size_t{1});
+}
