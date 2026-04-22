@@ -254,6 +254,14 @@ private:
     std::unordered_map<Kind, std::vector<Kind>>  subjects_per_property_;
     std::array<std::vector<Kind>, 6>             subjects_per_verb_;
 
+    // object_has_property hot-path indices. Keyed by pack(subject, property).
+    // Each maps to sorted rule indices into the owning vector. An early-reject
+    // set (cond_any_) lets the hot path bail in one probe.
+    std::unordered_set<std::uint32_t>                          cond_any_;
+    std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> cond_idx_;
+    std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> facing_idx_;
+    std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> global_idx_;
+
     static std::uint32_t key_(Kind noun, Kind property) {
         return (static_cast<std::uint32_t>(noun) << 16) |
                 static_cast<std::uint32_t>(property);

@@ -1103,6 +1103,27 @@ RuleSet RuleSet::parse(World const& world) {
         }
     }
 
+    // Hot-path indices for object_has_property: per-(subject, property) vec
+    // of rule indices into cond_rules_ / facing_rules_ / global_cond_rules_.
+    for (std::uint32_t i = 0; i < rs.cond_rules_.size(); ++i) {
+        auto const& cr = rs.cond_rules_[i];
+        auto k = key_(cr.subject, cr.property);
+        rs.cond_any_.insert(k);
+        rs.cond_idx_[k].push_back(i);
+    }
+    for (std::uint32_t i = 0; i < rs.facing_rules_.size(); ++i) {
+        auto const& fr = rs.facing_rules_[i];
+        auto k = key_(fr.subject, fr.property);
+        rs.cond_any_.insert(k);
+        rs.facing_idx_[k].push_back(i);
+    }
+    for (std::uint32_t i = 0; i < rs.global_cond_rules_.size(); ++i) {
+        auto const& gcr = rs.global_cond_rules_[i];
+        auto k = key_(gcr.subject, gcr.property);
+        rs.cond_any_.insert(k);
+        rs.global_idx_[k].push_back(i);
+    }
+
     // Subjects-per-verb (Transform / Make / Eat / Has / Fear / Play).
     {
         auto build = [](RuleSet::Verb, std::unordered_set<Kind>& acc,
@@ -1153,13 +1174,23 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
     Object const* o = world.get(id);
     if (!o) return false;
     Kind noun = o->text ? Kind::N_Text : o->kind;
-    if (index_.count(key_(noun, property))) return true;
+    auto k = key_(noun, property);
 
-    // Check conditional rules (NOUN ON/NOT ON NOUN [AND NOUN]* IS PROPERTY).
-    if (!o->text) {
-        for (auto const& cr : cond_rules_) {
-            if (cr.subject != o->kind || cr.property != property) continue;
-            // ALL clauses must pass. Each clause: ON → all nouns present; NOT ON → not all present.
+    // Fast path 1: unconditional positive rule. O(1).
+    if (index_.count(k)) return true;
+
+    // Text objects only ever match TEXT IS <prop> unconditionally (already
+    // handled above); all conditional/facing/global rules apply to nouns.
+    if (o->text) return false;
+
+    // Fast path 2: no conditional/facing/global rule with this (subject, prop).
+    // Single O(1) probe rejects the overwhelming-majority "not applicable" case.
+    if (!cond_any_.count(k)) return false;
+
+    // Slow path: only rules matching (subject, property) are evaluated.
+    if (auto it = cond_idx_.find(k); it != cond_idx_.end()) {
+        for (std::uint32_t idx : it->second) {
+            auto const& cr = cond_rules_[idx];
             bool all_clauses_pass = true;
             for (auto const& clause : cr.clauses) {
                 bool all_found = true;
@@ -1177,13 +1208,14 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
             }
             if (all_clauses_pass) return true;
         }
+    }
 
-        // Check FACING rules (NOUN [NOT] FACING <cond> IS PROPERTY).
-        for (auto const& fr : facing_rules_) {
-            if (fr.subject != o->kind || fr.property != property) continue;
-            bool matched;
+    if (auto it = facing_idx_.find(k); it != facing_idx_.end()) {
+        for (std::uint32_t idx : it->second) {
+            auto const& fr = facing_rules_[idx];
             bool cond_is_dir = (fr.condition == Kind::P_Left || fr.condition == Kind::P_Right ||
                                 fr.condition == Kind::P_Up   || fr.condition == Kind::P_Down);
+            bool matched;
             if (cond_is_dir) {
                 Direction req = fr.condition == Kind::P_Left  ? Direction::Left  :
                                 fr.condition == Kind::P_Right ? Direction::Right :
@@ -1200,10 +1232,11 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
             }
             if (fr.negated ? !matched : matched) return true;
         }
+    }
 
-        // Check global conditional rules ([NOT] POWEREDx [AND …] NOUN IS PROPERTY).
-        for (auto const& gcr : global_cond_rules_) {
-            if (gcr.subject != o->kind || gcr.property != property) continue;
+    if (auto it = global_idx_.find(k); it != global_idx_.end()) {
+        for (std::uint32_t idx : it->second) {
+            auto const& gcr = global_cond_rules_[idx];
             bool all_met = true;
             for (auto const& cond : gcr.conditions) {
                 bool pw_exists = any_has_power_kind(world, cond.power_kind);
@@ -1212,34 +1245,51 @@ bool RuleSet::object_has_property(World const& world, ObjectId id, Kind property
             if (all_met) return true;
         }
     }
+
     return false;
 }
 
 bool RuleSet::any_has_power_kind(World const& world, Kind power_prop) const {
-    for (ObjectId id : world.all_ids()) {
-        Object const* o = world.get(id);
-        if (!o || o->text) continue;
-        // Unconditional (X IS POWERx → in index)
-        if (index_.count(key_(o->kind, power_prop))) return true;
-        // Conditional via ON/NOT ON (no recursion into global_cond_rules_)
-        for (auto const& cr : cond_rules_) {
-            if (cr.subject != o->kind || cr.property != power_prop) continue;
-            bool all_clauses_pass = true;
-            for (auto const& clause : cr.clauses) {
-                bool all_found = true;
-                for (Kind cn : clause.nouns) {
-                    bool found = false;
-                    for (ObjectId oid : world.at(o->pos)) {
-                        if (oid == id) continue;
-                        Object const* ob = world.get(oid);
-                        if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+    // Only kinds that could ever grant this power (via any rule form) need
+    // checking — comes from the parse-time subjects_for_property cache.
+    auto const& candidates = subjects_for_property(power_prop);
+    if (candidates.empty()) return false;
+
+    for (Kind k : candidates) {
+        // Unconditional X IS POWERx — a single index probe covers every
+        // object of this kind at once.
+        if (index_.count(key_(k, power_prop))) {
+            if (!world.objects_of_kind(k).empty()) return true;
+        }
+        // Conditional via ON/NOT ON. Evaluate per-object because it depends
+        // on cell contents. Never recurse into global_cond_rules_.
+        bool kind_has_cond = false;
+        for (auto const& cr : cond_rules_)
+            if (cr.subject == k && cr.property == power_prop) { kind_has_cond = true; break; }
+        if (!kind_has_cond) continue;
+
+        for (ObjectId id : world.objects_of_kind(k)) {
+            Object const* o = world.get(id);
+            if (!o) continue;
+            for (auto const& cr : cond_rules_) {
+                if (cr.subject != k || cr.property != power_prop) continue;
+                bool all_clauses_pass = true;
+                for (auto const& clause : cr.clauses) {
+                    bool all_found = true;
+                    for (Kind cn : clause.nouns) {
+                        bool found = false;
+                        for (ObjectId oid : world.at(o->pos)) {
+                            if (oid == id) continue;
+                            Object const* ob = world.get(oid);
+                            if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                        }
+                        if (!found) { all_found = false; break; }
                     }
-                    if (!found) { all_found = false; break; }
+                    bool clause_pass = clause.negated ? !all_found : all_found;
+                    if (!clause_pass) { all_clauses_pass = false; break; }
                 }
-                bool clause_pass = clause.negated ? !all_found : all_found;
-                if (!clause_pass) { all_clauses_pass = false; break; }
+                if (all_clauses_pass) return true;
             }
-            if (all_clauses_pass) return true;
         }
     }
     return false;
