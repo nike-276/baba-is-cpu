@@ -232,7 +232,6 @@ inline std::vector<PaletteEntry> default_palette() {
     add(K::O_Eat,    true, "T:eat");
     add(K::O_Facing, true, "T:facing");
     add(K::O_Has,    true, "T:has");
-    add(K::O_Follow, true, "T:follow");
     add(K::O_Fear,   true, "T:fear");
 
     // Text: properties

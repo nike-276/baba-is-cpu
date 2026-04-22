@@ -120,7 +120,6 @@ constexpr std::array kTable = {
     Entry{"powered",  Kind::O_Powered},
     Entry{"powered2", Kind::O_Powered2},
     Entry{"powered3", Kind::O_Powered3},
-    Entry{"follow",   Kind::O_Follow},
     Entry{"fear",     Kind::O_Fear},
     Entry{"play",     Kind::O_Play},
     // PLAY parameter tokens

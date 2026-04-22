@@ -18,7 +18,6 @@ static constexpr const char* kPhaseNames[] = {
     "apply_shift",
     "apply_swap",
     "parse_post_move",
-    "apply_follow",
     "apply_transform",
     "parse_post_transform",
     "apply_fall",

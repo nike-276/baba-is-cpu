@@ -84,7 +84,6 @@ enum class Kind : std::uint16_t {
     O_Powered,  // prefix condition: [NOT] POWERED NOUN IS PROPERTY
     O_Powered2, // prefix condition: [NOT] POWERED2 NOUN IS PROPERTY (channel 2)
     O_Powered3, // prefix condition: [NOT] POWERED3 NOUN IS PROPERTY (channel 3)
-    O_Follow,  // NOUN FOLLOW NOUN [AND NOUN]*: move toward nearest target each tick
     O_Fear,    // NOUN FEAR NOUN [AND NOUN]*: move away from adjacent target each tick
     O_Play,    // NOUN PLAY NOTE [OCTAVE] [ACCIDENTAL]: emit note each tick
 

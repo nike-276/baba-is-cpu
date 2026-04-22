@@ -10,7 +10,6 @@
 //   2.6  APPLY_SHIFT
 //   2.7  APPLY_SWAP
 //   3.   PARSE_POST_MOVE
-//   3.5  APPLY_FOLLOW
 //   4.   TRANSFORM          — apply X IS Y transformation rules + REVERT
 //   5.   PARSE_POST_TRANSFORM
 //   5.5  APPLY_FALL         — FALL* slides after REVERT resolves (wiki Order of Ops)
@@ -35,7 +34,7 @@ namespace baba::core {
 enum class Phase : int {
     ParseInitial = 0,
     Directional, Input, AutoMove, Nudge, Fear, Shift, Swap,
-    ParsePostMove, Follow, Transform, ParsePostTransform,
+    ParsePostMove, Transform, ParsePostTransform,
     Fall, Destruct, Has, Make, ParsePostDestruct, Play, CheckWin,
     Count  // sentinel
 };

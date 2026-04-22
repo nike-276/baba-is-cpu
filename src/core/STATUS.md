@@ -42,7 +42,7 @@ authoritative master checklist.
 | HAS   | yes (O_Has)     | NOUN HAS NOUN [AND NOUN]*: spawn target when subject destroyed via DESTRUCT (DONE). Phase 6.1 `apply_has()`. |
 | POWERED (O_Powered) | yes (O_Powered) | Global prefix condition: `[NOT] POWERED NOUN IS PROPERTY`. Stored as `GlobalConditionPropertyRule{conditions}`; evaluated via `any_has_power_kind(P_Power)`. |
 | POWERED2 / POWERED3 | yes (O_Powered2/3) | Independent variants; `[NOT] POWERED2 NOUN IS PROPERTY`. AND-chains of POWERED/POWERED2/POWERED3 require ALL channels active. |
-| FOLLOW (O_Follow) | yes (O_Follow) | `NOUN FOLLOW NOUN [AND NOUN]*`: move toward nearest non-colocated target (Manhattan, vertical tie-break). Phase 3.5 `apply_follow()`. |
+| FOLLOW | removed | FOLLOW removed from the engine, parser, palette, and file format. `NOUN FOLLOW NOUN` no longer parses. |
 | FEAR (O_Fear) | yes (O_Fear) | `NOUN FEAR NOUN [AND NOUN]*`: move away from adjacent target; priority fwd→CW→CCW→bwd relative to facing. Phase 2.55 `apply_fear()`. |
 | PLAY (O_Play) | yes (O_Play) | `NOUN PLAY NOTE [OCTAVE] [ACCIDENTAL]`: each non-text subject emits one `SoundEvent` per tick (phase 7.5 `apply_play()`). NOTE = O_LetterA…O_LetterG; optional OCTAVE = O_Num0…O_Num9 (default 5); optional ACCIDENTAL = O_Sharp / O_Flat. Modifiers in any order. |
 | NEAR / FACING / LONELY | deferred | |
@@ -64,8 +64,6 @@ APPLY_NUDGE                ← DONE (NUDGERIGHT/UP/LEFT/DOWN; R→U→L→D sub-
 APPLY_FEAR                 ← DONE (NOUN FEAR NOUN; move away from adjacent)
   ↓
 PARSE_POST_MOVE
-  ↓
-APPLY_FOLLOW               ← DONE (NOUN FOLLOW NOUN; move toward nearest)
   ↓
 TRANSFORM                  ← DONE (X IS Y, X IS X protection, duplication, X IS TEXT)
   ↓

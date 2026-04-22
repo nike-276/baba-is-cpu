@@ -44,7 +44,6 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<GlobalConditionEatRule>& global_cond_eat_out,
                 std::vector<GlobalConditionMakeRule>& global_cond_make_out,
                 std::vector<HasRule>& has_out,
-                std::vector<FollowRule>& follow_out,
                 std::vector<FearRule>& fear_out,
                 std::vector<PlayRule>& play_out,
                 std::unordered_map<Coord, Kind, CoordHash> const& word_at = {}) {
@@ -264,7 +263,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             auto k = at(cur);
             if (!k) break;
             if (*k == Kind::O_On || *k == Kind::O_Facing || is_pow_op_g(*k) ||
-                *k == Kind::O_Follow || *k == Kind::O_Fear) return;
+                *k == Kind::O_Fear) return;
             // [NOT] POWEREDx acts as a prefix condition chain-starter
             if (*k == Kind::O_Not) {
                 auto after_not = at(adv(cur));
@@ -411,30 +410,6 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             for (Kind n : subjects)
                 for (Kind t : targets)
                     has_out.push_back({n, t});
-        }
-        return;
-    }
-
-    // ── NOUN FOLLOW NOUN [AND NOUN]* ───────────────────────────────────────
-    if (*op_tok == Kind::O_Follow) {
-        cursor = adv(cursor);
-        auto target = at(cursor);
-        if (target && is_noun(*target)) {
-            std::vector<Kind> targets;
-            targets.push_back(*target);
-            cursor = adv(cursor);
-            while (true) {
-                auto k = at(cursor);
-                if (!k || *k != Kind::O_And) break;
-                Coord next = adv(cursor);
-                auto nt = at(next);
-                if (!nt || !is_noun(*nt)) break;
-                targets.push_back(*nt);
-                cursor = adv(next);
-            }
-            for (Kind n : subjects)
-                for (Kind t : targets)
-                    follow_out.push_back({n, t});
         }
         return;
     }
@@ -792,8 +767,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_, rs.play_rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_, rs.play_rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_);
     }
 
     // Pass 2: WORD — objects that have P_Word (via any rule form) act as their own text tile.
@@ -906,8 +881,8 @@ RuleSet RuleSet::parse(World const& world) {
                 }
             }
             if (!has_text_or_word) continue;
-            scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_, rs.play_rules_, word_at);
-            scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.follow_rules_, rs.fear_rules_, rs.play_rules_, word_at);
+            scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, word_at);
+            scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, word_at);
         }
     }
 
@@ -1022,16 +997,6 @@ RuleSet RuleSet::parse(World const& world) {
             if (seen.insert(key2).second) deduped.push_back(hr);
         }
         rs.has_rules_ = std::move(deduped);
-    }
-    {
-        std::set<std::pair<uint16_t,uint16_t>> seen;
-        std::vector<FollowRule> deduped;
-        for (auto const& fr : rs.follow_rules_) {
-            auto key2 = std::make_pair(static_cast<uint16_t>(fr.subject),
-                                       static_cast<uint16_t>(fr.target));
-            if (seen.insert(key2).second) deduped.push_back(fr);
-        }
-        rs.follow_rules_ = std::move(deduped);
     }
     // FearRule: no dedup — identical entries represent stacking (reserved for future use).
     {
