@@ -450,31 +450,28 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
              || !rs.global_condition_make_rules().empty();
     if (!any) return;
 
-    // Build kind→{cells, ids} index once (same O(objects) pass as apply_destructions).
-    // Unconditional MAKE uses kind_cells; conditional/global MAKE uses kind_ids.
-    std::unordered_map<Kind, std::vector<Coord>>    kind_cells;
-    std::unordered_map<Kind, std::vector<ObjectId>> kind_ids;
-    for (Coord c : world.all_cells()) {
-        for (ObjectId id : world.at(c)) {
-            Object const* o = world.get(id);
-            if (!o || o->text) continue;
-            kind_cells[o->kind].push_back(c);
-            kind_ids[o->kind].push_back(id);
-        }
-    }
-
-    // Unconditional MAKE rules: iterate only cells containing the "from" kind.
+    // Unconditional MAKE rules: iterate subjects via the World kind index.
+    // Snapshot the id list because do_spawn mutates kind_index_.
+    // Dedup cells so multiple FROM objects on the same tile only spawn once,
+    // matching the old apply_make pre-CP-2 behaviour (which de-facto dedup'd
+    // via the has_to check).
     for (auto const& mr : rs.make_rules()) {
-        auto it = kind_cells.find(mr.from);
-        if (it == kind_cells.end()) continue;
-        for (Coord c : it->second) {
-            bool has_to = false;
+        std::vector<ObjectId> subjects = world.objects_of_kind(mr.from);
+        std::unordered_set<Coord, CoordHash> seen;
+        for (ObjectId id : subjects) {
+            Object const* o = world.get(id);
+            if (!o) continue;
+            Coord c = o->pos;
+            if (!seen.insert(c).second) continue;
+            // Match pre-CP-2 behaviour: src_facing = last FROM on cell (in
+            // cell-insertion order from world.at), target pre-existence check.
             Direction src_facing = Direction::Right;
-            for (ObjectId id : world.at(c)) {
-                Object const* o = world.get(id);
-                if (!o || o->text) continue;
-                if (o->kind == mr.from) src_facing = o->facing;
-                if (o->kind == mr.to)   has_to = true;
+            bool has_to = false;
+            for (ObjectId other : world.at(c)) {
+                Object const* ob = world.get(other);
+                if (!ob || ob->text) continue;
+                if (ob->kind == mr.from) src_facing = ob->facing;
+                if (ob->kind == mr.to)   has_to = true;
             }
             if (!has_to)
                 do_spawn(world, c, mr.to, /*text=*/false, src_facing, log);
@@ -483,9 +480,8 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
 
     // Conditional MAKE rules (ON/NOT ON): iterate only objects of the subject kind.
     for (auto const& cmr : rs.conditional_make_rules()) {
-        auto it = kind_ids.find(cmr.subject);
-        if (it == kind_ids.end()) continue;
-        for (ObjectId id : it->second) {
+        std::vector<ObjectId> subjects = world.objects_of_kind(cmr.subject);
+        for (ObjectId id : subjects) {
             Object const* o = world.get(id);
             if (!o) continue;
             bool all_clauses_pass = true;
@@ -522,10 +518,9 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
         }
         if (!all_met) continue;
 
-        auto it = kind_ids.find(gcmr.subject);
-        if (it == kind_ids.end()) continue;
+        std::vector<ObjectId> subjects = world.objects_of_kind(gcmr.subject);
         bool has_on = !gcmr.on_clauses.empty();
-        for (ObjectId id : it->second) {
+        for (ObjectId id : subjects) {
             Object const* o = world.get(id);
             if (!o) continue;
             if (has_on) {
@@ -789,38 +784,14 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
         for (ObjectId id : sorted) do_destroy(world, id, log);
     };
 
-    // Build kind→cells index once for all cell-scanning sub-phases.
-    // One O(objects) pass replaces O(rules × all_cells) scans per sub-phase.
-    // Diagnosis (cpu.level, 1000 ticks): destruct remains ~48% of total even after
-    // this index because the dominant EAT-rule subjects (tile=512, donut=512) are
-    // dense enough that kind_cells[subject].size() ≈ all_cells().size(), giving
-    // near-zero filtering benefit. A cell-change (arrived) filter isn't valid for
-    // unconditional EAT since it fires on every co-occupying tick, not just arrivals.
-    std::unordered_map<Kind, std::vector<Coord>> kind_cells;
-    {
-        bool need = rs.any_grants(Kind::P_Sink)
-                 || !rs.eat_rules().empty()
-                 || !rs.conditional_eat_rules().empty()
-                 || !rs.global_condition_eat_rules().empty()
-                 || (rs.any_grants(Kind::P_Hot) && rs.any_grants(Kind::P_Melt))
-                 || (rs.any_grants(Kind::P_Defeat) && rs.any_grants(Kind::P_You))
-                 || (rs.any_grants(Kind::P_Open) && rs.any_grants(Kind::P_Shut));
-        if (need) {
-            for (Coord c : world.all_cells())
-                for (ObjectId id : world.at(c)) {
-                    Object const* o = world.get(id);
-                    if (o && !o->text) kind_cells[o->kind].push_back(c);
-                }
-        }
-    }
-
-    // Helper: collect candidate cells for a given property by scanning rule subjects.
-    // Inserts into out_cells; caller deduplicates via unordered_set as needed.
+    // Helper: collect candidate cells for a given property by scanning rule
+    // subjects via the World kind index (skips the per-tick O(objects) build).
     auto candidate_cells = [&](Kind prop, std::unordered_set<Coord, CoordHash>& out_cells) {
         auto add = [&](Kind subject) {
-            auto it = kind_cells.find(subject);
-            if (it != kind_cells.end())
-                for (Coord c : it->second) out_cells.insert(c);
+            for (ObjectId id : world.objects_of_kind(subject)) {
+                Object const* o = world.get(id);
+                if (o) out_cells.insert(o->pos);
+            }
         };
         for (auto const& r : rs.property_rules())
             if (!r.negated && r.property == prop) add(r.subject);
@@ -830,6 +801,14 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             if (r.property == prop) add(r.subject);
         for (auto const& r : rs.global_condition_property_rules())
             if (r.property == prop) add(r.subject);
+    };
+
+    // Helper: dedup'd cells where any non-text object of `subject` lives.
+    auto cells_of_kind = [&](Kind subject, std::unordered_set<Coord, CoordHash>& out_cells) {
+        for (ObjectId id : world.objects_of_kind(subject)) {
+            Object const* o = world.get(id);
+            if (o) out_cells.insert(o->pos);
+        }
     };
 
     // Capture tiles that received a moving object this tick (for WEAK check below).
@@ -888,16 +867,16 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
 
         // Iterate only cells containing the subject kind instead of all_cells.
         for (auto const& er : rs.eat_rules()) {
-            auto it = kind_cells.find(er.subject);
-            if (it == kind_cells.end()) continue;
-            for (Coord c : it->second)
+            std::unordered_set<Coord, CoordHash> cells;
+            cells_of_kind(er.subject, cells);
+            for (Coord c : cells)
                 eat_on_tile(c, er.subject, er.target);
         }
 
         for (auto const& er : rs.conditional_eat_rules()) {
-            auto it = kind_cells.find(er.subject);
-            if (it == kind_cells.end()) continue;
-            for (Coord c : it->second) {
+            std::unordered_set<Coord, CoordHash> cells;
+            cells_of_kind(er.subject, cells);
+            for (Coord c : cells) {
                 // At least one subject object must satisfy all ON clauses when
                 // evaluated against OTHER objects on the tile (skip self).
                 bool condition_met = false;
@@ -946,9 +925,9 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             bool has_on = !gcer.on_clauses.empty();
 
             // Iterate only cells containing the eater kind.
-            auto it = kind_cells.find(eater);
-            if (it == kind_cells.end()) continue;
-            for (Coord c : it->second) {
+            std::unordered_set<Coord, CoordHash> cells;
+            cells_of_kind(eater, cells);
+            for (Coord c : cells) {
                 // For ON-conditioned rules, at least one eater on this tile must
                 // satisfy all ON clauses (same logic as ConditionalEatRule).
                 if (has_on) {
