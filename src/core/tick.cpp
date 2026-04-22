@@ -1364,12 +1364,7 @@ TickReport apply_tick(World& world, Input input) {
         }
     });
 
-    // Phase 3.5: APPLY_FOLLOW
-    PHASE_TIME(Phase::Follow, {
-        apply_follow(world, rs, log);
-    });
-
-    // Phase 4: TRANSFORM
+    // Phase 4: TRANSFORM — wiki: transforms happen before moveblock (FOLLOW).
     PHASE_TIME(Phase::Transform, {
         apply_transforms(world, rs, log);
     });
@@ -1382,7 +1377,12 @@ TickReport apply_tick(World& world, Input input) {
         }
     });
 
-    // Phase 5.5: APPLY_FALL — after TRANSFORM so REVERT resolves before objects slide.
+    // Phase 5.1: APPLY_FOLLOW (moveblock) — wiki: FOLLOW is after transforms + rule reparse.
+    PHASE_TIME(Phase::Follow, {
+        apply_follow(world, rs, log);
+    });
+
+    // Phase 5.5: APPLY_FALL — after TRANSFORM+FOLLOW so REVERT resolves before objects slide.
     PHASE_TIME(Phase::Fall, {
         apply_fall(world, rs, log);
     });

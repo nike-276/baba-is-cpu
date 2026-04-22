@@ -1,0 +1,47 @@
+# Order of Operations: FALL (fallblock) fires before DESTRUCT (block: DEFEAT/EAT/SINK/etc.).
+# Wiki: fallblock() runs entirely before block() which contains DEFEAT, EAT, SINK, etc.
+#
+# Baba has FALL and YOU. Skull (DEFEAT) at (5,4). Wall (STOP) at (5,5) blocks fall.
+# Baba starts at (5,0) far above the skull.
+#
+# Correct order (FALL then DESTRUCT):
+#   FALL: baba slides from (5,0) → (5,4), landing on skull (skull is not STOP/PUSH).
+#   DESTRUCT: skull (DEFEAT) + baba (YOU) on same tile → baba destroyed.
+#   Result: baba not at (5,0) or (5,4).
+#
+# Wrong order (DESTRUCT then FALL — would be the bug):
+#   DESTRUCT: skull at (5,4), baba still at (5,0) — not on same tile → nothing.
+#   FALL: baba slides to (5,4).
+#   Result: baba alive at (5,4) — assertion "not_at 5 4 baba" would FAIL.
+
+[setup]
+version 1
+name "oop: fall before destruct (baba falls onto defeat)"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 fall
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+text 0 2 skull
+text 1 2 is
+text 2 2 defeat
+
+text 0 3 wall
+text 1 3 is
+text 2 3 stop
+
+object 5 0 baba right
+object 5 4 skull right
+object 5 5 wall right
+
+[inputs]
+wait
+
+[expected]
+not_at 5 0 baba
+not_at 5 4 baba
+not_won

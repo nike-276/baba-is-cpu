@@ -1,0 +1,47 @@
+# Order of Operations: FOLLOW (moveblock, step 5) fires before FALL (fallblock, step 8).
+# Wiki: moveblock() runs before fallblock().
+# FOLLOW must track the target's PRE-FALL position; the target then falls after.
+#
+# Rock IS FALL at (5,0). Baba FOLLOW rock at (8,0) (3 tiles to the right, same row).
+# Wall at (5,5) IS STOP blocks rock's fall; rock lands at (5,4).
+#
+# Correct order (FOLLOW then FALL):
+#   FOLLOW: baba at (8,0) tracks rock at (5,0) — pure horizontal (dx=-3, dy=0) → baba LEFT → (7,0).
+#   FALL: rock slides from (5,0) → (5,4), stopped by wall at (5,5).
+#   Result: baba at (7,0), rock at (5,4).
+#
+# Wrong order (FALL then FOLLOW — the bug):
+#   FALL: rock slides to (5,4).
+#   FOLLOW: baba at (8,0) tracks rock at (5,4) — diagonally lower-left (dx=-3, dy=+4).
+#           dy > dx → prefer vertical → baba moves DOWN to (8,1).
+#   Result: baba at (8,1) — assertion "at 7 0 baba" would FAIL.
+
+[setup]
+version 1
+name "oop: follow before fall (follow tracks pre-fall position)"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 fall
+
+text 0 1 baba
+text 1 1 follow
+text 2 1 rock
+
+text 0 2 wall
+text 1 2 is
+text 2 2 stop
+
+object 5 0 rock right
+object 8 0 baba right
+object 5 5 wall right
+
+[inputs]
+wait
+
+[expected]
+at 7 0 baba
+not_at 8 0 baba
+at 5 4 rock
+not_at 5 0 rock
+not_won
