@@ -1,10 +1,13 @@
-# Scenario 19: WEAK objects are destroyed when another object moves onto their tile.
-# WEAK does not have STOP, so movement succeeds; the WEAK object is then
-# removed in DESTRUCT because a mover arrived on its tile this tick.
+# Scenario 19: WEAK objects are destroyed whenever they share a tile with any
+# other non-text object (static overlap). Post-CP-11 WEAK is arrival-agnostic:
+# if BABA IS YOU and ROCK IS WEAK, moving BABA onto ROCK still destroys ROCK
+# on the same tick — and ROCK would also die if something teleported/spawned
+# onto its tile. This test keeps the "move onto" form; see scenario 120 for
+# the spawn-overlap case.
 
 [setup]
 version 1
-name "weak destroyed when object arrives on tile"
+name "weak destroyed by any tile-overlap"
 
 text 0 0 baba
 text 1 0 is

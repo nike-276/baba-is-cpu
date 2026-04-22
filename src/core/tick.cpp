@@ -723,29 +723,42 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
 // ── DESTRUCT phase ─────────────────────────────────────────────────────────
 
 void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& log) {
-    auto destroy_set = [&](std::unordered_set<ObjectId> const& ids) {
+    // Inline HAS emission (CP-11). After each destruction substage, spawn every
+    // HAS target for the non-text objects destroyed in THIS substage, before
+    // the next substage runs. `mark` is the log index taken immediately before
+    // the substage's do_destroy loop.
+    auto emit_has_since = [&](std::size_t mark) {
+        if (rs.has_rules().empty()) return;
+        std::size_t n = log.size();
+        for (std::size_t i = mark; i < n; ++i) {
+            Change const c = log[i];  // copy: do_spawn may reallocate log
+            if (c.kind != ChangeKind::Destroy) continue;
+            if (c.obj_text) continue;
+            for (auto const& hr : rs.has_rules()) {
+                if (hr.subject != c.obj_kind) continue;
+                do_spawn(world, c.obj_pos, hr.target, /*text=*/false, c.obj_facing, log);
+            }
+        }
+    };
+
+    auto destroy_and_has = [&](std::unordered_set<ObjectId> const& ids) {
+        if (ids.empty()) return;
+        std::size_t mark = log.size();
         std::vector<ObjectId> sorted(ids.begin(), ids.end());
         std::sort(sorted.begin(), sorted.end());
         for (ObjectId id : sorted) do_destroy(world, id, log);
+        emit_has_since(mark);
     };
 
     // Helper: collect candidate cells for a given property by scanning rule
-    // subjects via the World kind index (skips the per-tick O(objects) build).
+    // subjects via the World kind index.
     auto candidate_cells = [&](Kind prop, std::unordered_set<Coord, CoordHash>& out_cells) {
-        auto add = [&](Kind subject) {
+        for (Kind subject : rs.subjects_for_property(prop)) {
             for (ObjectId id : world.objects_of_kind(subject)) {
                 Object const* o = world.get(id);
                 if (o) out_cells.insert(o->pos);
             }
-        };
-        for (auto const& r : rs.property_rules())
-            if (!r.negated && r.property == prop) add(r.subject);
-        for (auto const& r : rs.conditional_rules())
-            if (r.property == prop) add(r.subject);
-        for (auto const& r : rs.facing_rules())
-            if (r.property == prop) add(r.subject);
-        for (auto const& r : rs.global_condition_property_rules())
-            if (r.property == prop) add(r.subject);
+        }
     };
 
     // Helper: dedup'd cells where any non-text object of `subject` lives.
@@ -755,14 +768,6 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             if (o) out_cells.insert(o->pos);
         }
     };
-
-    // Capture tiles that received a moving object this tick (for WEAK check below).
-    // Read log before any destructions add to it.
-    std::unordered_set<Coord, CoordHash> arrived;
-    if (rs.any_grants(Kind::P_Weak)) {
-        for (auto const& c : log)
-            if (c.kind == ChangeKind::Move) arrived.insert(c.to_pos);
-    }
 
     // a. SINK — only check cells that contain an object whose kind can be SINK.
     if (rs.any_grants(Kind::P_Sink)) {
@@ -778,7 +783,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             if (any_sink)
                 for (ObjectId id : cell) doomed.insert(id);
         }
-        destroy_set(doomed);
+        destroy_and_has(doomed);
     }
 
     // b. EAT — NOUN EAT NOUN: for each rule, destroy target-kind objects on tiles
@@ -850,7 +855,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
             }
         }
 
-        destroy_set(doomed);
+        destroy_and_has(doomed);
     }
 
     // b2. POWERED [ON] EAT — [NOT] POWEREDx NOUN [ON/NOT ON NOUN]* EAT NOUN
@@ -922,7 +927,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
                 }
             }
         }
-        destroy_set(doomed);
+        destroy_and_has(doomed);
     }
 
     // c. HOT / MELT — only check cells with a potential HOT-kind object.
@@ -941,18 +946,29 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
                 for (ObjectId id : cell)
                     if (rs.object_has_property(world, id, Kind::P_Melt)) doomed.insert(id);
         }
-        destroy_set(doomed);
+        destroy_and_has(doomed);
     }
 
-    // d. WEAK — destroyed when any object arrives on their tile this tick.
-    if (!arrived.empty()) {
+    // d. WEAK (CP-11) — static overlap: any WEAK object sharing a tile with
+    // another non-text object is destroyed, regardless of whether a move
+    // caused the overlap. Iterate WEAK candidates via the kind index.
+    if (rs.any_grants(Kind::P_Weak)) {
         std::unordered_set<ObjectId> doomed;
-        for (Coord const& c : arrived) {
-            for (ObjectId id : world.at(c)) {
-                if (rs.object_has_property(world, id, Kind::P_Weak)) doomed.insert(id);
+        for (Kind k : rs.subjects_for_property(Kind::P_Weak)) {
+            for (ObjectId id : world.objects_of_kind(k)) {
+                if (!rs.object_has_property(world, id, Kind::P_Weak)) continue;
+                Object const* o = world.get(id);
+                if (!o) continue;
+                bool has_other = false;
+                for (ObjectId oid : world.at(o->pos)) {
+                    if (oid == id) continue;
+                    Object const* ob = world.get(oid);
+                    if (ob && !ob->text) { has_other = true; break; }
+                }
+                if (has_other) doomed.insert(id);
             }
         }
-        destroy_set(doomed);
+        destroy_and_has(doomed);
     }
 
     // e. DEFEAT — only check cells with a potential DEFEAT-kind object.
@@ -969,7 +985,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
                 for (ObjectId id : cell)
                     if (rs.object_has_property(world, id, Kind::P_You)) doomed.insert(id);
         }
-        destroy_set(doomed);
+        destroy_and_has(doomed);
     }
 
     // f. OPEN / SHUT — only check cells with a potential OPEN-kind object.
@@ -989,7 +1005,7 @@ void apply_destructions(World& world, RuleSet const& rs, std::vector<Change>& lo
                     if (rs.object_has_property(world, id, Kind::P_Open) ||
                         rs.object_has_property(world, id, Kind::P_Shut)) doomed.insert(id);
         }
-        destroy_set(doomed);
+        destroy_and_has(doomed);
     }
 }
 
@@ -1009,12 +1025,12 @@ bool check_win(World const& world, RuleSet const& rs) {
     return false;
 }
 
-// ── APPLY_HAS phase ────────────────────────────────────────────────────────
-// Fires after all DESTRUCT sub-steps complete. For each non-text object destroyed
-// during DESTRUCT, spawn each HAS target at the destroyed object's tile.
-// [DEVIATION] v1 processes HAS after the entire DESTRUCT phase; conditional HAS
-// interactions within DESTRUCT are not modelled.
-void apply_has(World& world, RuleSet const& rs,
+// ── APPLY_HAS (obsolete, kept as a stub) ───────────────────────────────────
+// CP-11 folded HAS into apply_destructions as an inline emit_has_since()
+// helper that fires after EACH destruction substage instead of once at end.
+// This free function is no longer called; retained only so existing external
+// callers (if any — none at time of writing) continue to compile.
+[[maybe_unused]] void apply_has(World& world, RuleSet const& rs,
                std::vector<Change>& log, std::size_t destruct_start) {
     if (rs.has_rules().empty()) return;
     std::size_t const n = log.size();
@@ -1276,24 +1292,29 @@ TickReport apply_tick(World& world, Input input) {
         apply_directional(world, rs, log);
     });
 
-    // Phase 6: DESTRUCT
-    std::size_t pre_destruct = log.size();
+    // ── Stage 5 — Block (CP-11) ──────────────────────────────────────────
+    // Play fires first (before any destructions). Each destruction substage
+    // inside apply_destructions triggers its paired HAS inline. Make fires
+    // after all destructions. A single post-Block reparse closes the stage,
+    // then CheckWin.
+
+    // 5a. PLAY
+    PHASE_TIME(Phase::Play, {
+        apply_play(world, rs, report.sound_events);
+    });
+
+    // 5b..5g. DESTRUCT (SINK → EAT → HOT/MELT → WEAK → DEFEAT → OPEN/SHUT),
+    // each paired with inline HAS emission.
     PHASE_TIME(Phase::Destruct, {
-        pre_destruct = log.size();
         apply_destructions(world, rs, log);
     });
 
-    // Phase 6.1: HAS
-    PHASE_TIME(Phase::Has, {
-        apply_has(world, rs, log, pre_destruct);
-    });
-
-    // Phase 6.5: APPLY_MAKE
+    // 5h. MAKE
     PHASE_TIME(Phase::Make, {
         apply_make(world, rs, log);
     });
 
-    // Phase 7: PARSE_POST_DESTRUCT — skip when no text object changed since last parse.
+    // ParsePostBlock.
     PHASE_TIME(Phase::ParsePostDestruct, {
         if (text_dirty(last_parse_mark)) {
             rs = RuleSet::parse(world);
@@ -1301,12 +1322,7 @@ TickReport apply_tick(World& world, Input input) {
         }
     });
 
-    // Phase 7.5: APPLY_PLAY
-    PHASE_TIME(Phase::Play, {
-        apply_play(world, rs, report.sound_events);
-    });
-
-    // Phase 8: CHECK_WIN
+    // 5i. CHECK_WIN — final substage of Block.
     PHASE_TIME(Phase::CheckWin, {
         report.won = check_win(world, rs);
     });

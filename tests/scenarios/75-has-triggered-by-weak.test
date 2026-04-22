@@ -1,5 +1,6 @@
 # FLAG IS WEAK + FLAG HAS ROCK + BABA IS YOU: BABA moves onto FLAG.
-# FLAG (WEAK) is destroyed by arrival, ROCK spawns at FLAG's tile.
+# FLAG (WEAK) is destroyed by tile-overlap at Stage 5 Block, ROCK spawns at
+# FLAG's tile via the inline HAS after the WEAK destruction substage.
 
 [setup]
 version 1
