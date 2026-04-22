@@ -1123,42 +1123,6 @@ void apply_fear(World& world, RuleSet const& rs, std::vector<Change>& log) {
     }
 }
 
-// ── APPLY_FOLLOW (phase 3.5) ───────────────────────────────────────────────
-// Each FOLLOW subject moves one tile toward the nearest non-colocated target
-// (Manhattan distance). Tie on |dx|==|dy|: prefer vertical movement.
-
-void apply_follow(World& world, RuleSet const& rs, std::vector<Change>& log) {
-    if (rs.follow_rules().empty()) return;
-    for (ObjectId id : world.all_ids()) {
-        Object const* o = world.get(id);
-        if (!o || o->text) continue;
-        std::vector<Kind> targets;
-        for (auto const& fr : rs.follow_rules())
-            if (fr.subject == o->kind) targets.push_back(fr.target);
-        if (targets.empty()) continue;
-        int best = INT_MAX;
-        Coord best_pos{};
-        for (ObjectId other : world.all_ids()) {
-            Object const* ob = world.get(other);
-            if (!ob || ob->text) continue;
-            bool is_tgt = false;
-            for (Kind tk : targets) if (ob->kind == tk) { is_tgt = true; break; }
-            if (!is_tgt) continue;
-            int dist = std::abs(ob->pos.x - o->pos.x) + std::abs(ob->pos.y - o->pos.y);
-            if (dist == 0) continue;
-            if (dist < best) { best = dist; best_pos = ob->pos; }
-        }
-        if (best == INT_MAX) continue;
-        int dx = best_pos.x - o->pos.x;
-        int dy = best_pos.y - o->pos.y;
-        Direction dir = (std::abs(dy) >= std::abs(dx))
-            ? (dy < 0 ? Direction::Up : Direction::Down)
-            : (dx < 0 ? Direction::Left : Direction::Right);
-        do_face(world, id, dir, log);
-        try_move(world, id, step(dir), rs, log);
-    }
-}
-
 // ── APPLY_PLAY (phase 7.5) ────────────────────────────────────────────────
 // For each non-text object with a matching PlayRule, emit one SoundEvent.
 // Iteration in ascending id order preserves determinism.
@@ -1288,7 +1252,7 @@ TickReport apply_tick(World& world, Input input) {
         }
     });
 
-    // Phase 4: TRANSFORM — wiki: transforms happen before moveblock (FOLLOW).
+    // Phase 4: TRANSFORM
     PHASE_TIME(Phase::Transform, {
         apply_transforms(world, rs, log);
     });
@@ -1301,12 +1265,7 @@ TickReport apply_tick(World& world, Input input) {
         }
     });
 
-    // Phase 5.1: APPLY_FOLLOW (moveblock) — wiki: FOLLOW is after transforms + rule reparse.
-    PHASE_TIME(Phase::Follow, {
-        apply_follow(world, rs, log);
-    });
-
-    // Phase 5.5: APPLY_FALL — after TRANSFORM+FOLLOW so REVERT resolves before objects slide.
+    // Phase 5.5: APPLY_FALL — after TRANSFORM so REVERT resolves before objects slide.
     PHASE_TIME(Phase::Fall, {
         apply_fall(world, rs, log);
     });
