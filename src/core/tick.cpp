@@ -1316,11 +1316,6 @@ TickReport apply_tick(World& world, Input input) {
             initial_swap.insert(id);
     }
 
-    // Phase 1.5: APPLY_DIRECTIONAL
-    PHASE_TIME(Phase::Directional, {
-        apply_directional(world, rs, log);
-    });
-
     // Phase 2: APPLY_INPUT
     PHASE_TIME(Phase::Input, {
         if (input.kind == InputKind::Move) {
@@ -1358,6 +1353,12 @@ TickReport apply_tick(World& world, Input input) {
     // Phase 2.7: APPLY_SWAP
     PHASE_TIME(Phase::Swap, {
         apply_swap(world, rs, initial_swap, log);
+    });
+
+    // Phase 2.8: APPLY_DIRECTIONAL — after all movement so facing updates take
+    // effect next tick, not during the same tick's movement phases.
+    PHASE_TIME(Phase::Directional, {
+        apply_directional(world, rs, log);
     });
 
     // Phase 3: PARSE_POST_MOVE — skip when no text object moved/spawned/destroyed

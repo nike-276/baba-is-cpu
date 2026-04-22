@@ -1,6 +1,7 @@
 # BABA IS LEFT: sets baba's facing to Left each tick (APPLY_DIRECTIONAL phase).
-# Baba faces right initially. After one wait tick baba faces left.
-# Combined with MOVE baba then moves left — verify position changed left.
+# Baba faces right initially. APPLY_DIRECTIONAL runs AFTER all movement phases,
+# so on tick 1: MOVE fires using the current facing (right) → baba moves right,
+# then DIRECTIONAL sets facing left (takes effect next tick).
 
 [setup]
 version 1
@@ -19,6 +20,6 @@ object 5 5 baba right
 wait
 
 [expected]
-at 4 5 baba
+at 6 5 baba
 not_at 5 5 baba
 not_won

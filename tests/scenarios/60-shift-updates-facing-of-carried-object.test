@@ -1,7 +1,6 @@
-# When SHIFT carries an object, that object's facing updates to the shift direction.
-# Rock (SHIFT, facing right) carries Baba left — wait, rock faces right so baba goes right.
-# After SHIFT carries baba right, baba should face right (which it already does here).
-# To test direction change: rock faces left, baba starts facing right; baba should face left after carry.
+# When SHIFT carries an object, DIRECTIONAL runs AFTER movement (Phase 2.8).
+# Rock starts facing right, baba is on same tile. SHIFT moves baba right to (6,5).
+# Then DIRECTIONAL sets rock facing left — takes effect next tick, not this one.
 
 [setup]
 version 1
@@ -24,7 +23,7 @@ object 5 5 baba right
 input wait
 
 [expected]
-at 4 5 baba
+at 6 5 baba
 not_at 5 5 baba
 tick 1
 not_won
