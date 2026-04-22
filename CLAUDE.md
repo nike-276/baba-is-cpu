@@ -55,9 +55,9 @@ make clean
 # GUI (Phase 2) — CMake + FetchContent raylib 5.0.
 cmake -S . -B build-cmake
 cmake --build build-cmake -j
-./build-cmake/babaiwt --edit [file.level]
-./build-cmake/babaiwt --play file.level
-./build-cmake/babaiwt --test scenario.test
+./build-cmake/src/app/babaiwt --edit [file.level]
+./build-cmake/src/app/babaiwt --play file.level
+./build-cmake/src/app/babaiwt --test scenario.test
 ```
 
 `build/` and `build-cmake/` are gitignored.

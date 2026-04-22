@@ -22,7 +22,7 @@ cmake -S . -B build-cmake
 cmake --build build-cmake -j
 ```
 
-Binary: `build-cmake/babaiwt`
+Binary: `build-cmake/src/app/babaiwt`
 
 ### Headless build (scenarios + unit tests only)
 
@@ -39,20 +39,20 @@ make test       # scenario tests only
 ### Open the level editor
 
 ```sh
-./build-cmake/babaiwt --edit                 # blank level
-./build-cmake/babaiwt --edit my.level        # open an existing level
+./build-cmake/src/app/babaiwt --edit                 # blank level
+./build-cmake/src/app/babaiwt --edit my.level        # open an existing level
 ```
 
 ### Play a level directly
 
 ```sh
-./build-cmake/babaiwt --play my.level
+./build-cmake/src/app/babaiwt --play my.level
 ```
 
 ### Run a test scenario (headless)
 
 ```sh
-./build-cmake/babaiwt --test tests/scenarios/01-baba-is-you.test
+./build-cmake/src/app/babaiwt --test tests/scenarios/01-baba-is-you.test
 # or with the Makefile build:
 ./build/babaiwt tests/scenarios/01-baba-is-you.test
 ```
