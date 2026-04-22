@@ -1,0 +1,24 @@
+version 1
+name "schematics/memwrite.schem"
+origin 10 78
+
+text 10 78 powered
+text 11 78 cart
+text 12 78 on
+text 13 78 car
+text 14 78 and
+text 15 78 tile
+text 16 78 make
+object 17 78 gem right
+object 17 79 bomb right
+text 11 80 powered
+text 12 80 lift
+text 13 80 on
+text 14 80 car
+text 15 80 and
+text 16 80 tile
+text 17 80 make
+object 18 80 gem right
+object 18 81 bomb right
+tag 18 78 input
+tag 17 78 input

@@ -1,0 +1,54 @@
+version 1
+name "schematics/clock.schem"
+origin -13 74
+
+object -12 74 wall right
+object -11 74 wall right
+object -10 74 wall right
+object -9 74 wall right
+object -8 74 wall right
+object -7 74 wall right
+object -6 74 wall right
+object -5 74 wall right
+object -13 75 wall right
+object -12 75 clock right
+object -12 75 arrow right
+object -5 75 arrow down
+object -4 75 wall right
+object -13 76 wall right
+object -12 76 flag right
+object -11 76 arrow down
+object -5 76 arrow left
+object -4 76 wall right
+object -13 77 wall right
+object -11 77 arrow right
+object -5 77 arrow down
+object -4 77 wall right
+object -13 78 wall right
+object -11 78 arrow down
+object -5 78 arrow left
+object -4 78 wall right
+object -13 79 wall right
+object -11 79 arrow right
+object -5 79 arrow down
+object -4 79 wall right
+object -13 80 wall right
+object -11 80 arrow down
+object -5 80 arrow left
+object -4 80 wall right
+object -13 81 wall right
+object -11 81 arrow right
+object -5 81 arrow down
+object -4 81 wall right
+object -13 82 wall right
+object -12 82 arrow up
+object -5 82 arrow left
+object -4 82 wall right
+object -12 83 wall right
+object -11 83 wall right
+object -10 83 wall right
+object -9 83 wall right
+object -8 83 wall right
+object -7 83 wall right
+object -6 83 wall right
+object -5 83 wall right

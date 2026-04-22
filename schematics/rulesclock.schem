@@ -1,0 +1,32 @@
+version 1
+name "schematics/rulesclock.schem"
+origin -13 66
+
+text -13 66 clock
+text -12 66 is
+text -11 66 auto
+text -13 67 clock
+text -12 67 on
+text -11 67 flag
+text -10 67 is
+text -9 67 power
+text -13 69 clock
+text -12 69 on
+text -11 69 sun
+text -10 69 is
+text -9 69 up
+text -13 70 clock
+text -12 70 on
+text -11 70 moon
+text -10 70 is
+text -9 70 down
+text -13 71 clock
+text -12 71 on
+text -11 71 planet
+text -10 71 is
+text -9 71 left
+text -13 72 clock
+text -12 72 on
+text -11 72 star
+text -10 72 is
+text -9 72 right
