@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Default build type" FORCE)
+endif()
+
 project(baba-is-true CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -12,6 +17,9 @@ add_compile_options(
 )
 
 # ── raylib via FetchContent (no system install required) ──────────────────
+# raylib 5.0 still uses pre-3.5 cmake_minimum_required; newer CMake refuses
+# without this shim.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
 include(FetchContent)
 
 FetchContent_Declare(
