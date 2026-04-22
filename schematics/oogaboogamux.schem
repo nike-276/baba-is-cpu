@@ -3,7 +3,6 @@ name "schematics/oogaboogamux.schem"
 origin -37 -28
 
 object -24 -28 bolt down
-object -20 -26 triangle right
 object -24 -25 lily right
 object -24 -24 fire right
 object -24 -24 lock right
@@ -12,59 +11,104 @@ object -24 -23 water right
 object -24 -23 lava right
 object -37 -22 bolt right
 object -24 -22 lever right
-object -8 -22 bomb right
+object -22 -22 arrow down
+object -22 -22 fire right
 object -37 -21 bolt right
 object -24 -21 lever right
-object -8 -21 bomb right
+object -21 -21 arrow down
+object -21 -21 fire right
 object -37 -20 bolt right
 object -24 -20 lever right
-object -8 -20 bomb right
+object -20 -20 arrow down
+object -20 -20 fire right
 object -37 -19 bolt right
 object -24 -19 lever right
-object -8 -19 bomb right
+object -19 -19 arrow down
+object -19 -19 fire right
 object -37 -18 bolt right
 object -24 -18 lever right
-object -8 -18 bomb right
+object -18 -18 arrow down
+object -18 -18 fire right
 object -37 -17 bolt right
 object -24 -17 lever right
-object -8 -17 bomb right
+object -17 -17 arrow down
+object -17 -17 fire right
 object -37 -16 bolt right
 object -24 -16 lever right
-object -8 -16 bomb right
+object -16 -16 arrow down
+object -16 -16 fire right
 object -37 -15 bolt right
 object -24 -15 lever right
-object -8 -15 bomb right
+object -15 -15 arrow down
+object -15 -15 fire right
 object -24 -14 bomb right
-object -8 -14 bomb right
 object -24 -13 ghost right
-object -8 -13 bomb right
 object -24 -12 wall right
-object -8 -12 bomb right
 object -37 -11 bolt right
 object -24 -11 lever right
-object -8 -11 bomb right
+object -22 -11 arrow down
+object -22 -11 fire right
 object -37 -10 bolt right
 object -24 -10 lever right
-object -8 -10 bomb right
+object -21 -10 arrow down
+object -21 -10 fire right
 object -37 -9 bolt right
 object -24 -9 lever right
-object -8 -9 bomb right
+object -20 -9 arrow down
+object -20 -9 fire right
 object -37 -8 bolt right
 object -24 -8 lever right
-object -8 -8 bomb right
+object -19 -8 arrow down
+object -19 -8 fire right
 object -37 -7 bolt right
 object -24 -7 lever right
-object -8 -7 bomb right
+object -18 -7 arrow down
+object -18 -7 fire right
 object -37 -6 bolt right
 object -24 -6 lever right
-object -8 -6 bomb right
+object -17 -6 arrow down
+object -17 -6 fire right
 object -37 -5 bolt right
 object -24 -5 lever right
-object -8 -5 bomb right
+object -16 -5 arrow down
+object -16 -5 fire right
 object -37 -4 bolt right
 object -24 -4 lever right
-object -8 -4 bomb right
+object -15 -4 arrow down
+object -15 -4 fire right
+object -22 -3 ghost right
+object -22 -3 arrow down
+object -21 -3 ghost right
+object -21 -3 arrow down
+object -20 -3 ghost right
+object -20 -3 arrow down
+object -19 -3 ghost right
+object -19 -3 arrow down
+object -18 -3 ghost right
+object -18 -3 arrow down
+object -17 -3 ghost right
+object -17 -3 arrow down
+object -16 -3 ghost right
+object -16 -3 arrow down
+object -15 -3 ghost right
+object -15 -3 arrow down
 object -24 -2 bomb right
+object -22 -2 wall right
+object -21 -2 wall right
+object -20 -2 wall right
+object -19 -2 wall right
+object -18 -2 wall right
+object -17 -2 wall right
+object -16 -2 wall right
+object -15 -2 wall right
+object -22 1 bomb right
+object -21 1 bomb right
+object -20 1 bomb right
+object -19 1 bomb right
+object -18 1 bomb right
+object -17 1 bomb right
+object -16 1 bomb right
+object -15 1 bomb right
 tag -37 -22 input
 tag -37 -21 input
 tag -37 -20 input
@@ -74,28 +118,19 @@ tag -37 -17 input
 tag -37 -16 input
 tag -37 -15 input
 tag -37 -11 input
-tag -37 -9 input
 tag -37 -10 input
+tag -37 -9 input
 tag -37 -8 input
 tag -37 -7 input
 tag -37 -6 input
 tag -37 -5 input
 tag -37 -4 input
 tag -24 -28 input
-tag -8 -22 output
-tag -8 -21 output
-tag -8 -20 output
-tag -8 -19 output
-tag -8 -18 output
-tag -8 -17 output
-tag -8 -16 output
-tag -8 -15 output
-tag -8 -14 output
-tag -8 -11 output
-tag -8 -10 output
-tag -8 -9 output
-tag -8 -8 output
-tag -8 -7 output
-tag -8 -6 output
-tag -8 -5 output
-tag -8 -4 output
+tag -22 1 output
+tag -21 1 output
+tag -20 1 output
+tag -19 1 output
+tag -18 1 output
+tag -17 1 output
+tag -16 1 output
+tag -15 1 output
