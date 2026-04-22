@@ -1,0 +1,57 @@
+# Order of Operations: FALL fires before DIRECTIONAL (LEFT/UP/RIGHT/DOWN).
+# Wiki: fallblock() runs before statusblock() which contains LEFT/UP/RIGHT/DOWN.
+#
+# Setup: baba at (10,1) facing RIGHT has FALL. Water at (10,4), wall at (10,5) IS STOP.
+# Rule "BABA ON WATER IS LEFT" is conditional — only fires when baba is ON water.
+# Rule "BABA FACING FLAG IS WIN" — flag is at (9,4), ONE TILE TO THE LEFT.
+#
+# Correct order (FALL then DIRECTIONAL):
+#   FALL: baba slides from (10,1) → (10,4), landing on water.
+#   DIRECTIONAL: condition "baba on water" now MET → facing set to LEFT.
+#   CHECK_WIN: baba at (10,4) facing left, flag at (9,4) → WON.
+#
+# Wrong order (DIRECTIONAL then FALL — the historical bug):
+#   DIRECTIONAL: baba at (10,1), NOT on water → condition not met → facing stays RIGHT.
+#   FALL: baba slides to (10,4).
+#   CHECK_WIN: baba facing right, tile at (11,4) has no flag → NOT WON. (test would FAIL)
+
+[setup]
+version 1
+name "oop: fall before directional (conditional facing)"
+
+text 0 0 baba
+text 1 0 is
+text 2 0 fall
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+text 0 2 baba
+text 1 2 on
+text 2 2 water
+text 3 2 is
+text 4 2 left
+
+text 0 3 baba
+text 1 3 facing
+text 2 3 flag
+text 3 3 is
+text 4 3 win
+
+text 0 4 wall
+text 1 4 is
+text 2 4 stop
+
+object 10 1 baba right
+object 10 4 water right
+object 10 5 wall right
+object 9 4 flag right
+
+[inputs]
+wait
+
+[expected]
+at 10 4 baba
+not_at 10 1 baba
+won

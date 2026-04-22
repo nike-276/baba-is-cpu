@@ -1355,12 +1355,6 @@ TickReport apply_tick(World& world, Input input) {
         apply_swap(world, rs, initial_swap, log);
     });
 
-    // Phase 2.8: APPLY_DIRECTIONAL — after all movement so facing updates take
-    // effect next tick, not during the same tick's movement phases.
-    PHASE_TIME(Phase::Directional, {
-        apply_directional(world, rs, log);
-    });
-
     // Phase 3: PARSE_POST_MOVE — skip when no text object moved/spawned/destroyed
     // since ParseInitial; static rule tiles never change, saving ~700ms/tick.
     PHASE_TIME(Phase::ParsePostMove, {
@@ -1391,6 +1385,12 @@ TickReport apply_tick(World& world, Input input) {
     // Phase 5.5: APPLY_FALL — after TRANSFORM so REVERT resolves before objects slide.
     PHASE_TIME(Phase::Fall, {
         apply_fall(world, rs, log);
+    });
+
+    // Phase 5.6: APPLY_DIRECTIONAL (statusblock) — wiki: LEFT/UP/RIGHT/DOWN run in
+    // statusblock(), which is after the first fallblock() and before destruct.
+    PHASE_TIME(Phase::Directional, {
+        apply_directional(world, rs, log);
     });
 
     // Phase 6: DESTRUCT
