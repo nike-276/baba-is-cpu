@@ -157,6 +157,8 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
     std::vector<std::string> picker_filtered;  // subset matching picker_query
     std::string              picker_query;
     int                      picker_sel{0};
+    float                    picker_key_held{0.0f};  // seconds current dir key has been held
+    int                      picker_key_dir{0};       // -1=up +1=down 0=none
 
     AutoTick auto_tick;
     bool     show_bench{false};
@@ -449,15 +451,59 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
             }
             picker_sel = std::clamp(picker_sel, 0, std::max(0, static_cast<int>(picker_filtered.size()) - 1));
 
-            // Keyboard input.
+            // Text filter input.
             int ch;
             while ((ch = GetCharPressed()) != 0)
                 if (ch >= 32 && ch < 127) { picker_query += static_cast<char>(ch); picker_sel = 0; }
             if (IsKeyPressed(KEY_BACKSPACE) && !picker_query.empty()) { picker_query.pop_back(); picker_sel = 0; }
-            if (IsKeyPressed(KEY_DOWN) && picker_sel < static_cast<int>(picker_filtered.size()) - 1) ++picker_sel;
-            if (IsKeyPressed(KEY_UP)   && picker_sel > 0)                                            --picker_sel;
             if (IsKeyPressed(KEY_ESCAPE)) { overlay = Overlay::None; }
-            if (IsKeyPressed(KEY_ENTER) && !picker_filtered.empty()) {
+
+            // Mouse click to select an entry.
+            bool mouse_activate = false;
+            {
+                int sw_ = GetScreenWidth(), sh_ = GetScreenHeight();
+                int bw_ = 560, bh_ = 360;
+                int bx_ = (sw_ - bw_) / 2, by_ = (sh_ - bh_) / 2;
+                int list_top_  = by_ + 56;
+                int entry_h_   = 20;
+                int visible_n_ = (bh_ - 70) / entry_h_;
+                int scroll_    = std::max(0, picker_sel - visible_n_ / 2);
+                Vector2 mp_    = GetMousePosition();
+                if (mp_.x >= bx_ + 4 && mp_.x < bx_ + bw_ - 4 &&
+                    mp_.y >= list_top_ && mp_.y < list_top_ + visible_n_ * entry_h_) {
+                    int hov = scroll_ + static_cast<int>((mp_.y - list_top_) / entry_h_);
+                    if (hov >= 0 && hov < static_cast<int>(picker_filtered.size())) {
+                        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                            if (hov == picker_sel) mouse_activate = true;
+                            else picker_sel = hov;
+                        }
+                    }
+                }
+            }
+
+            // Up/Down with key-repeat (0.30 s initial delay, 0.05 s repeat rate).
+            {
+                int new_dir = IsKeyDown(KEY_DOWN) ? 1 : (IsKeyDown(KEY_UP) ? -1 : 0);
+                if (new_dir != picker_key_dir) {
+                    picker_key_dir  = new_dir;
+                    picker_key_held = 0.0f;
+                } else if (new_dir != 0) {
+                    picker_key_held += GetFrameTime();
+                }
+                int move = 0;
+                if      (IsKeyPressed(KEY_DOWN)) move =  1;
+                else if (IsKeyPressed(KEY_UP))   move = -1;
+                else if (new_dir != 0 && picker_key_held >= 0.30f) {
+                    float prev  = picker_key_held - GetFrameTime();
+                    int before  = (prev  < 0.30f) ? 0 : static_cast<int>((prev  - 0.30f) / 0.05f);
+                    int now_    = static_cast<int>((picker_key_held - 0.30f) / 0.05f);
+                    if (now_ > before) move = new_dir;
+                }
+                if (move != 0)
+                    picker_sel = std::clamp(picker_sel + move, 0, static_cast<int>(picker_filtered.size()) - 1);
+            }
+
+            if ((mouse_activate || IsKeyPressed(KEY_ENTER)) && !picker_filtered.empty()) {
                 std::string path = picker_filtered[picker_sel];
                 auto result = core::load_schematic_file(path);
                 if (std::holds_alternative<core::Schematic>(result)) {
@@ -614,13 +660,28 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
             int entry_h   = 20;
             int visible_n = (bh - 70) / entry_h;
             int scroll_start = std::max(0, picker_sel - visible_n / 2);
+
+            // Compute hovered entry for visual feedback.
+            int hover_idx = -1;
+            {
+                Vector2 mhp = GetMousePosition();
+                if (mhp.x >= bx + 4 && mhp.x < bx + bw - 4 &&
+                    mhp.y >= list_top && mhp.y < list_top + visible_n * entry_h) {
+                    int h = scroll_start + static_cast<int>((mhp.y - list_top) / entry_h);
+                    if (h >= 0 && h < static_cast<int>(picker_filtered.size()))
+                        hover_idx = h;
+                }
+            }
+
             BeginScissorMode(bx + 4, list_top, bw - 8, bh - 70);
             for (int i = scroll_start; i < static_cast<int>(picker_filtered.size()) && i < scroll_start + visible_n + 1; ++i) {
                 int ey = list_top + (i - scroll_start) * entry_h;
                 if (i == picker_sel) {
                     DrawRectangle(bx + 4, ey, bw - 8, entry_h - 2, {60, 100, 200, 200});
+                } else if (i == hover_idx) {
+                    DrawRectangle(bx + 4, ey, bw - 8, entry_h - 2, {50, 50, 80, 140});
                 }
-                Color tc = (i == picker_sel) ? WHITE : LIGHTGRAY;
+                Color tc = (i == picker_sel) ? WHITE : (i == hover_idx ? Color{200, 210, 230, 255} : LIGHTGRAY);
                 DrawText(picker_filtered[i].c_str(), bx + 10, ey + 3, 12, tc);
             }
             EndScissorMode();

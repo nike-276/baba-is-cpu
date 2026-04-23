@@ -204,7 +204,7 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         }
         if (ctrl && IsKeyPressed(KEY_O)) st.request_load = true;
         if (ctrl && IsKeyPressed(KEY_N)) st.request_new  = true;
-        if (ctrl && IsKeyPressed(KEY_I)) st.request_import_schem = true;
+        if (ctrl && IsKeyPressed(KEY_F)) st.request_import_schem = true;
 
         // ── Clipboard ────────────────────────────────────────────────────
         if (ctrl && IsKeyPressed(KEY_C) && st.has_selection) {
@@ -254,7 +254,8 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
                 } else if (st.paste_state == PasteState::Schematic && st.pending_schem) {
                     ed.paste_schematic(*st.pending_schem, tile, st.schem_rotation);
                 }
-                st.paste_state = PasteState::None;
+                st.paste_state     = PasteState::None;
+                st.last_place_tile = tile;  // prevent held LMB from also placing the selected object
                 return;
             }
 
