@@ -1,24 +1,102 @@
 version 1
 name "schematics/memwrite.schem"
-origin 10 78
+origin -77 138
 
-text 10 78 powered
-text 11 78 cart
-text 12 78 on
-text 13 78 car
-text 14 78 and
-text 15 78 tile
-text 16 78 make
-object 17 78 gem right
-object 17 79 bomb right
-text 11 80 powered
-text 12 80 lift
-text 13 80 on
-text 14 80 car
-text 15 80 and
-text 16 80 tile
-text 17 80 make
-object 18 80 gem right
-object 18 81 bomb right
-tag 18 78 input
-tag 17 78 input
+text -77 138 powered
+text -76 138 cart
+text -75 138 on
+text -74 138 car
+text -73 138 and
+text -72 138 tile
+text -71 138 eat
+text -70 138 donut
+text -69 138 and
+text -68 138 stick
+text -67 138 and
+text -66 138 scissors
+text -65 138 and
+text -64 138 bubble
+text -63 138 and
+text -62 138 dust
+text -61 138 and
+text -60 138 hand
+text -59 138 and
+text -58 138 sax
+text -57 138 and
+text -56 138 cash
+text -55 138 and
+text -54 138 cog
+text -53 138 and
+text -52 138 cat
+text -51 138 and
+text -50 138 algae
+text -49 138 and
+text -48 138 bottle
+text -47 138 and
+text -46 138 cake
+text -45 138 and
+text -44 138 drink
+text -43 138 and
+text -42 138 egg
+text -41 138 and
+text -40 138 fruit
+text -39 138 and
+text -38 138 book
+text -77 139 powered
+text -76 139 lift
+text -75 139 on
+text -74 139 car
+text -73 139 and
+text -72 139 tile
+text -71 139 eat
+text -70 139 donut
+text -69 139 and
+text -68 139 stick
+text -67 139 and
+text -66 139 scissors
+text -65 139 and
+text -64 139 bubble
+text -63 139 and
+text -62 139 dust
+text -61 139 and
+text -60 139 hand
+text -59 139 and
+text -58 139 sax
+text -57 139 and
+text -56 139 cash
+text -55 139 and
+text -54 139 cog
+text -53 139 and
+text -52 139 cat
+text -51 139 and
+text -50 139 algae
+text -49 139 and
+text -48 139 bottle
+text -47 139 and
+text -46 139 cake
+text -45 139 and
+text -44 139 drink
+text -43 139 and
+text -42 139 egg
+text -41 139 and
+text -40 139 fruit
+text -39 139 and
+text -38 139 book
+text -77 141 powered
+text -76 141 cart
+text -75 141 on
+text -74 141 car
+text -73 141 and
+text -72 141 tile
+text -71 141 make
+object -70 141 gem right
+object -70 142 bomb right
+text -76 143 powered
+text -75 143 lift
+text -74 143 on
+text -73 143 car
+text -72 143 and
+text -71 143 tile
+text -70 143 make
+object -69 143 gem right
+object -69 144 bomb right
