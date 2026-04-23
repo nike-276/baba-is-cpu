@@ -1,0 +1,16 @@
+version 1
+name "schematics/rulespc.schem"
+origin 60 -41
+
+text 60 -41 powered
+text 61 -41 wind
+text 62 -41 on
+text 63 -41 badbad
+text 64 -41 is
+text 65 -41 bolt
+text 60 -40 powered
+text 61 -40 bolt
+text 62 -40 on
+text 63 -40 me
+text 64 -40 is
+text 65 -40 wind

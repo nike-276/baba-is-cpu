@@ -1,0 +1,52 @@
+version 1
+name "schematics/pc.schem"
+origin 64 -52
+
+object 64 -52 ice right
+object 64 -52 wind left
+object 64 -52 bomb right
+object 65 -52 lily right
+object 64 -51 ice right
+object 64 -51 wind left
+object 64 -51 bomb right
+object 65 -51 lily right
+object 64 -50 ice right
+object 64 -50 wind left
+object 64 -50 bomb right
+object 65 -50 lily right
+object 64 -49 ice right
+object 64 -49 wind left
+object 64 -49 bomb right
+object 65 -49 lily right
+object 64 -48 ice right
+object 64 -48 wind left
+object 64 -48 bomb right
+object 65 -48 lily right
+object 64 -47 ice right
+object 64 -47 wind left
+object 64 -47 bomb right
+object 65 -47 lily right
+object 64 -46 ice right
+object 64 -46 wind left
+object 64 -46 bomb right
+object 65 -46 lily right
+object 64 -45 ice right
+object 64 -45 wind left
+object 64 -45 bomb right
+object 65 -45 lily right
+tag 65 -52 input
+tag 65 -51 input
+tag 65 -50 input
+tag 65 -49 input
+tag 65 -48 input
+tag 65 -47 input
+tag 65 -46 input
+tag 65 -45 input
+tag 64 -52 output
+tag 64 -51 output
+tag 64 -50 output
+tag 64 -49 output
+tag 64 -48 output
+tag 64 -47 output
+tag 64 -46 output
+tag 64 -45 output
