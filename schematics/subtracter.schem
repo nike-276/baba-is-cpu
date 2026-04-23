@@ -1,0 +1,111 @@
+version 1
+name "schematics/subtracter.schem"
+origin -20 7
+
+object -20 7 bomb right
+object -19 7 bomb right
+object -18 7 bomb right
+object -17 7 bomb right
+object -16 7 bomb right
+object -15 7 bomb right
+object -14 7 bomb right
+object -13 7 bomb right
+object -12 7 bomb right
+object -20 8 orb up
+object -19 8 orb up
+object -19 8 arrow right
+object -18 8 orb up
+object -18 8 arrow right
+object -17 8 orb up
+object -17 8 arrow right
+object -16 8 orb up
+object -16 8 arrow right
+object -15 8 orb up
+object -15 8 arrow right
+object -14 8 orb up
+object -14 8 arrow right
+object -13 8 orb up
+object -13 8 arrow right
+object -12 8 orb up
+object -12 8 arrow right
+object -11 8 door right
+object -19 9 orb up
+object -18 9 orb up
+object -18 9 arrow right
+object -17 9 orb up
+object -17 9 arrow right
+object -16 9 orb up
+object -16 9 arrow right
+object -15 9 orb up
+object -15 9 arrow right
+object -14 9 orb up
+object -14 9 arrow right
+object -13 9 orb up
+object -13 9 arrow right
+object -12 9 arrow right
+object -12 9 orb up
+object -11 9 door right
+object -18 10 orb up
+object -17 10 orb up
+object -17 10 arrow right
+object -16 10 orb up
+object -16 10 arrow right
+object -15 10 orb up
+object -15 10 arrow right
+object -14 10 orb up
+object -14 10 arrow right
+object -13 10 orb up
+object -13 10 arrow right
+object -12 10 orb up
+object -12 10 arrow right
+object -11 10 door right
+object -17 11 orb up
+object -16 11 orb up
+object -16 11 arrow right
+object -15 11 orb up
+object -15 11 arrow right
+object -14 11 orb up
+object -14 11 arrow right
+object -13 11 orb up
+object -13 11 arrow right
+object -12 11 arrow right
+object -12 11 orb up
+object -11 11 door right
+object -16 12 orb up
+object -15 12 orb up
+object -15 12 arrow right
+object -14 12 orb up
+object -14 12 arrow right
+object -13 12 orb up
+object -13 12 arrow right
+object -12 12 arrow right
+object -12 12 orb up
+object -11 12 door right
+object -15 13 orb up
+object -14 13 orb up
+object -14 13 arrow right
+object -13 13 orb up
+object -13 13 arrow right
+object -12 13 orb up
+object -12 13 arrow right
+object -11 13 door right
+object -14 14 orb up
+object -13 14 orb up
+object -13 14 arrow right
+object -12 14 arrow right
+object -12 14 orb up
+object -11 14 door right
+object -13 15 orb up
+object -12 15 arrow right
+object -12 15 orb up
+object -11 15 door right
+object -12 16 bolt up
+tag -20 8 input
+tag -11 8 output
+tag -11 9 output
+tag -11 10 output
+tag -11 11 output
+tag -11 12 output
+tag -11 13 output
+tag -11 14 output
+tag -11 15 output
