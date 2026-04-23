@@ -43,6 +43,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<GlobalConditionPropertyRule>& global_cond_out,
                 std::vector<GlobalConditionEatRule>& global_cond_eat_out,
                 std::vector<GlobalConditionMakeRule>& global_cond_make_out,
+                std::vector<GlobalConditionTransformRule>& global_cond_xform_out,
                 std::vector<HasRule>& has_out,
                 std::vector<FearRule>& fear_out,
                 std::vector<PlayRule>& play_out,
@@ -132,10 +133,25 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 if (!parse_one_cond()) break;
             }
 
-            // Expect NOUN [[NOT] ON NOUN]* (IS PROPERTY | EAT NOUN [AND NOUN]*).
+            // Expect NOUN [AND NOUN]* [[NOT] ON NOUN]* (IS … | EAT … | MAKE …).
             auto subj = at(pw);
             if (!subj || !is_noun(*subj)) return false;
+            std::vector<Kind> subjects;
+            subjects.push_back(*subj);
             pw = adv(pw);
+            // AND-chained additional subjects. Stop if the token after AND isn't
+            // a noun (could be a condition continuation — leave those to the ON
+            // clause loop below, though no ON-clause AND chain ever precedes the
+            // first clause, so in practice this just short-circuits on AND ON).
+            while (true) {
+                auto ak = at(pw);
+                if (!ak || *ak != Kind::O_And) break;
+                Coord nk_pos = adv(pw);
+                auto nk = at(nk_pos);
+                if (!nk || !is_noun(*nk)) break;
+                subjects.push_back(*nk);
+                pw = adv(nk_pos);
+            }
 
             // Optional ON/NOT ON clause chain between subject and verb.
             std::vector<CondClause> on_clauses;
@@ -191,12 +207,21 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
             auto op_tok = at(pw);
             if (!op_tok) return false;
 
-            if (*op_tok == Kind::O_Is && on_clauses.empty()) {
+            if (*op_tok == Kind::O_Is) {
                 pw = adv(pw);
-                auto prop_tok = at(pw);
-                if (!prop_tok || !is_property(*prop_tok)) return false;
-                global_cond_out.push_back({*subj, *prop_tok, std::move(conditions)});
-                return true;
+                auto pred_tok = at(pw);
+                if (!pred_tok) return false;
+                if (is_property(*pred_tok) && on_clauses.empty()) {
+                    for (Kind s : subjects)
+                        global_cond_out.push_back({s, *pred_tok, conditions});
+                    return true;
+                }
+                if (is_noun(*pred_tok)) {
+                    for (Kind s : subjects)
+                        global_cond_xform_out.push_back({s, *pred_tok, conditions, on_clauses});
+                    return true;
+                }
+                return false;
             }
             if (*op_tok == Kind::O_Eat) {
                 pw = adv(pw);
@@ -214,8 +239,9 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                     targets.push_back(*nt);
                     pw = adv(next);
                 }
-                for (Kind t : targets)
-                    global_cond_eat_out.push_back({*subj, t, conditions, on_clauses});
+                for (Kind s : subjects)
+                    for (Kind t : targets)
+                        global_cond_eat_out.push_back({s, t, conditions, on_clauses});
                 return true;
             }
             if (*op_tok == Kind::O_Make) {
@@ -234,8 +260,9 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                     targets.push_back(*nt);
                     pw = adv(next);
                 }
-                for (Kind t : targets)
-                    global_cond_make_out.push_back({*subj, t, conditions, on_clauses});
+                for (Kind s : subjects)
+                    for (Kind t : targets)
+                        global_cond_make_out.push_back({s, t, conditions, on_clauses});
                 return true;
             }
             return false;
@@ -796,8 +823,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.global_cond_transforms_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.global_cond_transforms_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_);
     }
 
     // Pass 2: WORD — objects that have P_Word (via any rule form) act as their own text tile.
@@ -910,8 +937,8 @@ RuleSet RuleSet::parse(World const& world) {
                 }
             }
             if (!has_text_or_word) continue;
-            scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_, word_at);
-            scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_, word_at);
+            scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.global_cond_transforms_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_, word_at);
+            scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.global_cond_transforms_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_, word_at);
         }
     }
 
@@ -1016,6 +1043,27 @@ RuleSet RuleSet::parse(World const& world) {
             if (!dup) deduped.push_back(gcmr);
         }
         rs.global_cond_make_rules_ = std::move(deduped);
+    }
+    {
+        std::vector<GlobalConditionTransformRule> deduped;
+        for (auto const& gctr : rs.global_cond_transforms_) {
+            bool dup = false;
+            for (auto const& ex : deduped) {
+                if (ex.subject == gctr.subject && ex.target == gctr.target
+                    && ex.conditions == gctr.conditions
+                    && ex.on_clauses.size() == gctr.on_clauses.size()) {
+                    bool same = true;
+                    for (size_t i = 0; i < gctr.on_clauses.size(); ++i) {
+                        if (gctr.on_clauses[i].negated != ex.on_clauses[i].negated ||
+                            gctr.on_clauses[i].nouns   != ex.on_clauses[i].nouns)
+                            { same = false; break; }
+                    }
+                    if (same) { dup = true; break; }
+                }
+            }
+            if (!dup) deduped.push_back(gctr);
+        }
+        rs.global_cond_transforms_ = std::move(deduped);
     }
     {
         std::set<std::pair<uint16_t,uint16_t>> seen;
@@ -1149,6 +1197,7 @@ RuleSet RuleSet::parse(World const& world) {
         for (auto const& r : rs.transforms_)             xform.insert(r.from);
         for (auto const& r : rs.cond_transforms_)        xform.insert(r.subject);
         for (auto const& r : rs.facing_transforms_)      xform.insert(r.subject);
+        for (auto const& r : rs.global_cond_transforms_) xform.insert(r.subject);
         for (auto const& r : rs.makes_)                  make.insert(r.from);
         for (auto const& r : rs.cond_makes_)             make.insert(r.subject);
         for (auto const& r : rs.global_cond_make_rules_) make.insert(r.subject);

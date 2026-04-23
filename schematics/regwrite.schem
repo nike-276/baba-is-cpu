@@ -1,80 +1,89 @@
 version 1
 name "schematics/regwrite.schem"
-origin -19 87
+origin 57 -53
 
-text -19 87 powered
-text -18 87 donut
-text -17 87 and
-text -16 87 stick
-text -15 87 and
-text -14 87 scissors
-text -13 87 and
-text -12 87 bubble
-text -11 87 and
-text -10 87 dust
-text -9 87 and
-text -8 87 hand
-text -7 87 and
-text -6 87 sax
-text -5 87 and
-text -4 87 cash
-text -3 87 and
-text -2 87 cog
-text -1 87 and
-text 0 87 cat
-text 1 87 and
-text 2 87 algae
-text 3 87 and
-text 4 87 bottle
-text 5 87 and
-text 6 87 cake
-text 7 87 and
-text 8 87 drink
-text 9 87 and
-text 10 87 egg
-text 11 87 and
-text 12 87 fruit
-text 13 87 on
-text 14 87 teeth
-text 15 87 and
-text 16 87 pawn
-text 17 87 is
-object 18 87 gem right
-text -19 88 powered
-text -18 88 donut
-text -17 88 and
-text -16 88 stick
-text -15 88 and
-text -14 88 scissors
-text -13 88 and
-text -12 88 bubble
-text -11 88 and
-text -10 88 dust
-text -9 88 and
-text -8 88 hand
-text -7 88 and
-text -6 88 sax
-text -5 88 and
-text -4 88 cash
-text -3 88 and
-text -2 88 cog
-text -1 88 and
-text 0 88 cat
-text 1 88 and
-text 2 88 algae
-text 3 88 and
-text 4 88 bottle
-text 5 88 and
-text 6 88 cake
-text 7 88 and
-text 8 88 drink
-text 9 88 and
-text 10 88 egg
-text 11 88 and
-text 12 88 fruit
-text 13 88 on
-text 14 88 teeth
-text 15 88 and
-text 16 88 knight
-text 17 88 is
-object 18 88 gem right
+object 91 -53 triangle right
+object 92 -53 lily right
+object 93 -53 cloud right
+object 93 -53 water right
+object 94 -53 lever right
+object 95 -53 lever right
+object 96 -53 bomb right
+text 57 -52 powered
+text 58 -52 donut
+text 59 -52 and
+text 60 -52 stick
+text 61 -52 and
+text 62 -52 scissors
+text 63 -52 and
+text 64 -52 bubble
+text 65 -52 and
+text 66 -52 dust
+text 67 -52 and
+text 68 -52 hand
+text 69 -52 and
+text 70 -52 sax
+text 71 -52 and
+text 72 -52 cash
+text 73 -52 and
+text 74 -52 cog
+text 75 -52 and
+text 76 -52 cat
+text 77 -52 and
+text 78 -52 algae
+text 79 -52 and
+text 80 -52 bottle
+text 81 -52 and
+text 82 -52 cake
+text 83 -52 and
+text 84 -52 drink
+text 85 -52 and
+text 86 -52 egg
+text 87 -52 and
+text 88 -52 fruit
+text 89 -52 on
+text 90 -52 teeth
+text 91 -52 and
+text 92 -52 pawn
+text 93 -52 is
+object 94 -52 gem right
+object 94 -51 bomb right
+text 58 -50 powered
+text 59 -50 donut
+text 60 -50 and
+text 61 -50 stick
+text 62 -50 and
+text 63 -50 scissors
+text 64 -50 and
+text 65 -50 bubble
+text 66 -50 and
+text 67 -50 dust
+text 68 -50 and
+text 69 -50 hand
+text 70 -50 and
+text 71 -50 sax
+text 72 -50 and
+text 73 -50 cash
+text 74 -50 and
+text 75 -50 cog
+text 76 -50 and
+text 77 -50 cat
+text 78 -50 and
+text 79 -50 algae
+text 80 -50 and
+text 81 -50 bottle
+text 82 -50 and
+text 83 -50 cake
+text 84 -50 and
+text 85 -50 drink
+text 86 -50 and
+text 87 -50 egg
+text 88 -50 and
+text 89 -50 fruit
+text 90 -50 on
+text 91 -50 teeth
+text 92 -50 and
+text 93 -50 knight
+text 94 -50 is
+object 95 -50 gem right
+object 95 -49 bomb right

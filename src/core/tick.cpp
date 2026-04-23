@@ -486,7 +486,7 @@ void apply_make(World& world, RuleSet const& rs, std::vector<Change>& log) {
 
 void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log) {
     auto const& transforms = rs.transform_rules();
-    if (transforms.empty() && rs.conditional_transform_rules().empty() && rs.facing_transform_rules().empty()) return;
+    if (transforms.empty() && rs.conditional_transform_rules().empty() && rs.facing_transform_rules().empty() && rs.global_condition_transform_rules().empty()) return;
 
     std::map<Kind, std::vector<Kind>> xmap;
     for (auto const& tr : transforms) {
@@ -500,7 +500,7 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
         if (self) it = xmap.erase(it);
         else      ++it;
     }
-    if (xmap.empty() && rs.conditional_transform_rules().empty() && rs.facing_transform_rules().empty()) return;
+    if (xmap.empty() && rs.conditional_transform_rules().empty() && rs.facing_transform_rules().empty() && rs.global_condition_transform_rules().empty()) return;
 
     struct XEntry { ObjectId id; Coord pos; Direction facing; std::vector<Kind> targets; Kind original_kind{Kind::None}; };
     std::vector<XEntry> pending;
@@ -570,6 +570,34 @@ void apply_transforms(World& world, RuleSet const& rs, std::vector<Change>& log)
             }
         }
         for (auto& [id, targets] : ftargets) {
+            std::sort(targets.begin(), targets.end());
+            targets.erase(std::unique(targets.begin(), targets.end()), targets.end());
+            Object const* o = world.get(id);
+            if (o) pending.push_back({id, o->pos, o->facing, targets, o->original_kind});
+        }
+    }
+
+    // Global condition transforms ([NOT] POWEREDx NOUN [ON …]* IS NOUN).
+    // Power conditions gate the whole rule; optional ON clauses filter per-object.
+    {
+        std::map<ObjectId, std::vector<Kind>> gtargets;
+        for (auto const& gctr : rs.global_condition_transform_rules()) {
+            bool all_met = true;
+            for (auto const& cond : gctr.conditions) {
+                bool pw_exists = rs.any_has_power_kind(world, cond.power_kind);
+                if (cond.negated ? pw_exists : !pw_exists) { all_met = false; break; }
+            }
+            if (!all_met) continue;
+
+            bool has_on = !gctr.on_clauses.empty();
+            for (ObjectId id : world.objects_of_kind(gctr.subject)) {
+                Object const* o = world.get(id);
+                if (!o || o->text) continue;
+                if (has_on && !RuleSet::eval_cond_clauses(world, id, gctr.on_clauses)) continue;
+                gtargets[id].push_back(gctr.target);
+            }
+        }
+        for (auto& [id, targets] : gtargets) {
             std::sort(targets.begin(), targets.end());
             targets.erase(std::unique(targets.begin(), targets.end()), targets.end());
             Object const* o = world.get(id);
