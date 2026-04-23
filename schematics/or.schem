@@ -1,9 +1,9 @@
 version 1
-name "schematics/and.schem"
+name "schematics/or.schem"
 origin -20 -7
 
+object -20 -7 circle right
 object -20 -7 arrow right
-object -20 -7 square right
 object -20 -7 water right
 object -19 -7 gate right
 object -18 -7 cloud right

@@ -1,18 +1,5 @@
 version 1
 name "schematics/splitter.schem"
-origin 21 -33
+origin -13 5
 
-object 25 -33 pants up
-object 21 -32 bolt right
-object 24 -32 tile right
-object 24 -32 bed right
-object 24 -32 arrow up
-object 25 -32 tile right
-object 25 -32 bed right
-object 25 -32 arrow up
-object 26 -32 tile right
-object 26 -32 bed right
-object 26 -32 arrow right
-tag 21 -32 input
-tag 25 -33 output
-tag 26 -32 output
+object -13 5 pants right
