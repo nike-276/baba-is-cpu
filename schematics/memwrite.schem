@@ -1,102 +1,116 @@
 version 1
 name "schematics/memwrite.schem"
-origin -77 138
+origin 70 -43
 
-text -77 138 powered
-text -76 138 cart
-text -75 138 on
-text -74 138 car
-text -73 138 and
-text -72 138 tile
-text -71 138 eat
-text -70 138 donut
-text -69 138 and
-text -68 138 stick
-text -67 138 and
-text -66 138 scissors
-text -65 138 and
-text -64 138 bubble
-text -63 138 and
-text -62 138 dust
-text -61 138 and
-text -60 138 hand
-text -59 138 and
-text -58 138 sax
-text -57 138 and
-text -56 138 cash
-text -55 138 and
-text -54 138 cog
-text -53 138 and
-text -52 138 cat
-text -51 138 and
-text -50 138 algae
-text -49 138 and
-text -48 138 bottle
-text -47 138 and
-text -46 138 cake
-text -45 138 and
-text -44 138 drink
-text -43 138 and
-text -42 138 egg
-text -41 138 and
-text -40 138 fruit
-text -39 138 and
-text -38 138 book
-text -77 139 powered
-text -76 139 lift
-text -75 139 on
-text -74 139 car
-text -73 139 and
-text -72 139 tile
-text -71 139 eat
-text -70 139 donut
-text -69 139 and
-text -68 139 stick
-text -67 139 and
-text -66 139 scissors
-text -65 139 and
-text -64 139 bubble
-text -63 139 and
-text -62 139 dust
-text -61 139 and
-text -60 139 hand
-text -59 139 and
-text -58 139 sax
-text -57 139 and
-text -56 139 cash
-text -55 139 and
-text -54 139 cog
-text -53 139 and
-text -52 139 cat
-text -51 139 and
-text -50 139 algae
-text -49 139 and
-text -48 139 bottle
-text -47 139 and
-text -46 139 cake
-text -45 139 and
-text -44 139 drink
-text -43 139 and
-text -42 139 egg
-text -41 139 and
-text -40 139 fruit
-text -39 139 and
-text -38 139 book
-text -77 141 powered
-text -76 141 cart
-text -75 141 on
-text -74 141 car
-text -73 141 and
-text -72 141 tile
-text -71 141 make
-object -70 141 gem right
-object -70 142 bomb right
-text -76 143 powered
-text -75 143 lift
-text -74 143 on
-text -73 143 car
-text -72 143 and
-text -71 143 tile
-text -70 143 make
-object -69 143 gem right
-object -69 144 bomb right
+object 79 -43 jiji down
+object 74 -42 triangle right
+object 75 -42 lily right
+object 76 -42 cloud right
+object 76 -42 water right
+object 77 -42 lever right
+object 78 -42 lever right
+object 79 -42 lever right
+object 80 -42 bomb right
+text 70 -41 powered
+text 71 -41 cart
+text 72 -41 on
+text 73 -41 car
+text 74 -41 and
+text 75 -41 tile
+text 76 -41 make
+object 77 -41 gem right
+text 82 -41 jiji
+text 83 -41 make
+text 84 -41 donut
+object 77 -40 bomb right
+text 71 -39 powered
+text 72 -39 lift
+text 73 -39 on
+text 74 -39 car
+text 75 -39 and
+text 76 -39 tile
+text 77 -39 make
+object 78 -39 gem right
+object 78 -38 bomb right
+text 72 -37 powered
+text 73 -37 cart
+text 74 -37 on
+text 75 -37 car
+text 76 -37 and
+text 77 -37 tile
+text 78 -37 eat
+object 79 -37 gem right
+text 80 -37 and
+text 81 -37 stick
+text 82 -37 and
+text 83 -37 scissors
+text 84 -37 and
+text 85 -37 bubble
+text 86 -37 and
+text 87 -37 dust
+text 88 -37 and
+text 89 -37 hand
+text 90 -37 and
+text 91 -37 sax
+text 92 -37 and
+text 93 -37 cash
+text 94 -37 and
+text 95 -37 cog
+text 96 -37 and
+text 97 -37 cat
+text 98 -37 and
+text 99 -37 algae
+text 100 -37 and
+text 101 -37 bottle
+text 102 -37 and
+text 103 -37 cake
+text 104 -37 and
+text 105 -37 drink
+text 106 -37 and
+text 107 -37 egg
+text 108 -37 and
+text 109 -37 fruit
+text 110 -37 and
+text 111 -37 book
+text 72 -36 powered
+text 73 -36 lift
+text 74 -36 on
+text 75 -36 car
+text 76 -36 and
+text 77 -36 tile
+text 78 -36 eat
+object 79 -36 gem right
+text 80 -36 and
+text 81 -36 stick
+text 82 -36 and
+text 83 -36 scissors
+text 84 -36 and
+text 85 -36 bubble
+text 86 -36 and
+text 87 -36 dust
+text 88 -36 and
+text 89 -36 hand
+text 90 -36 and
+text 91 -36 sax
+text 92 -36 and
+text 93 -36 cash
+text 94 -36 and
+text 95 -36 cog
+text 96 -36 and
+text 97 -36 cat
+text 98 -36 and
+text 99 -36 algae
+text 100 -36 and
+text 101 -36 bottle
+text 102 -36 and
+text 103 -36 cake
+text 104 -36 and
+text 105 -36 drink
+text 106 -36 and
+text 107 -36 egg
+text 108 -36 and
+text 109 -36 fruit
+text 110 -36 and
+text 111 -36 book
+tag 77 -42 input
+tag 78 -42 input
