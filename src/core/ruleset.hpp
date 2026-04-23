@@ -172,6 +172,16 @@ struct GlobalConditionMakeRule {
     std::vector<CondClause> on_clauses;
 };
 
+// [NOT] POWEREDx [AND [NOT] POWEREDy]* NOUN [ON/NOT ON NOUN]* IS NOUN.
+// Conditional transform gated by the POWERED prefix AND optional ON clauses.
+struct GlobalConditionTransformRule {
+    using Condition = GlobalConditionPropertyRule::Condition;
+    Kind subject;
+    Kind target;
+    std::vector<Condition>  conditions;
+    std::vector<CondClause> on_clauses;
+};
+
 class RuleSet {
 public:
     RuleSet() = default;
@@ -200,6 +210,7 @@ public:
     std::vector<GlobalConditionPropertyRule>  const& global_condition_property_rules()  const { return global_cond_rules_; }
     std::vector<GlobalConditionEatRule>       const& global_condition_eat_rules()       const { return global_cond_eat_rules_; }
     std::vector<GlobalConditionMakeRule>      const& global_condition_make_rules()      const { return global_cond_make_rules_; }
+    std::vector<GlobalConditionTransformRule> const& global_condition_transform_rules() const { return global_cond_transforms_; }
     std::vector<HasRule>                      const& has_rules()                        const { return has_rules_; }
     std::vector<FearRule>                     const& fear_rules()                       const { return fear_rules_; }
     std::vector<PlayRule>                     const& play_rules()                       const { return play_rules_; }
@@ -250,6 +261,7 @@ private:
     std::vector<GlobalConditionPropertyRule>  global_cond_rules_;
     std::vector<GlobalConditionEatRule>       global_cond_eat_rules_;
     std::vector<GlobalConditionMakeRule>      global_cond_make_rules_;
+    std::vector<GlobalConditionTransformRule> global_cond_transforms_;
     std::vector<HasRule>                      has_rules_;
     std::vector<FearRule>                     fear_rules_;
     std::vector<PlayRule>                     play_rules_;

@@ -1,0 +1,58 @@
+# Combines POWERED prefix, ON conditional, IS-NOUN transform, and WORD in
+# one strip.
+#
+# Rules (text tiles):
+#   DONUT ON GEM IS WORD       → a donut sitting on a gem acts as DONUT text.
+#   BOLT IS POWER              → any live bolt supplies POWER (POWERED active).
+#   POWERED BABA ON FLAG IS [donut-on-gem]
+#                              → with donut-on-gem acting as the DONUT text,
+#                                the strip resolves to
+#                                  POWERED BABA ON FLAG IS DONUT
+#                                which should transform the baba-on-flag
+#                                into a donut on tick 1.
+#
+# Exercises: WORD property stitching a noun object into a rule strip
+# simultaneously with a POWERED prefix condition AND an ON clause on a
+# NOUN-target IS transform. Stored as a GlobalConditionTransformRule and
+# applied in apply_transforms().
+
+[setup]
+version 1
+name "powered+word: donut-on-gem acts as DONUT; transforms baba on flag"
+
+# DONUT ON GEM IS WORD
+text 0 0 donut
+text 1 0 on
+text 2 0 gem
+text 3 0 is
+text 4 0 word
+
+# BOLT IS POWER
+text 0 2 bolt
+text 1 2 is
+text 2 2 power
+
+# POWERED BABA ON FLAG IS [donut-on-gem acts as DONUT text]
+text 0 4 powered
+text 1 4 baba
+text 2 4 on
+text 3 4 flag
+text 4 4 is
+object 5 4 gem right
+object 5 4 donut right
+
+# Baba standing on a flag (subject of the transform)
+object 3 7 baba right
+object 3 7 flag right
+
+# A bolt somewhere — supplies POWER so POWERED is active
+object 7 7 bolt right
+
+[inputs]
+input wait
+
+[expected]
+tick 1
+at 3 7 donut
+at 3 7 flag
+not_at 3 7 baba

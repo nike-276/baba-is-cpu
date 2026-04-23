@@ -1,0 +1,49 @@
+# AND-chained subjects under a POWERED prefix distribute across each subject:
+#
+#   BOLT IS POWER
+#   POWERED BABA AND KEKE ON FLAG IS ROCK
+#
+# should act as TWO rules — POWERED BABA ON FLAG IS ROCK and
+# POWERED KEKE ON FLAG IS ROCK. Both a baba-on-flag and a keke-on-flag
+# transform to rock on tick 1.
+
+[setup]
+version 1
+name "powered: AND-chained subjects distribute"
+
+# BOLT IS POWER — supplies the POWERED condition.
+text 0 0 bolt
+text 1 0 is
+text 2 0 power
+
+# POWERED BABA AND KEKE ON FLAG IS ROCK
+text 0 2 powered
+text 1 2 baba
+text 2 2 and
+text 3 2 keke
+text 4 2 on
+text 5 2 flag
+text 6 2 is
+text 7 2 rock
+
+# Subjects: baba-on-flag and keke-on-flag (both should transform).
+object 3 5 baba right
+object 3 5 flag right
+
+object 6 5 keke right
+object 6 5 flag right
+
+# Power source.
+object 9 5 bolt right
+
+[inputs]
+input wait
+
+[expected]
+tick 1
+at 3 5 rock
+at 3 5 flag
+not_at 3 5 baba
+at 6 5 rock
+at 6 5 flag
+not_at 6 5 keke
