@@ -1,0 +1,30 @@
+# BABA ON KEKE PLAY A: babas co-located with a keke play A; babas without a
+# keke are silent. Two babas on the keke → two sound events.
+
+[setup]
+version 1
+name "baba on keke play a"
+
+text 0 0 baba
+text 1 0 on
+text 2 0 keke
+text 3 0 play
+text 4 0 a
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 baba right
+object 5 5 baba right
+object 5 5 keke right
+
+object 8 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+sound_count 2
+tick 1
+not_won
