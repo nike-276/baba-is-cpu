@@ -524,7 +524,7 @@ object -50 0 track down
 object -49 0 lily right
 object -48 0 arrow right
 object -48 0 fire right
-object -47 0 tile right
+object -88 -40 wall down
 object -46 0 tile right
 object -45 0 tile right
 object -44 0 tile right
@@ -544,7 +544,7 @@ object -31 0 bomb right
 object -30 0 ghost right
 object -29 0 wall right
 object -28 0 hedge right
-object -27 0 tile right
+object -47 0 tile right
 object -26 0 tile right
 object -25 0 tile right
 object -24 0 tile right
@@ -1724,110 +1724,110 @@ text -17 -97 moon
 object 97 -1 arrow right
 text 156 -99 lever
 object 95 -1 arrow right
-object -49 -12 wall right
-object -47 -12 wall right
-object -50 -12 wall right
-object -51 -12 wall right
-object -52 -12 wall right
-object -53 -12 wall right
-object -53 -13 arrow up
-object -46 -13 arrow left
-object -45 -13 wall right
-object -54 -13 wall right
-object -45 -14 wall right
-object -46 -14 arrow down
-object -52 -14 arrow right
-object -54 -14 wall right
-object -45 -15 wall right
-object -46 -15 arrow left
-object -52 -15 arrow down
-object -54 -15 wall right
-object -45 -16 wall right
-object -46 -16 arrow down
-object -52 -16 arrow right
-object -54 -16 wall right
-object -45 -17 wall right
-object -46 -17 arrow left
-object -52 -17 arrow down
-object -54 -17 wall right
-object -45 -18 wall right
-object -46 -18 arrow left
-object -52 -18 arrow down
-object -54 -18 wall right
-object -45 -19 wall right
-object -46 -19 arrow down
-object -52 -19 arrow right
-object -54 -19 wall right
-object -45 -20 wall right
-object -46 -20 arrow left
-object -52 -20 arrow down
-object -54 -20 wall right
-object -45 -21 wall right
-object -46 -21 arrow down
-object -52 -21 arrow right
-object -54 -21 wall right
-object -45 -22 wall right
-object -46 -22 arrow left
-object -52 -22 arrow down
-object -54 -22 wall right
-object -45 -23 wall right
-object -46 -23 arrow left
-object -52 -23 arrow down
-object -54 -23 wall right
-object -45 -24 wall right
-object -46 -24 arrow down
-object -52 -24 arrow right
-object -54 -24 wall right
-object -45 -25 wall right
-object -46 -25 arrow left
-object -52 -25 arrow down
-object -54 -25 wall right
-object -45 -26 wall right
-object -46 -26 arrow down
-object -52 -26 arrow right
-object -54 -26 wall right
-object -45 -27 wall right
-object -46 -27 arrow left
-object -52 -27 arrow down
-object -54 -27 wall right
-object -45 -28 wall right
-object -46 -28 arrow down
-object -52 -28 arrow right
-object -54 -28 wall right
-object -45 -29 wall right
-object -46 -29 arrow left
-object -52 -29 arrow down
-object -54 -29 wall right
-object -45 -30 wall right
-object -46 -30 arrow down
-object -52 -30 arrow right
-object -54 -30 wall right
-object -45 -31 wall right
-object -46 -31 arrow left
-object -52 -31 arrow down
-object -54 -31 wall right
-object -45 -32 wall right
-object -46 -32 arrow down
-object -52 -32 arrow right
-object -54 -32 wall right
-object -45 -33 wall right
-object -46 -33 arrow left
-object -52 -33 arrow down
-object -53 -33 flag right
-object -54 -33 wall right
-object -45 -34 wall right
-object -46 -34 arrow down
-object -53 -34 arrow right
-object -53 -34 clock right
-object -54 -34 wall right
-object -46 -35 wall right
-object -47 -35 wall right
-object -48 -35 wall right
-object -49 -35 wall right
-object -50 -35 wall right
-object -51 -35 wall right
-object -52 -35 wall right
-object -53 -35 wall right
+text 47 113 make
+object 41 113 gem right
+text 48 113 donut
+object 41 114 bomb right
+text 35 115 powered
+text 36 115 lift
+text 39 115 and
+text 38 115 car
+text 37 115 on
+text 40 115 tile
+text 41 115 make
+object 42 115 gem right
+object 42 116 bomb right
+text 36 117 powered
+text 37 117 cart
+text 38 117 on
+text 39 117 car
+text 40 117 and
+text 41 117 tile
+text 42 117 eat
+object 43 117 gem right
+text 44 117 and
+text 45 117 stick
+text 46 117 and
+text 47 117 scissors
+text 48 117 and
+text 49 117 bubble
+text 50 117 and
+text 51 117 dust
+text 52 117 and
+text 53 117 hand
+text 54 117 and
+text 55 117 sax
+text 56 117 and
+text 57 117 cash
+text 58 117 and
+text 59 117 cog
+text 60 117 and
+text 61 117 cat
+text 62 117 and
+text 63 117 algae
+text 64 117 and
+text 65 117 bottle
+text 66 117 and
+text 67 117 cake
+text 68 117 and
+text 69 117 drink
+text 70 117 and
+text 71 117 egg
+text 72 117 and
+text 73 117 fruit
+text 74 117 and
+text 75 117 book
+text 36 118 powered
+text 37 118 lift
+text 38 118 on
+text 39 118 car
+text 40 118 and
+text 41 118 tile
+text 42 118 eat
+object 43 118 gem right
+text 44 118 and
+text 45 118 stick
+text 46 118 and
+text 47 118 scissors
+text 48 118 and
+text 49 118 bubble
+text 50 118 and
+text 51 118 dust
+text 52 118 and
+text 53 118 hand
+text 54 118 and
+text 55 118 sax
+text 56 118 and
+text 57 118 cash
+text 58 118 and
+text 59 118 cog
+text 60 118 and
+text 61 118 cat
+text 62 118 and
+text 63 118 algae
+text 64 118 and
+text 65 118 bottle
+text 66 118 and
+text 67 118 cake
+text 68 118 and
+text 69 118 drink
+text 70 118 and
+text 71 118 egg
+object 30 108 fire right
+text 72 118 and
+text 73 118 fruit
+text 74 118 and
+object 40 105 bomb right
+text 75 118 book
+object 39 105 bomb right
+object 26 65 arrow down
+object 26 65 fire up
+object 36 112 wall down
+object 35 112 ghost right
+object 26 112 arrow right
+object 26 112 fire up
+object 43 119 bomb right
+text 39 113 tile
 object 73 -2 bomb right
 object 69 -1 wall right
 object 105 -4 bomb right
@@ -1869,7 +1869,7 @@ object 83 -1 wall right
 object 78 -2 bomb right
 object 79 -2 arrow right
 object 95 -2 bomb right
-object -48 -12 wall right
+text 46 113 jiji
 object 93 -2 bomb right
 object 94 -2 bomb right
 object 90 -2 bomb right
@@ -3405,7 +3405,7 @@ object 79 -1 wall right
 object 81 -1 wall right
 object 83 -2 bomb right
 object 80 -1 wall right
-object -46 -12 wall right
+text 40 113 make
 object 84 -1 wall right
 object 98 -1 arrow right
 text 147 -101 powered
@@ -3419,8 +3419,8 @@ text 148 -100 bolt
 text 149 -100 on
 text 150 -100 me
 text 151 -100 is
-object -47 0 donut down
-object -27 0 hand down
+object -89 -40 wall down
+object -90 -40 wall down
 text 170 -95 hand
 text 171 -95 and
 text 172 -95 sax
@@ -3859,9 +3859,9 @@ object 15 4 arrow right
 object 16 5 arrow right
 object 18 7 arrow right
 object 19 8 arrow right
-object 15 12 pants up
+object 48 8 bomb right
 object 18 12 arrow up
-object 16 13 pants up
+object 48 7 bomb right
 object 19 13 arrow up
 object 19 14 arrow down
 object 19 16 arrow right
@@ -5599,7 +5599,7 @@ object 15 41 circle right
 object 16 41 gate right
 object 17 41 cloud right
 object 18 41 triangle right
-object 71 16 bomb right
+object 60 8 bomb right
 object 5 42 pants right
 object 11 42 arrow up
 object 6 43 pants right
@@ -5615,7 +5615,7 @@ object 15 45 water right
 object 16 45 gate right
 object 17 45 cloud right
 object 18 45 triangle right
-object 21 45 bomb right
+object 120 66 wall right
 object 5 46 pants right
 object 11 46 arrow up
 object 6 47 pants right
@@ -5632,7 +5632,7 @@ object 15 49 circle right
 object 16 49 gate right
 object 17 49 cloud right
 object 18 49 triangle right
-object 21 49 bomb right
+object 33 49 wall right
 object 5 50 pants right
 object 10 50 triangle right
 object 11 50 arrow up
@@ -5645,7 +5645,7 @@ object 15 51 circle right
 object 16 51 gate right
 object 17 51 cloud right
 object 18 51 triangle right
-object 21 51 bomb right
+object 32 49 fire right
 object 5 52 pants right
 object 11 52 arrow up
 object 4 53 pants right
@@ -5694,7 +5694,7 @@ object 15 61 circle right
 object 16 61 gate right
 object 17 61 cloud right
 object 18 61 triangle right
-object 21 61 bomb right
+object 114 50 wall right
 object 5 62 pants right
 object 10 62 triangle right
 object 11 62 arrow up
@@ -5712,7 +5712,7 @@ object 15 65 arrow right
 object 16 65 gate right
 object 17 65 cloud right
 object 18 65 triangle right
-object 21 65 bomb right
+object 26 113 wall down
 object 5 66 pants right
 object 10 66 triangle right
 object 11 66 arrow up
@@ -5725,14 +5725,14 @@ object 11 68 arrow up
 object 3 70 bomb right
 object 4 70 bomb right
 object 5 70 bomb right
-object 6 70 bomb right
-object 7 70 bomb right
+object 45 76 arrow right
+object 44 77 arrow right
 object 64 19 arrow right
 object 64 19 orb up
-object 39 4 pants down
-object 40 5 pants down
-object 41 7 pants down
-object 42 8 pants down
+object 42 5 pants down
+object 41 4 pants down
+object 40 8 pants down
+object 39 7 pants down
 object 39 25 pants right
 object 40 26 pants right
 object 41 30 pants right
@@ -5784,7 +5784,7 @@ object 51 26 bed right
 object 52 26 arrow up
 object 52 26 tile right
 object 52 26 bed right
-object 53 26 bomb right
+object 46 3 fire right
 object 58 17 arrow right
 object 57 18 arrow right
 object 56 19 arrow right
@@ -5940,8 +5940,8 @@ object 45 42 trees up
 object 44 42 tree up
 object 52 39 arrow right
 object 47 35 arrow right
-object 9 72 arrow right
-object 8 71 arrow right
+object 72 64 wall right
+object 126 63 arrow down
 object 69 18 door right
 object 67 24 orb up
 object 67 18 orb up
@@ -5956,8 +5956,8 @@ object 66 16 bomb right
 object 67 16 bomb right
 object 65 18 orb up
 object 68 24 arrow right
-object 9 72 fire right
-object 8 71 fire right
+object 35 45 wall right
+object 71 64 arrow up
 object 62 19 orb up
 object 66 17 arrow right
 object 68 23 arrow right
@@ -6087,103 +6087,990 @@ object 59 44 arrow up
 object 60 44 arrow up
 object 59 44 ghost right
 object 60 44 ghost right
-object 64 47 ghost up
-object 64 46 wall right
-object 64 45 lily left
-object 64 44 fire left
-object 64 44 lock left
-object 64 44 arrow up
-object 64 43 water left
-object 64 43 lava left
-object 64 42 lever left
-object 64 41 lever left
-object 64 40 lever left
-object 64 39 lever left
-object 53 61 bomb right
-object 64 37 lever left
-object 64 36 lever left
-object 64 35 lever left
-object 64 34 bomb right
-object 71 17 lever left
-object 71 18 lever left
-object 71 19 lever left
-object 71 20 lever left
-object 71 21 lever left
-object 71 22 lever left
-object 71 23 lever left
-object 71 24 lever left
-object 71 25 water left
-object 71 25 lava left
-object 71 26 fire left
-object 71 26 lock left
-object 71 26 arrow up
-object 71 27 lily left
+object 71 27 triangle up
+object 71 37 lever up
+object 71 38 lever up
+object 71 25 cloud up
+object 71 26 lily up
+object 71 39 lever up
+object 71 24 lever up
+object 71 25 water up
+object 21 37 fire right
+object 71 23 lever up
+object 71 22 lever up
+object 71 21 lever up
+object 71 43 water up
+object 71 19 lever up
+object 71 18 lever up
+object 71 17 lever up
+object 71 16 bomb right
+object 60 7 bomb right
+object 21 37 arrow up
+object 71 36 lever up
+object 36 50 wall right
+object 36 49 fire right
+object 21 41 arrow right
+object 36 49 arrow right
+object 21 41 fire right
+object 36 41 arrow down
+object 36 41 fire right
+object 37 41 wall right
+object 71 43 cloud up
+object 71 42 lever up
+object 71 40 lever up
 object 71 29 ghost up
 object 71 28 wall right
-object 64 38 lever left
+object 71 20 lever up
 object 21 32 wall right
 object 71 33 fire right
 object 71 33 arrow up
 object 21 33 arrow right
 object 21 33 fire right
-object 52 61 bed right
-object 47 52 arrow right
-object 46 53 arrow right
-object 45 54 arrow right
-object 44 55 arrow right
-object 52 56 arrow right
-object 51 57 arrow right
-object 50 58 arrow right
-object 44 59 tree up
-object 45 59 trees up
-object 46 59 husk up
-object 47 59 husks up
-object 49 59 arrow right
-object 41 60 pants right
-object 43 60 arrow up
-object 43 60 tile right
-object 43 60 bed right
-object 44 60 arrow up
-object 44 60 tile right
-object 44 60 bed right
-object 45 60 arrow up
-object 45 60 tile right
-object 45 60 bed right
-object 46 60 arrow up
-object 46 60 tile right
-object 46 60 bed right
-object 47 60 arrow up
-object 47 60 tile right
-object 47 60 bed right
-object 48 60 bomb right
-object 49 60 tree up
-object 50 60 trees up
-object 51 60 husk up
-object 52 60 husks up
-object 42 61 pants right
-object 48 61 arrow up
-object 48 61 tile right
-object 48 61 bed right
-object 49 61 arrow up
-object 49 61 tile right
-object 49 61 bed right
-object 50 61 arrow up
-object 50 61 tile right
-object 50 61 bed right
-object 51 61 arrow up
-object 51 61 tile right
-object 51 61 bed right
-object 52 61 arrow up
-object 52 61 tile right
-object 21 37 arrow right
-object 21 37 fire right
-object 37 37 wall right
-object 36 37 arrow down
-object 36 49 arrow right
-object 36 37 fire right
-object 36 49 fire right
-object 36 50 wall right
-object 65 49 wall right
-object 64 49 arrow up
-object 60 7 bomb right
-object 60 8 bomb right
+object 71 41 lever up
+object 72 49 wall right
+object 71 47 ghost up
+object 71 44 lily up
+object 71 34 bomb right
+object 71 45 triangle up
+object 71 46 wall right
+object 71 35 lever up
+object 71 49 arrow up
+object 71 50 bomb right
+object 47 51 arrow right
+object 71 51 lever up
+object 46 52 arrow right
+object 71 52 lever up
+object 45 53 arrow right
+object 71 53 lever up
+object 44 54 arrow right
+object 71 54 lever up
+object 52 55 arrow right
+object 71 55 lever up
+object 51 56 arrow right
+object 71 56 lever up
+object 50 57 arrow right
+object 71 57 lever up
+object 44 58 tree up
+object 45 58 trees up
+object 46 58 husk up
+object 47 58 husks up
+object 49 58 arrow right
+object 71 58 lever up
+object 41 59 pants right
+object 43 59 arrow up
+object 43 59 tile right
+object 43 59 bed right
+object 44 59 arrow up
+object 44 59 tile right
+object 44 59 bed right
+object 45 59 arrow up
+object 45 59 tile right
+object 45 59 bed right
+object 46 59 arrow up
+object 46 59 tile right
+object 46 59 bed right
+object 47 59 arrow up
+object 47 59 tile right
+object 47 59 bed right
+object 48 59 bomb right
+object 49 59 tree up
+object 50 59 trees up
+object 51 59 husk up
+object 52 59 husks up
+object 71 59 cloud up
+object 71 59 water up
+object 42 60 pants right
+object 48 60 arrow up
+object 48 60 tile right
+object 48 60 bed right
+object 49 60 arrow up
+object 49 60 tile right
+object 49 60 bed right
+object 50 60 arrow up
+object 50 60 tile right
+object 50 60 bed right
+object 51 60 arrow up
+object 51 60 tile right
+object 51 60 bed right
+object 52 60 bed right
+object 52 60 arrow up
+object 52 60 tile right
+object 53 60 bomb right
+object 71 60 lily up
+object 71 61 triangle up
+object 71 62 wall right
+object 71 63 ghost up
+object 119 66 ghost right
+object 21 45 arrow right
+object 21 45 fire right
+object 34 45 arrow down
+object 34 45 fire right
+object 10 71 arrow right
+object 10 71 fire right
+object 10 72 fire right
+object 10 72 arrow right
+object 8 71 pants right
+object 9 72 pants right
+object 30 108 arrow right
+object 72 108 wall right
+object 71 108 arrow up
+object 30 51 arrow down
+object 30 51 fire right
+object 31 51 wall right
+object 10 85 arrow right
+object 9 85 pants right
+object 10 84 fire right
+object 30 109 wall right
+object 44 79 tree up
+object 45 79 trees up
+object 46 79 husk up
+object 47 79 husks up
+object 43 80 bed right
+object 43 80 tile right
+object 43 80 arrow up
+object 44 80 bed right
+object 44 80 tile right
+object 44 80 arrow up
+object 45 80 bed right
+object 45 80 tile right
+object 45 80 arrow up
+object 46 80 bed right
+object 46 80 tile right
+object 46 80 arrow up
+object 47 80 bed right
+object 47 80 tile right
+object 47 80 arrow up
+object 48 80 bomb right
+object 32 89 wall right
+object 47 74 arrow right
+object 46 75 arrow right
+object 10 85 fire right
+object 49 81 arrow right
+object 50 80 arrow right
+object 50 85 wall right
+object 50 84 arrow up
+object 52 83 wall right
+object 51 83 arrow up
+object 53 82 wall right
+object 52 82 arrow up
+object 49 85 arrow up
+object 51 84 wall right
+object 51 79 arrow right
+object 52 78 arrow right
+object 6 82 pants right
+object 10 82 arrow right
+object 10 82 fire right
+object 7 83 pants right
+object 10 83 arrow right
+object 10 83 fire right
+object 8 84 pants right
+object 10 84 arrow right
+object 72 88 wall right
+object 71 88 arrow up
+object 71 86 ghost up
+object 10 90 arrow right
+object 10 90 fire right
+object 71 73 bomb right
+object 71 74 lever up
+object 71 75 lever up
+object 71 76 lever up
+object 71 77 lever up
+object 71 78 lever up
+object 71 79 lever up
+object 71 80 lever up
+object 71 81 lever up
+object 71 82 cloud up
+object 71 82 water up
+object 71 83 lily up
+object 71 84 triangle up
+object 71 85 wall right
+object 32 88 arrow right
+object 32 88 fire right
+object 43 104 bed right
+object 43 104 tile right
+object 43 104 arrow up
+object 44 104 bed right
+object 9 93 pants right
+object 44 104 tile right
+object 44 104 arrow up
+object 45 104 bed right
+object 45 104 tile right
+object 10 93 arrow right
+object 45 104 arrow up
+object 46 104 bed right
+object 46 104 tile right
+object 46 104 arrow up
+object 47 104 bed right
+object 47 104 tile right
+object 47 104 arrow up
+object 48 104 bomb right
+object 40 104 pants right
+object 10 91 fire right
+object 6 90 pants right
+object 10 91 arrow right
+object 8 92 pants right
+object 7 91 pants right
+object 10 92 arrow right
+object 10 92 fire right
+object 10 93 fire right
+object 45 90 wall right
+object 21 51 fire right
+object 45 91 arrow down
+object 46 92 arrow down
+object 44 94 arrow right
+object 44 90 arrow down
+object 45 95 arrow right
+object 46 96 arrow right
+object 47 97 arrow right
+object 47 93 arrow down
+object 48 93 wall right
+object 47 92 wall right
+object 46 91 wall right
+object 47 98 arrow right
+object 46 99 arrow right
+object 45 100 arrow right
+object 44 101 arrow right
+object 44 103 tree up
+object 45 103 trees up
+object 46 103 husk up
+object 47 103 husks up
+object 71 93 bomb right
+object 71 94 lever up
+object 71 95 lever up
+object 71 96 lever up
+object 71 97 lever up
+object 71 98 lever up
+object 71 99 lever up
+object 71 100 lever up
+object 71 101 lever up
+object 71 102 cloud up
+object 71 102 water up
+object 71 103 lily up
+object 71 104 triangle up
+object 71 105 wall right
+object 71 106 ghost up
+object 32 49 arrow down
+object 21 49 arrow right
+object 21 49 fire right
+object 21 51 arrow right
+object 39 80 pants right
+object 48 4 bomb right
+object 48 5 bomb right
+object 15 14 pants up
+object 16 15 pants up
+object 45 -17 arrow right
+object 46 -18 arrow right
+object 45 3 arrow up
+object 46 3 arrow up
+object 45 3 fire right
+object 53 26 bomb right
+object 53 -26 arrow right
+object 52 -25 arrow right
+object 51 -24 arrow right
+object 50 -23 arrow right
+object 58 -22 arrow right
+object 57 -21 arrow right
+object 56 -20 arrow right
+object 50 -19 tree up
+object 51 -19 trees up
+object 52 -19 husk up
+object 53 -19 husks up
+object 55 -19 arrow right
+object 49 -18 arrow up
+object 49 -18 tile right
+object 49 -18 bed right
+object 50 -18 arrow up
+object 50 -18 tile right
+object 50 -18 bed right
+object 51 -18 arrow up
+object 51 -18 tile right
+object 51 -18 bed right
+object 52 -18 arrow up
+object 52 -18 tile right
+object 52 -18 bed right
+object 53 -18 arrow up
+object 53 -18 tile right
+object 53 -18 bed right
+object 54 -18 bomb right
+object 55 -18 tree up
+object 56 -18 trees up
+object 57 -18 husk up
+object 58 -18 husks up
+object 54 -17 arrow up
+object 54 -17 tile right
+object 54 -17 bed right
+object 55 -17 arrow up
+object 55 -17 tile right
+object 55 -17 bed right
+object 56 -17 arrow up
+object 56 -17 tile right
+object 56 -17 bed right
+object 57 -17 arrow up
+object 57 -17 tile right
+object 57 -17 bed right
+object 58 -17 arrow up
+object 58 -17 tile right
+object 58 -17 bed right
+object 59 -17 bomb right
+object 45 -18 wall right
+object 46 -19 wall right
+object 45 5 pants up
+object 46 4 pants up
+object 75 51 arrow right
+object 76 52 arrow right
+object 77 53 arrow right
+object 78 54 arrow right
+object 79 55 arrow right
+object 80 56 arrow right
+object 81 57 arrow right
+object 82 58 arrow right
+object 75 35 arrow down
+object 76 36 arrow down
+object 77 37 arrow down
+object 78 38 arrow down
+object 79 39 arrow down
+object 80 40 arrow down
+object 81 41 arrow down
+object 82 42 arrow down
+object 75 17 arrow down
+object 76 18 arrow down
+object 77 19 arrow down
+object 78 20 arrow down
+object 79 21 arrow down
+object 80 22 arrow down
+object 81 23 arrow down
+object 82 24 arrow down
+object 82 81 arrow up
+object 81 80 arrow up
+object 80 79 arrow up
+object 79 78 arrow up
+object 78 77 arrow up
+object 77 76 arrow up
+object 76 75 arrow up
+object 75 74 arrow up
+object 75 94 arrow up
+object 76 95 arrow up
+object 77 96 arrow up
+object 78 97 arrow up
+object 79 98 arrow up
+object 80 99 arrow up
+object 81 100 arrow up
+object 82 101 arrow up
+object 75 49 wall right
+object 76 49 wall right
+object 77 49 wall right
+object 78 49 wall right
+object 79 49 wall right
+object 80 49 wall right
+object 81 49 wall right
+object 82 49 wall right
+object 90 51 wall up
+object 90 52 wall up
+object 90 53 wall up
+object 90 54 wall up
+object 90 55 wall up
+object 90 56 wall up
+object 90 57 wall up
+object 90 58 wall up
+object 89 51 ghost up
+object 89 52 ghost up
+object 89 53 ghost up
+object 89 54 ghost up
+object 89 55 ghost up
+object 89 56 ghost up
+object 89 57 ghost up
+object 89 58 ghost up
+object 75 48 ghost right
+object 76 48 ghost right
+object 77 48 ghost right
+object 78 48 ghost right
+object 79 48 ghost right
+object 80 48 ghost right
+object 81 48 ghost right
+object 82 48 ghost right
+object 75 35 fire right
+object 76 36 fire right
+object 77 37 fire right
+object 78 38 fire right
+object 79 39 fire right
+object 80 40 fire right
+object 81 41 fire right
+object 82 42 fire right
+object 75 51 fire right
+object 76 52 fire right
+object 77 53 fire right
+object 78 54 fire right
+object 79 55 fire right
+object 80 56 fire right
+object 81 57 fire right
+object 82 58 fire right
+object 75 74 fire right
+object 76 75 fire right
+object 77 76 fire right
+object 78 77 fire right
+object 79 78 fire right
+object 80 79 fire right
+object 81 80 fire right
+object 82 81 fire right
+object 75 94 fire right
+object 76 95 fire right
+object 77 96 fire right
+object 78 97 fire right
+object 79 98 fire right
+object 80 99 fire right
+object 81 100 fire right
+object 82 101 fire right
+object 75 17 fire right
+object 76 18 fire right
+object 77 19 fire right
+object 78 20 fire right
+object 79 21 fire right
+object 80 22 fire right
+object 81 23 fire right
+object 82 24 fire right
+object 92 51 circle right
+object 92 51 arrow right
+object 92 51 water right
+object 93 51 gate right
+object 94 51 cloud right
+object 92 52 circle right
+object 92 52 arrow right
+object 92 52 water right
+object 93 52 gate right
+object 94 52 cloud right
+object 92 53 circle right
+object 92 53 arrow right
+object 92 53 water right
+object 93 53 gate right
+object 94 53 cloud right
+object 92 54 circle right
+object 92 54 arrow right
+object 92 54 water right
+object 93 54 gate right
+object 94 54 cloud right
+object 92 55 circle right
+object 92 55 arrow right
+object 92 55 water right
+object 93 55 gate right
+object 94 55 cloud right
+object 92 56 circle right
+object 92 56 arrow right
+object 92 56 water right
+object 93 56 gate right
+object 94 56 cloud right
+object 92 57 circle right
+object 92 57 arrow right
+object 92 57 water right
+object 93 57 gate right
+object 94 57 cloud right
+object 92 58 circle right
+object 92 58 arrow right
+object 92 58 water right
+object 93 58 gate right
+object 94 58 cloud right
+object 75 60 wall right
+object 76 60 wall right
+object 77 60 wall right
+object 78 60 wall right
+object 79 60 wall right
+object 80 60 wall right
+object 81 60 wall right
+object 82 60 wall right
+object 75 61 ghost right
+object 76 61 ghost right
+object 77 61 ghost right
+object 78 61 ghost right
+object 79 61 ghost right
+object 80 61 ghost right
+object 81 61 ghost right
+object 82 61 ghost right
+object 100 45 water right
+object 101 45 arrow down
+object 100 46 water right
+object 102 46 arrow down
+object 105 46 pillar down
+object 100 47 lily right
+object 100 47 water right
+object 101 47 lock right
+object 101 47 arrow right
+object 101 47 fire right
+object 105 47 track right
+object 107 47 arrow down
+object 107 47 lock right
+object 109 47 bomb right
+object 100 48 lily right
+object 100 48 water right
+object 101 48 lock right
+object 101 48 arrow right
+object 101 48 fire right
+object 105 48 track right
+object 106 48 arrow down
+object 106 48 lock right
+object 107 48 track right
+object 108 48 arrow down
+object 108 48 lock right
+object 109 48 bomb right
+object 100 49 robot right
+object 101 49 track down
+object 102 49 track down
+object 108 -1 donut right
+object 118 49 lever right
+object 118 50 bomb right
+object 105 49 tile right
+object 105 49 donut down
+object 106 49 tile right
+object 106 49 stick down
+object 107 49 tile right
+object 107 49 scissors down
+object 108 49 tile right
+object 108 49 bubble down
+object 109 49 bomb right
+object 102 50 arrow right
+object 102 50 lock up
+object 108 -2 donut right
+object 118 51 ghost right
+object 118 52 wall right
+object 105 50 tile right
+object 105 50 dust down
+object 106 50 tile right
+object 106 50 hand down
+object 107 50 tile right
+object 107 50 sax down
+object 108 50 tile right
+object 108 50 cash down
+object 109 50 bomb right
+object 101 51 arrow right
+object 101 51 lock up
+object 102 51 track down
+object 107 -1 bomb right
+object 118 53 lever right
+object 118 54 lever right
+object 105 51 tile right
+object 105 51 cog down
+object 106 51 tile right
+object 106 51 cat down
+object 107 51 tile right
+object 107 51 algae down
+object 108 51 tile right
+object 108 51 bottle down
+object 109 51 bomb right
+object 102 52 arrow right
+object 102 52 lock up
+object 107 -2 bomb right
+object 118 46 lock right
+object 118 47 water right
+object 105 52 tile right
+object 105 52 cake down
+object 106 52 tile right
+object 106 52 drink down
+object 107 52 tile right
+object 107 52 egg down
+object 108 52 tile right
+object 108 52 fruit down
+object 109 52 bomb right
+object 101 53 bomb right
+object 102 53 bomb right
+object 105 53 arrow right
+object 106 53 arrow right
+object 107 53 arrow right
+object 108 53 arrow right
+object 109 53 ghost right
+object 109 53 lily right
+object 110 53 wall right
+object 105 54 wall right
+object 106 54 wall right
+object 107 54 wall right
+object 108 54 wall right
+object 100 55 water right
+object 101 55 arrow down
+object 100 56 water right
+object 102 56 arrow down
+object 105 56 pillar down
+object 100 57 lily right
+object 100 57 water right
+object 101 57 lock right
+object 101 57 arrow right
+object 101 57 fire right
+object 105 57 track right
+object 107 57 arrow down
+object 107 57 lock right
+object 109 57 bomb right
+object 100 58 lily right
+object 100 58 water right
+object 101 58 lock right
+object 101 58 arrow right
+object 101 58 fire right
+object 105 58 track right
+object 106 58 arrow down
+object 106 58 lock right
+object 107 58 track right
+object 108 58 arrow down
+object 108 58 lock right
+object 109 58 bomb right
+object 100 59 robot right
+object 101 59 track down
+object 102 59 track down
+object 114 -1 arrow down
+object 28 40 fire up
+object 113 54 arrow right
+object 105 59 tile right
+object 105 59 donut down
+object 106 59 tile right
+object 106 59 stick down
+object 107 59 tile right
+object 107 59 scissors down
+object 108 59 tile right
+object 108 59 bubble down
+object 109 59 bomb right
+object 102 60 arrow right
+object 102 60 lock up
+object 113 -2 arrow down
+object 118 47 lava right
+object 118 48 lever right
+object 105 60 tile right
+object 105 60 dust down
+object 106 60 tile right
+object 106 60 hand down
+object 107 60 tile right
+object 107 60 sax down
+object 108 60 tile right
+object 108 60 cash down
+object 109 60 bomb right
+object 101 61 arrow right
+object 101 61 lock up
+object 102 61 track down
+object 114 -1 fire up
+object 118 55 bomb right
+object 118 46 fire right
+object 105 61 tile right
+object 105 61 cog down
+object 106 61 tile right
+object 106 61 cat down
+object 107 61 tile right
+object 107 61 algae down
+object 108 61 tile right
+object 108 61 bottle down
+object 109 61 bomb right
+object 102 62 arrow right
+object 102 62 lock up
+object 113 -2 fire up
+object 118 46 arrow down
+object 118 45 lily right
+object 105 62 tile right
+object 105 62 cake down
+object 106 62 tile right
+object 106 62 drink down
+object 107 62 tile right
+object 107 62 egg down
+object 108 62 tile right
+object 108 62 fruit down
+object 109 62 bomb right
+object 101 63 bomb right
+object 102 63 bomb right
+object 105 63 arrow right
+object 106 63 arrow right
+object 107 63 arrow right
+object 108 63 arrow right
+object 109 63 ghost right
+object 109 63 lily right
+object 110 63 wall right
+object 105 64 wall right
+object 106 64 wall right
+object 107 64 wall right
+object 108 64 wall right
+object 95 54 arrow up
+object 96 53 arrow up
+object 97 52 arrow up
+object 98 51 arrow up
+object 95 48 arrow right
+object 96 47 arrow right
+object 97 46 arrow right
+object 98 45 arrow right
+object 95 47 wall right
+object 96 46 wall right
+object 97 45 wall right
+object 98 44 wall right
+object 95 54 fire down
+object 96 53 fire down
+object 97 52 fire down
+object 98 51 fire down
+object 122 66 triangle right
+object 123 66 lily right
+object 124 66 cloud right
+object 124 66 water right
+object 125 66 lever right
+object 126 66 lever right
+object 127 66 bomb right
+text 88 67 powered
+text 89 67 donut
+text 90 67 and
+text 91 67 stick
+text 92 67 and
+text 93 67 scissors
+text 94 67 and
+text 95 67 bubble
+text 96 67 and
+text 97 67 dust
+text 98 67 and
+text 99 67 hand
+text 100 67 and
+text 101 67 sax
+text 102 67 and
+text 103 67 cash
+text 104 67 and
+text 105 67 cog
+text 106 67 and
+text 107 67 cat
+text 108 67 and
+text 109 67 algae
+text 110 67 and
+text 111 67 bottle
+text 112 67 and
+text 113 67 cake
+text 114 67 and
+text 115 67 drink
+text 116 67 and
+text 117 67 egg
+text 118 67 and
+text 119 67 fruit
+text 120 67 on
+text 121 67 teeth
+text 122 67 and
+text 123 67 pawn
+text 124 67 is
+object 125 67 gem right
+object 125 68 bomb right
+text 89 69 powered
+text 90 69 donut
+text 91 69 and
+text 92 69 stick
+text 93 69 and
+text 94 69 scissors
+text 95 69 and
+text 96 69 bubble
+text 97 69 and
+text 98 69 dust
+text 99 69 and
+text 100 69 hand
+text 101 69 and
+text 102 69 sax
+text 103 69 and
+text 104 69 cash
+text 105 69 and
+text 106 69 cog
+text 107 69 and
+text 108 69 cat
+text 109 69 and
+text 110 69 algae
+text 111 69 and
+text 112 69 bottle
+text 113 69 and
+text 114 69 cake
+text 115 69 and
+text 116 69 drink
+text 117 69 and
+text 118 69 egg
+text 119 69 and
+text 120 69 fruit
+text 121 69 on
+text 122 69 teeth
+text 123 69 and
+text 124 69 knight
+text 125 69 is
+object 126 69 gem right
+object 126 70 bomb right
+object 112 63 fire up
+object 112 63 arrow up
+object 112 54 wall right
+object 112 55 arrow right
+object 113 55 arrow up
+object 113 48 arrow right
+object 113 49 wall right
+object 114 49 arrow right
+object 21 61 arrow right
+object 21 61 fire right
+object 29 61 wall right
+object 28 61 arrow up
+object 28 61 fire up
+object 119 40 wall right
+object 28 39 wall right
+object 28 40 arrow right
+object 118 40 arrow down
+object 125 48 arrow down
+object 125 48 fire up
+object 126 49 arrow down
+object 126 49 fire up
+object 125 53 arrow down
+object 125 53 fire up
+object 126 54 arrow down
+object 126 54 fire up
+object 125 64 wall right
+object 126 64 wall right
+object 125 63 ghost right
+object 126 63 ghost right
+object 125 63 arrow down
+object 34 64 arrow right
+object 34 64 fire right
+object 34 65 wall right
+object 19 37 pants down
+object 19 61 pants down
+object 19 51 pants down
+object 19 49 pants down
+object 19 45 pants down
+object 19 41 pants down
+object 19 66 arrow right
+object 21 66 circle right
+object 21 66 arrow right
+object 21 66 water right
+object 22 66 gate right
+object 23 66 cloud right
+object 19 62 arrow down
+object 19 62 fire up
+object 19 52 arrow down
+object 19 52 fire up
+object 19 50 arrow down
+object 19 50 fire up
+object 19 46 arrow down
+object 19 46 fire up
+object 19 42 arrow down
+object 19 42 fire up
+object 19 38 arrow down
+object 19 38 fire up
+object 25 66 fire up
+object 25 66 arrow right
+object 19 67 wall right
+object 43 111 jiji down
+object 38 112 triangle right
+object 39 112 lily right
+object 40 112 cloud right
+object 40 112 water right
+object 41 112 lever right
+object 42 112 lever right
+object 43 112 lever right
+object 44 112 bomb right
+text 34 113 powered
+text 35 113 cart
+text 36 113 on
+text 37 113 car
+text 38 113 and
+object -100 -63 wall right
+object -99 -63 wall right
+object -98 -63 wall right
+object -97 -63 wall right
+object -96 -63 wall right
+object -95 -63 wall right
+object -101 -50 wall right
+object -99 -50 arrow down
+object -101 -62 wall right
+object -100 -62 arrow right
+object -100 -62 clock right
+object -101 -47 wall right
+object -95 -40 wall right
+object -101 -61 wall right
+object -99 -61 arrow down
+object -96 -40 wall right
+object -97 -40 wall right
+object -101 -60 wall right
+object -99 -60 arrow right
+object -98 -40 wall right
+object -99 -40 wall right
+object -101 -59 wall right
+object -99 -59 arrow down
+object -100 -40 wall right
+object -99 -45 arrow down
+object -101 -58 wall right
+object -99 -58 arrow right
+object -101 -49 wall right
+object -100 -41 arrow up
+object -101 -57 wall right
+object -99 -57 arrow down
+object -101 -41 wall right
+object -99 -49 arrow right
+object -101 -56 wall right
+object -99 -56 arrow right
+object -101 -45 wall right
+object -99 -42 arrow right
+object -101 -55 wall right
+object -99 -55 arrow down
+object -101 -42 wall right
+object -99 -47 arrow right
+object -101 -54 wall right
+object -99 -54 arrow right
+object -101 -48 wall right
+object -99 -43 arrow down
+object -101 -53 wall right
+object -99 -53 arrow down
+object -101 -43 wall right
+object -99 -48 arrow down
+object -101 -52 wall right
+object -99 -52 arrow right
+object -101 -46 wall right
+object -99 -44 arrow right
+object -101 -51 wall right
+object -99 -51 arrow down
+object -101 -44 wall right
+object -99 -46 arrow down
+object -85 -63 wall right
+object -84 -63 wall right
+object -84 -62 arrow down
+object -83 -62 wall right
+object -84 -61 arrow left
+object -83 -61 wall right
+object -84 -60 arrow down
+object -83 -60 wall right
+object -84 -59 arrow left
+object -83 -59 wall right
+object -84 -58 arrow down
+object -83 -58 wall right
+object -84 -57 arrow left
+object -83 -57 wall right
+object -84 -56 arrow down
+object -83 -56 wall right
+object -84 -55 arrow left
+object -83 -55 wall right
+object -84 -54 arrow down
+object -83 -54 wall right
+object -84 -53 arrow left
+object -83 -53 wall right
+object -84 -52 arrow down
+object -83 -52 wall right
+object -84 -51 arrow left
+object -83 -51 wall right
+object -84 -50 arrow left
+object -83 -50 wall right
+object -84 -49 arrow down
+object -83 -49 wall right
+object -84 -48 arrow left
+object -83 -48 wall right
+object -84 -47 arrow down
+object -83 -47 wall right
+object -84 -46 arrow left
+object -83 -46 wall right
+object -84 -45 arrow left
+object -83 -45 wall right
+object -84 -44 arrow down
+object -83 -44 wall right
+object -84 -43 arrow left
+object -83 -43 wall right
+object -84 -42 arrow down
+object -83 -42 wall right
+object -84 -41 arrow left
+object -83 -41 wall right
+object -85 -40 wall right
+object -84 -40 wall right
+object -86 -63 wall down
+object -87 -63 wall down
+object -88 -63 wall down
+object -89 -63 wall down
+object -90 -63 wall down
+object -91 -63 wall down
+object -92 -63 wall down
+object -93 -63 wall down
+object -94 -63 wall down
+object -94 -40 wall down
+object -93 -40 wall down
+object -92 -40 wall down
+object -91 -40 wall down
+object -87 -40 wall down
+object -86 -40 wall down
+object -27 0 tile right
