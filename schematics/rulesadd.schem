@@ -1,0 +1,30 @@
+version 1
+name "schematics/rulesadd.schem"
+origin -21 18
+
+text -21 18 baba
+text -20 18 on
+text -19 18 baba
+text -18 18 and
+text -17 18 orb
+text -16 18 is
+text -15 18 crab
+text -21 20 orb
+text -20 20 on
+text -19 20 crab
+text -18 20 make
+text -17 20 baba
+text -21 22 crab
+text -20 22 on
+text -19 22 orb
+text -18 22 is
+text -17 22 keke
+text -21 24 orb
+text -20 24 eat
+text -19 24 keke
+text -21 26 door
+text -20 26 not
+text -19 26 on
+text -18 26 baba
+text -17 26 make
+text -16 26 keke
