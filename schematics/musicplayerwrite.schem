@@ -1,0 +1,11 @@
+version 1
+name "schematics/musicplayerwrite.schem"
+origin -25 45
+
+object -24 45 monitor right
+text -25 46 powered
+object -24 46 tile right
+object -24 46 belt down
+text -23 46 is
+text -22 46 shift
+object -24 47 bomb right
