@@ -1,0 +1,31 @@
+# When a target sits on two shifters with conflicting directions, the
+# first shifter (ascending id) locks the direction; the second shifter's
+# direction is ignored but its presence still increments the movement
+# count. Here the right-facing rock is spawned BEFORE the left-facing
+# rock, so "right" wins and baba moves 2 tiles right, not 1 net.
+
+[setup]
+version 1
+name "shift stacking: first shifter locks direction, second only adds count"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 shift
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 rock right
+object 5 5 rock left
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+at 7 5 baba
+not_at 5 5 baba
+not_at 4 5 baba
+tick 1
+not_won

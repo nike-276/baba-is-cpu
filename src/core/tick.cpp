@@ -286,8 +286,13 @@ void apply_fall(World& world, RuleSet const& rs, std::vector<Change>& log) {
 }
 
 // ── APPLY_SHIFT phase ─────────────────────────────────────────────────────
-// SHIFT objects push all co-located non-text, non-SHIFT, non-STILL objects
-// one step in the SHIFT object's facing direction (respects STOP/STILL).
+// SHIFT objects push all co-located non-text, non-SHIFT objects.
+// Stacking rule: a target on multiple SHIFT tiles only ever moves in ONE
+// direction per SHIFT substage. The first shifter to touch it (ascending
+// shifter id) locks the direction; every additional shifter on the same
+// target — regardless of its own facing — just increments the movement
+// count. The target then try_moves `count` times in the locked direction,
+// respecting STOP/PUSH (same try_move semantics as MOVE).
 
 void apply_shift(World& world, RuleSet const& rs, std::vector<Change>& log) {
     auto const& shift_subjects = rs.subjects_for_property(Kind::P_Shift);
@@ -301,23 +306,36 @@ void apply_shift(World& world, RuleSet const& rs, std::vector<Change>& log) {
         }
     }
     std::sort(shifters.begin(), shifters.end());
+    if (shifters.empty()) return;
+
+    // Accumulate per-target plan. Using std::map keeps execution order
+    // deterministic (ascending target id).
+    struct Plan { Direction dir; int count; };
+    std::map<ObjectId, Plan> plans;
+
     for (ObjectId sid : shifters) {
         Object const* s = world.get(sid);
         if (!s) continue;
         Coord pos = s->pos;
-        Coord step_v = step(s->facing);
-        std::vector<ObjectId> targets;
-        for (ObjectId id : world.at(pos)) {
-            if (id == sid) continue;
-            Object const* o = world.get(id);
+        Direction sdir = s->facing;
+        for (ObjectId tid : world.at(pos)) {
+            if (tid == sid) continue;
+            Object const* o = world.get(tid);
             if (!o || o->text) continue;
-            if (rs.object_has_property(world, id, Kind::P_Shift)) continue;
-            targets.push_back(id);
+            if (rs.object_has_property(world, tid, Kind::P_Shift)) continue;
+            auto it = plans.find(tid);
+            if (it == plans.end()) plans.emplace(tid, Plan{sdir, 1});
+            else it->second.count++;
         }
-        std::sort(targets.begin(), targets.end());
-        for (ObjectId tid : targets) {
-            if (try_move(world, tid, step_v, rs, log))
-                do_face(world, tid, s->facing, log);
+    }
+
+    for (auto const& [tid, plan] : plans) {
+        if (!world.get(tid)) continue;
+        Coord step_v = step(plan.dir);
+        // SHIFT sets facing once; subsequent failed moves don't unset it.
+        do_face(world, tid, plan.dir, log);
+        for (int i = 0; i < plan.count; ++i) {
+            if (!try_move(world, tid, step_v, rs, log)) break;
         }
     }
 }
