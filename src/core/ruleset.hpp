@@ -126,6 +126,16 @@ struct ConditionalEatRule {
     Kind target;
 };
 
+// NOUN ON ... PLAY NOTE [OCTAVE] [ACCIDENTAL]: emit note only when ON clause holds.
+struct ConditionalPlayRule {
+    Kind subject;
+    std::vector<CondClause> clauses;
+    Kind note{Kind::O_LetterA};
+    int  octave{5};
+    bool sharp{false};
+    bool flat{false};
+};
+
 // [NOT] POWEREDx [AND [NOT] POWEREDy]* NOUN IS PROPERTY.
 // Each Condition checks one POWER channel; ALL conditions must hold (AND semantics).
 // negated=true → condition met when NO object has power_kind.
@@ -193,6 +203,7 @@ public:
     std::vector<HasRule>                      const& has_rules()                        const { return has_rules_; }
     std::vector<FearRule>                     const& fear_rules()                       const { return fear_rules_; }
     std::vector<PlayRule>                     const& play_rules()                       const { return play_rules_; }
+    std::vector<ConditionalPlayRule>          const& conditional_play_rules()           const { return cond_play_rules_; }
 
     // O(1): true if ANY non-negated rule (including conditional) could grant
     // `property` at runtime. Conservative for conditional rules. Used for
@@ -242,6 +253,7 @@ private:
     std::vector<HasRule>                      has_rules_;
     std::vector<FearRule>                     fear_rules_;
     std::vector<PlayRule>                     play_rules_;
+    std::vector<ConditionalPlayRule>          cond_play_rules_;
     // Cached lookup: (noun, property) → bool.
     std::unordered_set<std::uint32_t> index_;
     // Set of every property Kind potentially grantable by any rule (for any_grants()).

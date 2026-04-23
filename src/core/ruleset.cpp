@@ -46,6 +46,7 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 std::vector<HasRule>& has_out,
                 std::vector<FearRule>& fear_out,
                 std::vector<PlayRule>& play_out,
+                std::vector<ConditionalPlayRule>& cond_play_out,
                 std::unordered_map<Coord, Kind, CoordHash> const& word_at = {}) {
     auto at = [&](Coord c) -> std::optional<Kind> {
         // Real text objects take priority.
@@ -561,6 +562,29 @@ void scan_strip(World const& world, Coord start, Coord step_dir,
                 return;
             }
 
+            // NOUN ON … PLAY NOTE [OCTAVE] [ACCIDENTAL]
+            if (*verb2 == Kind::O_Play) {
+                cursor = adv(cursor);
+                auto note_k = at(cursor);
+                if (!note_k || !is_note_token(*note_k)) return;
+                Kind note = *note_k;
+                cursor = adv(cursor);
+                int  octave = 5;
+                bool sharp  = false;
+                bool flat   = false;
+                for (int pass = 0; pass < 2; ++pass) {
+                    auto mk = at(cursor);
+                    if (!mk) break;
+                    if (is_num_token(*mk)) { octave = num_to_int(*mk); cursor = adv(cursor); }
+                    else if (*mk == Kind::O_Sharp) { sharp = true; cursor = adv(cursor); }
+                    else if (*mk == Kind::O_Flat)  { flat  = true; cursor = adv(cursor); }
+                    else break;
+                }
+                for (Kind n : subjects)
+                    cond_play_out.push_back({n, clauses, note, octave, sharp, flat});
+                return;
+            }
+
             if (*verb2 != Kind::O_Is) return;
             cursor = adv(cursor);
 
@@ -772,8 +796,8 @@ RuleSet RuleSet::parse(World const& world) {
             if (o && o->text) { has_text = true; break; }
         }
         if (!has_text) continue;
-        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_);
-        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_);
+        scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_);
+        scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_);
     }
 
     // Pass 2: WORD — objects that have P_Word (via any rule form) act as their own text tile.
@@ -886,8 +910,8 @@ RuleSet RuleSet::parse(World const& world) {
                 }
             }
             if (!has_text_or_word) continue;
-            scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, word_at);
-            scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, word_at);
+            scan_strip(world, c, {1, 0}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_, word_at);
+            scan_strip(world, c, {0, 1}, rs.rules_, rs.transforms_, rs.makes_, rs.eats_, rs.cond_rules_, rs.cond_transforms_, rs.cond_makes_, rs.cond_eats_, rs.facing_rules_, rs.facing_transforms_, rs.global_cond_rules_, rs.global_cond_eat_rules_, rs.global_cond_make_rules_, rs.has_rules_, rs.fear_rules_, rs.play_rules_, rs.cond_play_rules_, word_at);
         }
     }
 
@@ -1015,6 +1039,26 @@ RuleSet RuleSet::parse(World const& world) {
         }
         rs.play_rules_ = std::move(deduped);
     }
+    {
+        std::vector<ConditionalPlayRule> deduped;
+        for (auto const& pr : rs.cond_play_rules_) {
+            bool dup = false;
+            for (auto const& ex : deduped) {
+                if (ex.subject == pr.subject && ex.note == pr.note &&
+                    ex.octave == pr.octave && ex.sharp == pr.sharp && ex.flat == pr.flat &&
+                    ex.clauses.size() == pr.clauses.size()) {
+                    bool same = true;
+                    for (size_t i = 0; i < pr.clauses.size(); ++i) {
+                        if (pr.clauses[i].negated != ex.clauses[i].negated ||
+                            pr.clauses[i].nouns   != ex.clauses[i].nouns)  { same = false; break; }
+                    }
+                    if (same) { dup = true; break; }
+                }
+            }
+            if (!dup) deduped.push_back(pr);
+        }
+        rs.cond_play_rules_ = std::move(deduped);
+    }
 
     // Base rule: TEXT IS PUSH (always, treated as positive non-cancellable).
     rs.rules_.push_back({Kind::N_Text, Kind::P_Push, false});
@@ -1114,6 +1158,7 @@ RuleSet RuleSet::parse(World const& world) {
         for (auto const& r : rs.has_rules_)              has.insert(r.subject);
         for (auto const& r : rs.fear_rules_)             fear.insert(r.subject);
         for (auto const& r : rs.play_rules_)             play.insert(r.subject);
+        for (auto const& r : rs.cond_play_rules_)        play.insert(r.subject);
         build(RuleSet::Verb::Transform, xform, rs.subjects_per_verb_[0]);
         build(RuleSet::Verb::Make,      make,  rs.subjects_per_verb_[1]);
         build(RuleSet::Verb::Eat,       eat,   rs.subjects_per_verb_[2]);

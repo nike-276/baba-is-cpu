@@ -1091,12 +1091,18 @@ void apply_fear(World& world, RuleSet const& rs, std::vector<Change>& log) {
 
 void apply_play(World const& world, RuleSet const& rs,
                 std::vector<SoundEvent>& out) {
-    if (rs.play_rules().empty()) return;
+    bool any = !rs.play_rules().empty() || !rs.conditional_play_rules().empty();
+    if (!any) return;
     for (ObjectId id : world.all_ids()) {
         Object const* o = world.get(id);
         if (!o || o->text) continue;
         for (auto const& pr : rs.play_rules()) {
             if (pr.subject != o->kind) continue;
+            out.push_back({o->kind, pr.note, pr.octave, pr.sharp, pr.flat, o->pos});
+        }
+        for (auto const& pr : rs.conditional_play_rules()) {
+            if (pr.subject != o->kind) continue;
+            if (!RuleSet::eval_cond_clauses(world, id, pr.clauses)) continue;
             out.push_back({o->kind, pr.note, pr.octave, pr.sharp, pr.flat, o->pos});
         }
     }
