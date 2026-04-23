@@ -568,8 +568,15 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
                 static_cast<int>(std::floor(mp.x / state.tile_px + state.scroll_x)),
                 static_cast<int>(std::floor(mp.y / state.tile_px + state.scroll_y))
             };
-            renderer.draw_world_at(ed.clipboard_world(), hover,
-                                   state.scroll_x, state.scroll_y, 128);
+            // Build a temporary schematic so draw_schematic_normal can handle rotation.
+            core::Schematic clip_schem;
+            clip_schem.origin = {0, 0};
+            for (core::ObjectId id : ed.clipboard_world().all_ids()) {
+                core::Object const* o = ed.clipboard_world().get(id);
+                if (o) clip_schem.world.spawn(o->pos, o->kind, o->text, o->facing);
+            }
+            renderer.draw_schematic_normal(clip_schem, hover, state.schem_rotation,
+                                           state.scroll_x, state.scroll_y);
         }
         if (state.paste_state == PasteState::Schematic && state.pending_schem) {
             Vector2 mp = GetMousePosition();
@@ -586,6 +593,47 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
                                                state.schem_rotation,
                                                state.scroll_x, state.scroll_y);
             }
+        }
+
+        // ── Facing direction indicator ────────────────────────────────────
+        // Small triangle near the mouse cursor showing default_facing direction.
+        // Vertices are CW in screen space (y-down) so raylib renders them.
+        if (ed.mode() == editor::EditorMode::Edit &&
+            state.paste_state == PasteState::None &&
+            GetMouseX() >= palette_w) {
+
+            Vector2 mp  = GetMousePosition();
+            float   mx  = mp.x, my = mp.y;
+            float   gap = 12.0f;  // gap between cursor and near edge of arrow
+            float   al  = 9.0f;   // arrow length
+            float   aw  = 6.0f;   // arrow half-width
+
+            constexpr Color kArrow{255, 240, 120, 220};
+
+            Vector2 v1, v2, v3;
+            switch (ed.selected().default_facing) {
+                case core::Direction::Right:
+                    v1 = {mx + gap + al, my};
+                    v2 = {mx + gap,      my - aw};
+                    v3 = {mx + gap,      my + aw};
+                    break;
+                case core::Direction::Left:
+                    v1 = {mx - gap - al, my};
+                    v2 = {mx - gap,      my + aw};
+                    v3 = {mx - gap,      my - aw};
+                    break;
+                case core::Direction::Up:
+                    v1 = {mx,       my - gap - al};
+                    v2 = {mx - aw,  my - gap};
+                    v3 = {mx + aw,  my - gap};
+                    break;
+                default:  // Down
+                    v1 = {mx,       my + gap + al};
+                    v2 = {mx + aw,  my + gap};
+                    v3 = {mx - aw,  my + gap};
+                    break;
+            }
+            DrawTriangle(v1, v2, v3, kArrow);
         }
 
         // ── Palette panel (left) ──────────────────────────────────────────

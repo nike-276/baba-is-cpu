@@ -170,9 +170,11 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
 
         // ── Ctrl+letter palette hotkeys ───────────────────────────────────────
         if (ctrl) {
-            // Ctrl+R: rotate palette facing, or rotate in-flight schematic.
+            // Ctrl+R: rotate palette facing, or rotate in-flight paste (clipboard or schematic).
             if (IsKeyPressed(KEY_R)) {
                 if (st.paste_state == PasteState::Schematic && st.pending_schem)
+                    st.schem_rotation = (st.schem_rotation + 1) % 4;
+                else if (st.paste_state == PasteState::Clipboard)
                     st.schem_rotation = (st.schem_rotation + 1) % 4;
                 else
                     ed.rotate_facing();
@@ -215,8 +217,9 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
             st.has_selection = false;
         }
         if (ctrl && IsKeyPressed(KEY_V) && ed.has_clipboard() && st.paste_state == PasteState::None) {
-            st.paste_state   = PasteState::Clipboard;
-            st.has_selection = false;
+            st.paste_state    = PasteState::Clipboard;
+            st.schem_rotation = 0;
+            st.has_selection  = false;
         }
         // Ctrl+B: toggle abstract schematic view (works in normal mode and during schem paste).
         if (ctrl && IsKeyPressed(KEY_B))
@@ -250,7 +253,7 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
             // Paste on left-click when paste mode is active.
             if (st.paste_state != PasteState::None && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 if (st.paste_state == PasteState::Clipboard) {
-                    ed.paste_at(tile);
+                    ed.paste_at(tile, st.schem_rotation);
                 } else if (st.paste_state == PasteState::Schematic && st.pending_schem) {
                     ed.paste_schematic(*st.pending_schem, tile, st.schem_rotation);
                 }

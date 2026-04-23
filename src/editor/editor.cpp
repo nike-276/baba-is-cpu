@@ -120,10 +120,10 @@ void Editor::toggle_text_variant() {
 void Editor::rotate_facing() {
     auto& e = palette_[palette_idx_];
     switch (e.default_facing) {
-        case Direction::Right: e.default_facing = Direction::Up;    break;
-        case Direction::Up:    e.default_facing = Direction::Left;  break;
-        case Direction::Left:  e.default_facing = Direction::Down;  break;
-        case Direction::Down:  e.default_facing = Direction::Right; break;
+        case Direction::Right: e.default_facing = Direction::Down;  break;
+        case Direction::Down:  e.default_facing = Direction::Left;  break;
+        case Direction::Left:  e.default_facing = Direction::Up;    break;
+        case Direction::Up:    e.default_facing = Direction::Right; break;
     }
 }
 
@@ -175,12 +175,25 @@ void Editor::cut_rect(Coord a, Coord b) {
     }
 }
 
-void Editor::paste_at(Coord target) {
+void Editor::paste_at(Coord target, int rotation_cw) {
     if (!has_clipboard_) return;
 
-    std::vector<Change> changes;
+    rotation_cw = ((rotation_cw % 4) + 4) % 4;
+
+    // Build a temporary schematic from the clipboard so we can reuse rotate_schematic.
+    Schematic tmp;
+    tmp.origin = {0, 0};
     for (ObjectId id : clipboard_world_.all_ids()) {
         Object const* o = clipboard_world_.get(id);
+        if (o) tmp.world.spawn(o->pos, o->kind, o->text, o->facing);
+    }
+    Schematic rotated = (rotation_cw == 0) ? std::move(tmp)
+                                           : rotate_schematic(tmp, rotation_cw);
+    World const& src  = rotated.world;
+
+    std::vector<Change> changes;
+    for (ObjectId id : src.all_ids()) {
+        Object const* o = src.get(id);
         if (!o) continue;
         Coord dest{target.x + o->pos.x, target.y + o->pos.y};
         if (o->text) {

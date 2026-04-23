@@ -66,7 +66,7 @@ public:
     // clipboard_world() has objects with positions normalized to (0,0)-based offset.
     void copy_rect(core::Coord a, core::Coord b);
     void cut_rect (core::Coord a, core::Coord b);
-    void paste_at (core::Coord target);
+    void paste_at (core::Coord target, int rotation_cw = 0);
     bool has_clipboard() const { return has_clipboard_; }
     core::World const& clipboard_world() const { return clipboard_world_; }
 
