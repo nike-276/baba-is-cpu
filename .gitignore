@@ -7,3 +7,5 @@ build-smake/
 *.o
 *.green
 .DS_Store
+
+logs
