@@ -1,0 +1,26 @@
+# SHIFT must move co-located text tiles, not just non-text objects.
+# TEXT IS PUSH by default, so text is a valid SHIFT target.
+
+[setup]
+version 1
+name "shift carries co-located text tile"
+
+text 0 0 rock
+text 1 0 is
+text 2 0 shift
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 rock right
+text 5 5 wall
+
+[inputs]
+input wait
+
+[expected]
+at 5 5 rock
+text_at 6 5 wall
+tick 1
+not_won

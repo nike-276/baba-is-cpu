@@ -321,7 +321,7 @@ void apply_shift(World& world, RuleSet const& rs, std::vector<Change>& log) {
         for (ObjectId tid : world.at(pos)) {
             if (tid == sid) continue;
             Object const* o = world.get(tid);
-            if (!o || o->text) continue;
+            if (!o) continue;
             if (rs.object_has_property(world, tid, Kind::P_Shift)) continue;
             auto it = plans.find(tid);
             if (it == plans.end()) plans.emplace(tid, Plan{sdir, 1});
