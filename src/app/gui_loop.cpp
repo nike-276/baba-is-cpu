@@ -565,9 +565,9 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
             state.palette_scroll = std::min(state.palette_scroll, max_scroll);
         }
 
-        // ── Rules panel (right) ───────────────────────────────────────────
-        DrawRectangle(WIN_W - rules_w, 0, rules_w, WIN_H - 24, {15, 15, 15, 180});
-        renderer.draw_rule_panel(ed.current_rules(), WIN_W - rules_w + 6, 8);
+        // // ── Rules panel (right) ───────────────────────────────────────────
+        // DrawRectangle(WIN_W - rules_w, 0, rules_w, WIN_H - 24, {15, 15, 15, 180});
+        // renderer.draw_rule_panel(ed.current_rules(), WIN_W - rules_w + 6, 8);
 
         // ── HUD bar (bottom) ──────────────────────────────────────────────
         std::string mode_str = (ed.mode() == editor::EditorMode::Play) ? "PLAY" : "EDIT";
