@@ -1,0 +1,29 @@
+# FLAG ON BABA AND BABA IS WIN requires FLAG to be co-located with TWO baba
+# objects (wiki: "FLAG ON BABA AND BABA IS WIN makes flag WIN only when it's
+# on two babas"). With only one baba present the condition must NOT fire.
+
+[setup]
+version 1
+name "on-clause duplicate noun requires two distinct objects — one baba: no win"
+
+text 0 0 flag
+text 1 0 on
+text 2 0 baba
+text 3 0 and
+text 4 0 baba
+text 5 0 is
+text 6 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 flag right
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+not_won
+tick 1

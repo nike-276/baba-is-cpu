@@ -1,0 +1,29 @@
+version 1
+name "schematics/decoder.schem"
+origin 19 -27
+
+object 20 -26 tree up
+object 21 -26 trees up
+object 22 -26 husk up
+object 23 -26 husks up
+object 19 -25 bed right
+object 19 -25 tile right
+object 19 -25 arrow up
+object 20 -25 bed right
+object 20 -25 tile right
+object 20 -25 arrow up
+object 21 -25 bed right
+object 21 -25 tile right
+object 21 -25 arrow up
+object 22 -25 bed right
+object 22 -25 tile right
+object 22 -25 arrow up
+object 23 -25 bed right
+object 23 -25 tile right
+object 23 -25 arrow up
+object 24 -25 bomb right
+tag 18 -25 input
+tag 23 -27 output
+tag 20 -27 output
+tag 21 -27 output
+tag 22 -27 output

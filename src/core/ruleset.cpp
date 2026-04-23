@@ -1241,12 +1241,22 @@ bool RuleSet::eval_cond_clauses(World const& world, ObjectId id,
         bool all_found = true;
         if (clause.ctype == CondType::On) {
             // Co-location: ALL nouns must be on the same tile as the subject.
+            // Duplicate nouns in the list (e.g. [BABA, BABA]) require that many
+            // *distinct* objects of that kind are present — each object may only
+            // satisfy one slot (wiki: "FLAG ON BABA AND BABA IS WIN fires only
+            // when FLAG is on two babas").
+            std::unordered_set<ObjectId> used;
             for (Kind cn : clause.nouns) {
                 bool found = false;
                 for (ObjectId other : world.at(o->pos)) {
                     if (other == id) continue;
+                    if (used.count(other)) continue;
                     Object const* ob = world.get(other);
-                    if (ob && !ob->text && ob->kind == cn) { found = true; break; }
+                    if (ob && !ob->text && ob->kind == cn) {
+                        used.insert(other);
+                        found = true;
+                        break;
+                    }
                 }
                 if (!found) { all_found = false; break; }
             }
@@ -1255,14 +1265,20 @@ bool RuleSet::eval_cond_clauses(World const& world, ObjectId id,
             // must be facing toward the subject.
             // Single objects_of_kind() probe per noun (one hash lookup vs 4 for
             // the 4-tile scan); aimed==o->pos enforces both adjacency and direction.
+            std::unordered_set<ObjectId> used;
             for (Kind cn : clause.nouns) {
                 bool found = false;
                 for (ObjectId other : world.objects_of_kind(cn)) {
+                    if (used.count(other)) continue;
                     Object const* ob = world.get(other);
                     if (!ob || ob->text) continue;
                     Coord aimed = {ob->pos.x + step(ob->facing).x,
                                    ob->pos.y + step(ob->facing).y};
-                    if (aimed.x == o->pos.x && aimed.y == o->pos.y) { found = true; break; }
+                    if (aimed.x == o->pos.x && aimed.y == o->pos.y) {
+                        used.insert(other);
+                        found = true;
+                        break;
+                    }
                 }
                 if (!found) { all_found = false; break; }
             }

@@ -1,0 +1,29 @@
+# FLAG ON BABA AND BABA IS WIN must fire when FLAG is co-located with exactly
+# two baba objects (each satisfies one slot independently).
+
+[setup]
+version 1
+name "on-clause duplicate noun satisfied by two distinct objects — two babas: win"
+
+text 0 0 flag
+text 1 0 on
+text 2 0 baba
+text 3 0 and
+text 4 0 baba
+text 5 0 is
+text 6 0 win
+
+text 0 1 baba
+text 1 1 is
+text 2 1 you
+
+object 5 5 flag right
+object 5 5 baba right
+object 5 5 baba right
+
+[inputs]
+input wait
+
+[expected]
+won
+tick 1
