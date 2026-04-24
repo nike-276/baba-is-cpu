@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -33,21 +34,39 @@ enum class Overlay {
 };
 
 // ── Auto-tick state ───────────────────────────────────────────────────────
+// Wall-clock-anchored scheduler: each tick fires at a fixed cadence regardless
+// of per-frame processing time. Default interval = 0.217391304 s (≈ 4.6 Hz).
 struct AutoTick {
-    bool  active{false};
-    bool  max_speed{false};
-    float interval_ms{250.0f};
-    float accum_ms{0.0f};
+    using Clock    = std::chrono::steady_clock;
+    using Duration = std::chrono::duration<double>;
 
-    void toggle()  { active = !active; accum_ms = 0.0f; }
-    void faster()  { interval_ms = std::max(50.0f,   interval_ms - 50.0f); }
-    void slower()  { interval_ms = std::min(5000.0f, interval_ms + 50.0f); }
+    bool     active{false};
+    bool     max_speed{false};
+    Duration interval{0.217391304};
+    Clock::time_point next_at{};  // wall-clock target for next tick
+
+    void reschedule_from_now() { next_at = Clock::now() + std::chrono::duration_cast<Clock::duration>(interval); }
+
+    void toggle()  {
+        active = !active;
+        if (active) reschedule_from_now();
+    }
+    void faster()  {
+        interval = std::max(Duration{0.050}, interval - Duration{0.050});
+        reschedule_from_now();
+    }
+    void slower()  {
+        interval = std::min(Duration{5.000}, interval + Duration{0.050});
+        reschedule_from_now();
+    }
     void toggle_max() { max_speed = !max_speed; }
 
     std::string label() const {
-        if (!active)      return "";
-        if (max_speed)    return "AUTO:MAX";
-        return "AUTO:" + std::to_string(static_cast<int>(interval_ms)) + "ms";
+        if (!active)   return "";
+        if (max_speed) return "AUTO:MAX";
+        char buf[32];
+        std::snprintf(buf, sizeof(buf), "AUTO:%.0fms", interval.count() * 1000.0);
+        return buf;
     }
 };
 
@@ -288,15 +307,24 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
         if (state.request_auto_tick_slower) auto_tick.slower();
         if (state.request_auto_tick_max)    auto_tick.toggle_max();
 
-        // Auto-tick execution (only in play mode).
+        // Auto-tick execution (only in play mode). Clocked: next_at advances
+        // by exactly `interval` per tick, so the cadence is independent of
+        // frame/tick processing time. If the app stalls and falls behind by
+        // more than one interval, we snap forward instead of spamming
+        // catch-up ticks (avoids runaway after a long stall).
         if (auto_tick.active && ed.mode() == editor::EditorMode::Play) {
-            float dt_ms = GetFrameTime() * 1000.0f;
             if (auto_tick.max_speed) {
                 play_sound_events(ed.play_step(core::Input::wait()).sound_events);
             } else {
-                auto_tick.accum_ms += dt_ms;
-                if (auto_tick.accum_ms >= auto_tick.interval_ms) {
-                    auto_tick.accum_ms = std::fmod(auto_tick.accum_ms, auto_tick.interval_ms);
+                auto now = AutoTick::Clock::now();
+                if (now >= auto_tick.next_at) {
+                    auto step = std::chrono::duration_cast<AutoTick::Clock::duration>(auto_tick.interval);
+                    auto behind = now - auto_tick.next_at;
+                    if (behind > step * 5) {
+                        auto_tick.next_at = now + step;
+                    } else {
+                        auto_tick.next_at += step;
+                    }
                     play_sound_events(ed.play_step(core::Input::wait()).sound_events);
                 }
             }

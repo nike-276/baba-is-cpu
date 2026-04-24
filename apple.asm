@@ -3,43 +3,43 @@
 
     la      r0, P1
     st      r2, r0
-    movh    r3, 0x8
+    movh    r3, 0xc
     movl    r3, 0x0
     jz      r2, phrase
 P1:
     la      r0, P2
     st      r2, r0
-    movh    r3, 0x9
+    movh    r3, 0xb
     movl    r3, 0x0
     jz      r2, phrase
 P2:
     la      r0, P3
     st      r2, r0
-    movh    r3, 0xa
+    movh    r3, 0xc
     movl    r3, 0x0
     jz      r2, phrase
 P3:
     la      r0, P4
     st      r2, r0
-    movh    r3, 0xa
+    movh    r3, 0xb
     movl    r3, 0x0
     jz      r2, phrase
 P4:
     la      r0, P5
     st      r2, r0
-    movh    r3, 0xb
+    movh    r3, 0xa
     movl    r3, 0x0
     jz      r2, phrase
 P5:
     la      r0, P6
     st      r2, r0
-    movh    r3, 0xc
+    movh    r3, 0xa
     movl    r3, 0x0
     jz      r2, phrase
 P6:
     la      r0, P7
     st      r2, r0
-    movh    r3, 0xb
+    movh    r3, 0x9
     movl    r3, 0x0
     jz      r2, phrase
 P7:
@@ -51,43 +51,43 @@ P7:
 P8:
     la      r0, P9
     st      r2, r0
-    movh    r3, 0x9
+    movh    r3, 0xb
     movl    r3, 0x0
     jz      r2, phrase
 P9:
     la      r0, P10
     st      r2, r0
-    movh    r3, 0xa
+    movh    r3, 0xc
     movl    r3, 0x0
     jz      r2, phrase
 P10:
     la      r0, P11
     st      r2, r0
-    movh    r3, 0xa
+    movh    r3, 0xb
     movl    r3, 0x0
     jz      r2, phrase
 P11:
     la      r0, P12
     st      r2, r0
-    movh    r3, 0xb
+    movh    r3, 0xa
     movl    r3, 0x0
     jz      r2, phrase
 P12:
     la      r0, P13
     st      r2, r0
-    movh    r3, 0xc
+    movh    r3, 0xa
     movl    r3, 0x0
     jz      r2, phrase
 P13:
     la      r0, P14
     st      r2, r0
-    movh    r3, 0xb
+    movh    r3, 0x9
     movl    r3, 0x0
     jz      r2, phrase
 P14:
     la      r0, P15
     st      r2, r0
-    movh    r3, 0xc
+    movh    r3, 0x8
     movl    r3, 0x0
     jz      r2, phrase
 P15:

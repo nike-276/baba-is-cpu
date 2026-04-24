@@ -429,8 +429,8 @@ def emit_schem(raw_bytes, out_path):
         lx   = LEFT_X  + col
         rx   = RIGHT_X + col
         gy   = GRID_Y  + row
-        lines.append(f'object {lx} {gy} {SYMBOLS[hi4]} right')
-        lines.append(f'object {rx} {gy} {SYMBOLS[lo4]} right')
+        lines.append(f'object {lx} {gy} {SYMBOLS[hi4]} down')
+        lines.append(f'object {rx} {gy} {SYMBOLS[lo4]} down')
     return '\n'.join(lines)
 
 

@@ -49,7 +49,7 @@ def decode_mnemonic(op):
         return f'movh r{tt}, {imm}'
     hi = op & 0xF0
     if hi in MNEMONICS_2OP_REG:
-        return f'{MNEMONICS_2OP_REG[hi]} r{tt}, r{aa}'
+        return f'{MNEMONICS_2OP_REG[hi]} r{aa}, r{tt}'
     return f'??? 0x{op:02x}'
 
 

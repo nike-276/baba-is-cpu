@@ -12,7 +12,7 @@ object -88 42 sax down
 object -68 42 cog down
 object -87 42 fruit down
 object -67 42 cog down
-object -86 42 algae down
+object -86 42 bottle down
 object -66 42 bubble down
 object -85 42 dust down
 object -65 42 bubble down
@@ -29,7 +29,7 @@ object -60 42 cog down
 object -79 42 fruit down
 object -59 42 cog down
 object -78 42 algae down
-object -58 42 cash down
+object -58 42 fruit down
 object -77 42 dust down
 object -57 42 bubble down
 object -76 42 algae down
@@ -44,8 +44,8 @@ object -88 43 sax down
 object -68 43 cog down
 object -87 43 fruit down
 object -67 43 cog down
-object -86 43 algae down
-object -66 43 bottle down
+object -86 43 bottle down
+object -66 43 bubble down
 object -85 43 dust down
 object -65 43 bubble down
 object -84 43 algae down
@@ -61,7 +61,7 @@ object -60 43 cog down
 object -79 43 fruit down
 object -59 43 cog down
 object -78 43 algae down
-object -58 43 bottle down
+object -58 43 fruit down
 object -77 43 dust down
 object -57 43 bubble down
 object -76 43 algae down
@@ -77,7 +77,7 @@ object -68 44 cog down
 object -87 44 fruit down
 object -67 44 cog down
 object -86 44 algae down
-object -66 44 fruit down
+object -66 44 bottle down
 object -85 44 dust down
 object -65 44 bubble down
 object -84 44 algae down
@@ -92,8 +92,8 @@ object -80 44 dust down
 object -60 44 cog down
 object -79 44 fruit down
 object -59 44 cog down
-object -78 44 bottle down
-object -58 44 bubble down
+object -78 44 algae down
+object -58 44 bottle down
 object -77 44 dust down
 object -57 44 bubble down
 object -76 44 algae down
@@ -109,7 +109,7 @@ object -68 45 cog down
 object -87 45 fruit down
 object -67 45 cog down
 object -86 45 algae down
-object -66 45 fruit down
+object -66 45 cash down
 object -85 45 dust down
 object -65 45 bubble down
 object -84 45 algae down
@@ -141,7 +141,7 @@ object -68 46 cog down
 object -87 46 fruit down
 object -67 46 cog down
 object -86 46 algae down
-object -66 46 cash down
+object -66 46 fruit down
 object -85 46 dust down
 object -65 46 bubble down
 object -84 46 algae down
@@ -156,8 +156,8 @@ object -80 46 dust down
 object -60 46 cog down
 object -79 46 fruit down
 object -59 46 cog down
-object -78 46 algae down
-object -58 46 bottle down
+object -78 46 bottle down
+object -58 46 bubble down
 object -77 46 dust down
 object -57 46 bubble down
 object -76 46 algae down
@@ -173,7 +173,7 @@ object -68 47 cog down
 object -87 47 fruit down
 object -67 47 cog down
 object -86 47 algae down
-object -66 47 bottle down
+object -66 47 fruit down
 object -85 47 dust down
 object -65 47 bubble down
 object -84 47 algae down
@@ -189,7 +189,7 @@ object -60 47 cog down
 object -79 47 fruit down
 object -59 47 cog down
 object -78 47 algae down
-object -58 47 fruit down
+object -58 47 bottle down
 object -77 47 dust down
 object -57 47 bubble down
 object -76 47 algae down
@@ -204,8 +204,8 @@ object -88 48 sax down
 object -68 48 cog down
 object -87 48 fruit down
 object -67 48 cog down
-object -86 48 bottle down
-object -66 48 bubble down
+object -86 48 algae down
+object -66 48 bottle down
 object -85 48 dust down
 object -65 48 bubble down
 object -84 48 algae down
@@ -221,7 +221,7 @@ object -60 48 cog down
 object -79 48 fruit down
 object -59 48 cog down
 object -78 48 algae down
-object -58 48 fruit down
+object -58 48 cash down
 object -77 48 dust down
 object -57 48 bubble down
 object -76 48 algae down
@@ -236,7 +236,7 @@ object -88 49 sax down
 object -68 49 cog down
 object -87 49 fruit down
 object -67 49 cog down
-object -86 49 bottle down
+object -86 49 algae down
 object -66 49 bubble down
 object -85 49 dust down
 object -65 49 bubble down
