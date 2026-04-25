@@ -59,6 +59,9 @@ struct InputState {
     // Global toggle: render all placed schematics in abstract mode.
     bool schem_abstract_view{false};
 
+    // Global toggle: overlay co-located objects at full tile height (instead of squishing).
+    bool overlay_layers{false};
+
     // Auto-tick requests (handled by gui_loop).
     bool request_auto_tick_toggle{false};
     bool request_auto_tick_faster{false};
@@ -88,7 +91,7 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
             st.palette_scroll = std::max(0, st.palette_scroll - static_cast<int>(wheel * PALETTE_ENTRY_H));
         } else {
             float old_px = st.tile_px;
-            float new_px = std::clamp(old_px * std::pow(1.1f, wheel), 8.0f, 128.0f);
+            float new_px = std::clamp(old_px * std::pow(1.1f, wheel), 4.0f, 128.0f);
             if (new_px != old_px) {
                 float mx = static_cast<float>(GetMouseX() - PALETTE_W);
                 float my = static_cast<float>(GetMouseY());
@@ -165,6 +168,9 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
 
     bool ctrl  = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
     bool shift = IsKeyDown(KEY_LEFT_SHIFT)   || IsKeyDown(KEY_RIGHT_SHIFT);
+
+    // Ctrl+P: toggle layer overlay view (works in both modes).
+    if (ctrl && IsKeyPressed(KEY_P)) st.overlay_layers = !st.overlay_layers;
 
     if (ed.mode() == editor::EditorMode::Edit) {
 
@@ -349,7 +355,7 @@ inline void poll_input(editor::Editor& ed, InputState& st) {
         if (fired) accumulate_sounds(ed.play_step(active_inp));
 
         // ── Auto-tick controls ───────────────────────────────────────────
-        if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_F5))
+        if ((IsKeyPressed(KEY_P) && !ctrl) || IsKeyPressed(KEY_F5))
             st.request_auto_tick_toggle = true;
         if (IsKeyPressed(KEY_EQUAL) || IsKeyPressed(KEY_KP_ADD))
             st.request_auto_tick_faster = true;

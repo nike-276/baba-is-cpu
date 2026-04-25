@@ -34,9 +34,12 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
     TileStyle style = style_for(obj.kind, obj.text);
 
     // Vertical offset when multiple objects share a tile.
+    // In overlay mode, every layer draws at full tile height (stacked on top).
     float layer_h = tile_px_ / static_cast<float>(total_layers);
-    int offset = (total_layers > 1) ? static_cast<int>(std::roundf(layer * layer_h)) : 0;
-    int h      = (total_layers > 1) ? static_cast<int>(std::roundf(layer_h)) : static_cast<int>(tile_px_);
+    bool stacked  = (total_layers > 1) && !overlay_mode_;
+    int offset    = stacked ? static_cast<int>(std::roundf(layer * layer_h)) : 0;
+    int h         = stacked ? static_cast<int>(std::roundf(layer_h))
+                            : static_cast<int>(tile_px_);
 
     Rectangle rect{
         static_cast<float>(sx + 1),
@@ -51,8 +54,6 @@ void Renderer::draw_tile(core::Object const& obj, int sx, int sy,
     // Try to draw a sprite texture; fall back to colored rect.
     Texture2D const* tex = atlas_ ? atlas_->get(obj.kind, obj.text) : nullptr;
     if (tex && tex->id != 0) {
-        Color sprite_bg = {20, 20, 30, alpha};  // dark neutral — sprites have transparent bg
-        DrawRectangleRec(rect, sprite_bg);
         Rectangle src{0, 0, static_cast<float>(tex->width), static_cast<float>(tex->height)};
         DrawTexturePro(*tex, src, rect, {0, 0}, 0.0f, {255, 255, 255, alpha});
     } else {

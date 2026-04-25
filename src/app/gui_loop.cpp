@@ -140,6 +140,7 @@ void play_sound_events(std::vector<core::SoundEvent> const& events) {
 int run_gui(std::string const& level_path, std::size_t undo_cap) {
     const int WIN_W = 1280;
     const int WIN_H = 720;
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(WIN_W, WIN_H, "baba-is-true editor");
     InitAudioDevice();
     SetTargetFPS(60);
@@ -197,7 +198,6 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
         state.request_bench_toggle     = false;
         state.request_bench_reset      = false;
         state.pending_sounds.clear();
-        renderer.set_tile_px(state.tile_px);
 
         // ── Filtered palette ───────────────────────────────────────────────
         {
@@ -227,7 +227,7 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
             float wheel = GetMouseWheelMove();
             if (wheel != 0.0f && GetMouseX() >= render::PALETTE_W) {
                 float old_px = state.tile_px;
-                float new_px = std::clamp(old_px * std::pow(1.1f, wheel), 8.0f, 128.0f);
+                float new_px = std::clamp(old_px * std::pow(1.1f, wheel), 1.0f, 128.0f);
                 if (new_px != old_px) {
                     float mx = static_cast<float>(GetMouseX() - render::PALETTE_W);
                     float my = static_cast<float>(GetMouseY());
@@ -549,6 +549,8 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
         }
 
         // ── Draw ──────────────────────────────────────────────────────────
+        renderer.set_tile_px(state.tile_px);
+        renderer.set_overlay_mode(state.overlay_layers);
         BeginDrawing();
         ClearBackground(BLACK);
 
@@ -556,7 +558,7 @@ int run_gui(std::string const& level_path, std::size_t undo_cap) {
         int rules_w   = 220;
 
         renderer.draw_world(ed.world(), state.scroll_x, state.scroll_y);
-        renderer.draw_grid(WIN_W, WIN_H, state.scroll_x, state.scroll_y);
+        renderer.draw_grid(GetScreenWidth(), GetScreenHeight(), state.scroll_x, state.scroll_y);
 
         // Selection rectangle.
         if (state.has_selection || state.shift_selecting) {

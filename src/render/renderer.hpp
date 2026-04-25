@@ -71,10 +71,14 @@ public:
     Vector2 screen_to_tile_f(float px, float py, float scroll_x, float scroll_y) const;
 
     float tile_px() const { return tile_px_; }
-    void set_tile_px(float px) { tile_px_ = std::max(8.0f, std::min(px, 128.0f)); }
+    void set_tile_px(float px) { tile_px_ = std::max(1.0f, std::min(px, 128.0f)); }
+
+    // Overlay mode: stacked tiles draw at full height instead of being split vertically.
+    void set_overlay_mode(bool on) { overlay_mode_ = on; }
 
 private:
     float tile_px_;
+    bool  overlay_mode_{false};
     SpriteAtlas const* atlas_{nullptr};
 
     void draw_tile(core::Object const& obj, int screen_x, int screen_y,
