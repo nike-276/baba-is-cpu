@@ -4,6 +4,45 @@ A from-scratch Baba Is You simulator and level editor in C++. Implements the ful
 
 ---
 
+## Project Overview
+
+A single-cycle CPU using Baba Is You rules and objects. Printing is done via hexadecimal output along two tracks in the simulator, which doubles as a music player. A map of the layout of our CPU can be found at (RENAME THE FILE/ADD IT IN) layout.png.
+
+Signals and data are represented using Objects (we picked all of them for a reason, try to figure out why!):
+| Object   | Value |
+|----------|-------|
+| Baba     | 0b1   |
+| Keke     | 0b0   |
+| Donut    | 0x0   |
+| Stick    | 0x1   |
+| Scissors | 0x2   |
+| Bubble   | 0x3   |
+| Dust     | 0x4   |
+| Hand     | 0x5   |
+| Sax      | 0x6   |
+| Cash     | 0x7   |
+| Cog      | 0x8   |
+| Cat      | 0x9   |
+| Algae    | 0xA   |
+| Bottle   | 0xB   |
+| Cake     | 0xC   |
+| Drink    | 0xD   |
+| Egg      | 0xE   |
+| Fruit    | 0xF   |
+
+The custom ISA is as follows:
+(UNDETERMINED BUT WE SHOULD PUT IT IN A TABLE)
+
+Instructions to run the CPU that we built and the program that plays bad apple and ___OTHER SONGS NAME___.
+1. Open the cpu.level in the level editor.
+2. Using the schematics importer, import the instructions (ex: bad_apple_inst.schem) and place it in the instructions area of the CPU.
+3. Again using the schematics importer, import the data (ex: bad_apple_data.schem) and place it in the memory area of the CPU.
+4. Hit enter to "run" the CPU.
+
+NOTE: sometimes when importing schematics you may accidentally place an object. CTRL+Z to remove the extra object.
+
+---
+
 ## Requirements
 
 - **C++20** compiler (GCC 12+ or Clang 15+)
