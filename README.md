@@ -1,6 +1,6 @@
 # baba-is-true
 
-A from-scratch Baba Is You simulator and level editor in C++. Implements the full rule engine (IS, AND, NOT, ON, MAKE, EAT, HAS, FOLLOW, FEAR, POWERED, PLAY, and more) with a raylib GUI editor and headless test harness.
+A from-scratch Baba Is You simulator and level editor in C++. Implements the full rule engine (IS, AND, NOT, ON, MAKE, EAT, HAS, FACING, FACEDBY, FEAR, POWERED, PLAY, and more) with a raylib GUI editor and headless test harness.
 
 ---
 
@@ -52,9 +52,9 @@ make test       # scenario tests only
 ### Run a test scenario (headless)
 
 ```sh
-./build-cmake/src/app/babaiwt --test tests/scenarios/01-baba-is-you.test
+./build-cmake/src/app/babaiwt --test tests/scenarios/01-baba-is-you-basic-move.test
 # or with the Makefile build:
-./build/babaiwt tests/scenarios/01-baba-is-you.test
+./build/babaiwt tests/scenarios/01-baba-is-you-basic-move.test
 ```
 
 ### Profile the tick pipeline
@@ -75,7 +75,7 @@ parse_post_transform           0.8       1.2       2.0       1.19   13%
 parse_post_move                0.8       1.2       1.8       1.17   13%
 parse_initial                  0.8       1.1       3.4       1.07   12%
 apply_nudge                    0.7       0.9       1.7       0.90   10%
-apply_follow                   0.5       0.7       4.7       0.70    8%
+apply_fear                     0.5       0.7       4.7       0.70    8%
 ...
 --------------------------------------------------------------------
 TOTAL                          6.8       9.0      44.5       9.03  100%
@@ -101,7 +101,7 @@ Both `.level` and `.test` files are accepted. Run against your actual slow level
 | Type any character | Open palette search (type to filter, ESC to close) |
 | `Ctrl+Q` / `Ctrl+E` | Previous / next palette entry |
 | `Ctrl+Tab` | Toggle text ↔ object variant (nouns only) |
-| `Ctrl+R` | Rotate selected entry's default facing |
+| `Ctrl+R` | Rotate selected entry's default facing; during paste, rotates the paste preview 90° CW |
 | `Ctrl+Z` | Undo last edit |
 | `Ctrl+S` | Save (prompts for filename on first save) |
 | `Ctrl+Shift+S` | Save as |
@@ -111,7 +111,7 @@ Both `.level` and `.test` files are accepted. Run against your actual slow level
 | `Ctrl+C` / `Ctrl+X` | Copy / cut selection |
 | `Ctrl+V` | Paste — hover to preview, LMB to stamp |
 | `Ctrl+Shift+E` | Save selection as a schematic |
-| `Ctrl+I` | Import schematic (fuzzy picker) |
+| `Ctrl+F` | Import schematic (fuzzy picker) |
 | `Ctrl+B` | Toggle abstract view for all placed schematics |
 | `Enter` or `Space` | Switch to Play mode |
 
@@ -126,6 +126,9 @@ Both `.level` and `.test` files are accepted. Run against your actual slow level
 | + / - | Speed auto-tick up / down by 50 ms |
 | 0 | Toggle max-speed auto-tick (one tick per frame) |
 | ESC | Return to Edit mode (restores the pre-play snapshot) |
+| F3 | Toggle benchmark overlay |
+| R | Reset benchmark stats |
+| Numpad 4/6/8/2 | Pan viewport |
 
 Closing the window: use the OS close button or Alt+F4. ESC only exits Play mode.
 
@@ -217,9 +220,9 @@ Run all scenarios: `make test`
 
 ## Implemented rules
 
-The engine supports: `IS`, `AND`, `NOT`, `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`, `FOLLOW`, `FEAR`, `POWERED` / `POWERED2` / `POWERED3`, `PLAY`.
+The engine supports: `IS`, `AND`, `NOT`, `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`, `FACING`, `FACEDBY`, `FEAR`, `POWERED` / `POWERED2` / `POWERED3`, `PLAY`.
 
-Properties: `YOU`, `PUSH`, `STOP`, `WIN`, `DEFEAT`, `SINK`, `HOT`, `MELT`, `OPEN`, `SHUT`, `WEAK`, `MOVE`, `AUTO`, `FALL*`, `UP/DOWN/LEFT/RIGHT`, `NUDGE*`, `POWER` / `POWER2` / `POWER3`.
+Properties: `YOU`, `PUSH`, `STOP`, `WIN`, `DEFEAT`, `SINK`, `HOT`, `MELT`, `OPEN`, `SHUT`, `WEAK`, `MOVE`, `AUTO`, `FALL*`, `UP/DOWN/LEFT/RIGHT`, `STILL`, `NUDGE*`, `POWER` / `POWER2` / `POWER3`.
 
 Full catalog with implementation status: [`docs/feature-status.md`](docs/feature-status.md)
 

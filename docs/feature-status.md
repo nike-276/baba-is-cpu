@@ -32,7 +32,7 @@ checklist) and any scenario file that locks the behavior down.
 | `WITHOUT`| DEFERRED | Negation of `NEAR`. |
 | `HAS`    | DONE     | `X HAS Y [AND Z]*`: when X is destroyed via any DESTRUCT sub-step (SINK, EAT, HOT/MELT, WEAK, DEFEAT, OPEN/SHUT), spawns Y (and Z…) at X's tile with X's facing. Does NOT trigger on transforms. Stored as `HasRule`; processed in `apply_has()` phase 6.1. AND chains supported. `X HAS X` (self-respawn) supported. |
 | `POWERED`| DONE     | Prefix condition: `[NOT] POWERED NOUN [ON Y]* {IS PROPERTY \| IS NOUN \| MAKE NOUN \| EAT NOUN}`. True when any live non-text object has `P_Power` (via unconditional or ON-conditional rule). Parsed as `O_Powered` operator token. Property form stored as `GlobalConditionPropertyRule` (no ON clauses); noun-transform form as `GlobalConditionTransformRule`; MAKE/EAT as `GlobalConditionMakeRule`/`GlobalConditionEatRule`. Evaluated in `object_has_property` / `apply_transforms` via `any_has_power_kind()`. |
-| `FOLLOW` | DONE     | `X FOLLOW Y [AND Z]*`: X moves one tile toward the nearest non-colocated Y (or Z…) each tick. Nearest by Manhattan distance; ties prefer vertical. Operator `O_Follow`; stored as `FollowRule`; processed in `apply_follow()` phase 3.5 (after PARSE_POST_MOVE). |
+| `FOLLOW` | REMOVED  | Previously implemented; removed from the engine, parser, palette, and file format. `NOUN FOLLOW NOUN` no longer parses. |
 | `FEAR`   | DONE     | `X FEAR Y [AND Z]*`: X moves away from any 4-directionally adjacent Y (or Z…) each tick. Direction priority relative to X's facing: forward→CW→CCW→backward; skips feared directions. Operator `O_Fear`; stored as `FearRule`; processed in `apply_fear()` phase 2.55. |
 | `PLAY`   | DONE     | `X PLAY NOTE [OCTAVE] [ACCIDENTAL]`: each non-text X emits one `SoundEvent` per tick (phase 7.5 `apply_play()`). NOTE = letter A–G (O_LetterA…G); OCTAVE = digit 0–9 (O_Num0…9, default 5); ACCIDENTAL = `sharp` / `flat` (O_Sharp / O_Flat). Modifiers in any order. AND subjects supported. Engine layer collects events in `TickReport::sound_events`; GUI layer synthesises sine-wave audio; test harness counts via `sound_count` assertion. Letters A–Z, digits 0–9, SHARP, FLAT are text-only tiles (no non-text object counterpart). |
 
@@ -94,7 +94,7 @@ Removal precedence inside DESTRUCT (lower = earlier):
 | `WEAK`   | DONE     | Destroyed when any object arrives on its tile this tick (determined from Move changes in the log). DESTRUCT sub-step (d). |
 | `MAKE`   | DONE     | `X MAKE Y [AND Z]*` (MAKE is an operator, not a property). Phase APPLY_MAKE post-DESTRUCT: spawns all targets on every tile containing X. Idempotent (skips if target already present). Supports AND for multiple targets. |
 | `POWER`  | DONE     | `X IS POWER` makes the global `POWERED` prefix condition true for this tick. No destruction/removal effect itself. Stored as `P_Power` property; evaluated by `any_has_power()` in `RuleSet`. |
-| `HAS`    | DEFERRED | `X HAS Y` spawns Y when X is destroyed; needs to hook DESTRUCT. |
+| `HAS`    | DONE     | See §1 Operators: HAS is an operator (`X HAS Y [AND Z]*`), not a property. Spawns Y at X's tile when X is destroyed via DESTRUCT. Phase 6.1 `apply_has()`. |
 | `BOOM`   | DEFERRED | Destroys self + neighbouring tiles' contents. |
 | `SAFE`   | DEFERRED | Immune to DEFEAT/SINK/MELT/etc. |
 | `PHANTOM`| DEFERRED | Skips collision checks entirely. |
@@ -207,7 +207,7 @@ Add new bugs above this line with the next free ID and the same shape.
 | File: save-as (`Ctrl+Shift+S`) | DONE | Always prompts. |
 | File: open (`Ctrl+O`) | DONE | Modal text-input dialog. |
 | Schematics: save (`Ctrl+Shift+E`) | DONE | Saves selection to `schematics/<name>.schem`; tagging mode: LMB=input, RMB=output, Enter=save. |
-| Schematics: import (`Ctrl+I`) | DONE | Fuzzy picker over `schematics/`; Up/Down + Enter to load. |
+| Schematics: import (`Ctrl+F`) | DONE | Fuzzy picker over `schematics/`; Up/Down + Enter to load. |
 | Schematics: paste preview | DONE | Normal (semi-transparent tiles) or abstract (Ctrl+B to toggle). |
 | Schematics: rotate on paste (`Ctrl+R`) | DONE | 90° CW per press; object positions + facings rotated. |
 | Schematics: abstract view (`Ctrl+B`) | DONE | Conforming outline + gray fill + blue (input) / red (output) tile highlight + centered name label. Global toggle for all placed schematics. |

@@ -1,5 +1,5 @@
 version 1
-name "untitled"
+name "bench.level"
 
 text 3 -2 triangle
 text 4 -2 is
@@ -2976,3 +2976,1812 @@ text -81 45 donut
 text -82 45 eat
 text -83 45 tile
 text -84 45 and
+object -85 -40 jiji down
+object -90 -39 triangle right
+object -89 -39 lily right
+object -88 -39 cloud right
+object -88 -39 water right
+object -87 -39 lever right
+object -86 -39 lever right
+object -85 -39 lever right
+object -84 -39 bomb right
+text -94 -38 powered
+text -93 -38 cart
+text -92 -38 on
+text -91 -38 car
+text -90 -38 and
+text -89 -38 tile
+text -88 -38 make
+object -87 -38 gem right
+text -82 -38 jiji
+text -81 -38 make
+text -80 -38 donut
+object -87 -37 bomb right
+text -93 -36 powered
+text -92 -36 lift
+text -91 -36 on
+text -90 -36 car
+text -89 -36 and
+text -88 -36 tile
+text -87 -36 make
+object -86 -36 gem right
+object -86 -35 bomb right
+text -92 -34 powered
+text -91 -34 cart
+text -90 -34 on
+text -89 -34 car
+text -88 -34 and
+text -87 -34 tile
+text -86 -34 eat
+object -85 -34 gem right
+text -84 -34 and
+text -83 -34 stick
+text -82 -34 and
+text -81 -34 scissors
+text -80 -34 and
+text -79 -34 bubble
+text -78 -34 and
+text -77 -34 dust
+text -76 -34 and
+text -75 -34 hand
+text -74 -34 and
+text -73 -34 sax
+text -72 -34 and
+text -71 -34 cash
+text -70 -34 and
+text -69 -34 cog
+text -68 -34 and
+text -67 -34 cat
+text -66 -34 and
+text -65 -34 algae
+text -64 -34 and
+text -63 -34 bottle
+text -62 -34 and
+text -61 -34 cake
+text -60 -34 and
+text -59 -34 drink
+text -58 -34 and
+text -57 -34 egg
+text -56 -34 and
+text -55 -34 fruit
+text -54 -34 and
+text -53 -34 book
+text -92 -33 powered
+text -91 -33 lift
+text -90 -33 on
+text -89 -33 car
+text -88 -33 and
+text -87 -33 tile
+text -86 -33 eat
+object -85 -33 gem right
+text -84 -33 and
+text -83 -33 stick
+text -82 -33 and
+text -81 -33 scissors
+text -80 -33 and
+text -79 -33 bubble
+text -78 -33 and
+text -77 -33 dust
+text -76 -33 and
+text -75 -33 hand
+text -74 -33 and
+text -73 -33 sax
+text -72 -33 and
+text -71 -33 cash
+text -70 -33 and
+text -69 -33 cog
+text -68 -33 and
+text -67 -33 cat
+text -66 -33 and
+text -65 -33 algae
+text -64 -33 and
+text -63 -33 bottle
+text -62 -33 and
+text -61 -33 cake
+text -60 -33 and
+text -59 -33 drink
+text -58 -33 and
+text -57 -33 egg
+text -56 -33 and
+text -55 -33 fruit
+text -54 -33 and
+text -53 -33 book
+text -158 -54 track
+text -157 -54 on
+text -156 -54 baba
+text -155 -54 is
+text -154 -54 shift
+text -158 -53 car
+text -157 -53 and
+text -156 -53 cart
+text -155 -53 and
+text -154 -53 lift
+text -153 -53 and
+text -152 -53 train
+text -151 -53 and
+text -150 -53 badbad
+text -149 -53 and
+text -148 -53 plane
+text -147 -53 is
+text -146 -53 auto
+text -158 -51 car
+text -157 -51 and
+text -156 -51 cart
+text -155 -51 and
+text -154 -51 lift
+text -153 -51 and
+text -152 -51 train
+text -151 -51 and
+text -150 -51 badbad
+text -149 -51 on
+text -148 -51 sun
+text -147 -51 is
+text -146 -51 up
+text -158 -50 car
+text -157 -50 and
+text -156 -50 cart
+text -155 -50 and
+text -154 -50 lift
+text -153 -50 and
+text -152 -50 train
+text -151 -50 and
+text -150 -50 badbad
+text -149 -50 on
+text -148 -50 moon
+text -147 -50 is
+text -146 -50 down
+text -158 -49 car
+text -157 -49 and
+text -156 -49 cart
+text -155 -49 and
+text -154 -49 lift
+text -153 -49 and
+text -152 -49 train
+text -151 -49 and
+text -150 -49 badbad
+text -149 -49 on
+text -148 -49 planet
+text -147 -49 is
+text -146 -49 left
+text -158 -48 car
+text -157 -48 and
+text -156 -48 cart
+text -155 -48 and
+text -154 -48 lift
+text -153 -48 and
+text -152 -48 train
+text -151 -48 and
+text -150 -48 badbad
+text -149 -48 on
+text -148 -48 star
+text -147 -48 is
+text -146 -48 right
+text -158 -46 plane
+text -157 -46 and
+text -156 -46 badbad
+text -155 -46 on
+text -154 -46 sun
+text -153 -46 and
+text -152 -46 fire
+text -151 -46 is
+text -150 -46 fallup
+text -158 -45 plane
+text -157 -45 and
+text -156 -45 badbad
+text -155 -45 on
+text -154 -45 moon
+text -153 -45 and
+text -152 -45 fire
+text -151 -45 is
+text -150 -45 fall
+text -158 -44 plane
+text -157 -44 and
+text -156 -44 badbad
+text -155 -44 on
+text -154 -44 planet
+text -153 -44 and
+text -152 -44 fire
+text -151 -44 is
+text -150 -44 fallleft
+text -158 -43 plane
+text -157 -43 and
+text -156 -43 badbad
+text -155 -43 on
+text -154 -43 star
+text -153 -43 and
+text -152 -43 fire
+text -151 -43 is
+text -150 -43 fallright
+text -158 -41 badbad
+text -157 -41 and
+text -156 -41 plane
+text -155 -41 on
+text -154 -41 ghost
+text -153 -41 is
+text -152 -41 swap
+text -158 -39 baba
+text -157 -39 on
+text -156 -39 lily
+text -155 -39 make
+text -154 -39 badbad
+text -158 -38 badbad
+text -157 -38 on
+text -156 -38 hedge
+text -155 -38 is
+text -154 -38 baba
+text -158 -36 car
+text -157 -36 on
+text -156 -36 lily
+text -155 -36 make
+text -154 -36 plane
+text -158 -35 plane
+text -157 -35 on
+text -156 -35 hedge
+text -155 -35 is
+text -154 -35 car
+text -158 -33 statue
+text -157 -33 not
+text -156 -33 on
+text -155 -33 lily
+text -154 -33 make
+text -153 -33 cart
+text -158 -32 statue
+text -157 -32 on
+text -156 -32 lily
+text -155 -32 make
+text -154 -32 lift
+text -158 -31 pillar
+text -157 -31 make
+text -156 -31 train
+text -158 -30 robot
+text -157 -30 make
+text -156 -30 car
+text -158 -28 donut
+text -157 -28 and
+text -156 -28 stick
+text -155 -28 and
+text -154 -28 scissors
+text -153 -28 and
+text -152 -28 bubble
+text -151 -28 and
+text -150 -28 dust
+text -149 -28 and
+text -148 -28 hand
+text -147 -28 and
+text -146 -28 sax
+text -145 -28 and
+text -144 -28 cash
+text -143 -28 and
+text -142 -28 cog
+text -141 -28 and
+text -140 -28 cat
+text -139 -28 and
+text -138 -28 algae
+text -137 -28 and
+text -136 -28 bottle
+text -135 -28 and
+text -134 -28 cake
+text -133 -28 and
+text -132 -28 drink
+text -131 -28 and
+text -130 -28 egg
+text -129 -28 and
+text -128 -28 fruit
+text -127 -28 on
+text -126 -28 tile
+text -125 -28 and
+text -124 -28 car
+text -123 -28 and
+text -122 -28 cart
+text -121 -28 is
+text -120 -28 book
+text -158 -27 donut
+text -157 -27 and
+text -156 -27 stick
+text -155 -27 and
+text -154 -27 scissors
+text -153 -27 and
+text -152 -27 bubble
+text -151 -27 and
+text -150 -27 dust
+text -149 -27 and
+text -148 -27 hand
+text -147 -27 and
+text -146 -27 sax
+text -145 -27 and
+text -144 -27 cash
+text -143 -27 and
+text -142 -27 cog
+text -141 -27 and
+text -140 -27 cat
+text -139 -27 and
+text -138 -27 algae
+text -137 -27 and
+text -136 -27 bottle
+text -135 -27 and
+text -134 -27 cake
+text -133 -27 and
+text -132 -27 drink
+text -131 -27 and
+text -130 -27 egg
+text -129 -27 and
+text -128 -27 fruit
+text -127 -27 on
+text -126 -27 tile
+text -125 -27 and
+text -124 -27 car
+text -123 -27 and
+text -122 -27 cart
+text -121 -27 and
+text -120 -27 not
+text -119 -27 on
+text -118 -27 book
+text -117 -27 is
+text -116 -27 lamp
+text -158 -26 donut
+text -157 -26 and
+text -156 -26 stick
+text -155 -26 and
+text -154 -26 scissors
+text -153 -26 and
+text -152 -26 bubble
+text -151 -26 and
+text -150 -26 dust
+text -149 -26 and
+text -148 -26 hand
+text -147 -26 and
+text -146 -26 sax
+text -145 -26 and
+text -144 -26 cash
+text -143 -26 and
+text -142 -26 cog
+text -141 -26 and
+text -140 -26 cat
+text -139 -26 and
+text -138 -26 algae
+text -137 -26 and
+text -136 -26 bottle
+text -135 -26 and
+text -134 -26 cake
+text -133 -26 and
+text -132 -26 drink
+text -131 -26 and
+text -130 -26 egg
+text -129 -26 and
+text -128 -26 fruit
+text -127 -26 on
+text -126 -26 tile
+text -125 -26 and
+text -124 -26 car
+text -123 -26 and
+text -122 -26 lift
+text -121 -26 is
+text -120 -26 book
+text -158 -25 donut
+text -157 -25 and
+text -156 -25 stick
+text -155 -25 and
+text -154 -25 scissors
+text -153 -25 and
+text -152 -25 bubble
+text -151 -25 and
+text -150 -25 dust
+text -149 -25 and
+text -148 -25 hand
+text -147 -25 and
+text -146 -25 sax
+text -145 -25 and
+text -144 -25 cash
+text -143 -25 and
+text -142 -25 cog
+text -141 -25 and
+text -140 -25 cat
+text -139 -25 and
+text -138 -25 algae
+text -137 -25 and
+text -136 -25 bottle
+text -135 -25 and
+text -134 -25 cake
+text -133 -25 and
+text -132 -25 drink
+text -131 -25 and
+text -130 -25 egg
+text -129 -25 and
+text -128 -25 fruit
+text -127 -25 on
+text -126 -25 tile
+text -125 -25 and
+text -124 -25 car
+text -123 -25 and
+text -122 -25 lift
+text -121 -25 and
+text -120 -25 not
+text -119 -25 on
+text -118 -25 book
+text -117 -25 is
+text -116 -25 lamp
+text -158 -24 donut
+text -157 -24 and
+text -156 -24 stick
+text -155 -24 and
+text -154 -24 scissors
+text -153 -24 and
+text -152 -24 bubble
+text -151 -24 and
+text -150 -24 dust
+text -149 -24 and
+text -148 -24 hand
+text -147 -24 and
+text -146 -24 sax
+text -145 -24 and
+text -144 -24 cash
+text -143 -24 and
+text -142 -24 cog
+text -141 -24 and
+text -140 -24 cat
+text -139 -24 and
+text -138 -24 algae
+text -137 -24 and
+text -136 -24 bottle
+text -135 -24 and
+text -134 -24 cake
+text -133 -24 and
+text -132 -24 drink
+text -131 -24 and
+text -130 -24 egg
+text -129 -24 and
+text -128 -24 fruit
+text -127 -24 on
+text -126 -24 tile
+text -125 -24 and
+text -124 -24 car
+text -123 -24 and
+text -122 -24 train
+text -121 -24 is
+text -120 -24 book
+text -158 -23 donut
+text -157 -23 and
+text -156 -23 stick
+text -155 -23 and
+text -154 -23 scissors
+text -153 -23 and
+text -152 -23 bubble
+text -151 -23 and
+text -150 -23 dust
+text -149 -23 and
+text -148 -23 hand
+text -147 -23 and
+text -146 -23 sax
+text -145 -23 and
+text -144 -23 cash
+text -143 -23 and
+text -142 -23 cog
+text -141 -23 and
+text -140 -23 cat
+text -139 -23 and
+text -138 -23 algae
+text -137 -23 and
+text -136 -23 bottle
+text -135 -23 and
+text -134 -23 cake
+text -133 -23 and
+text -132 -23 drink
+text -131 -23 and
+text -130 -23 egg
+text -129 -23 and
+text -128 -23 fruit
+text -127 -23 on
+text -126 -23 tile
+text -125 -23 and
+text -124 -23 car
+text -123 -23 and
+text -122 -23 train
+text -121 -23 and
+text -120 -23 not
+text -119 -23 on
+text -118 -23 book
+text -117 -23 is
+text -116 -23 lamp
+text -158 -20 lamp
+text -157 -20 on
+text -156 -20 tile
+text -155 -20 and
+text -154 -20 car
+text -153 -20 and
+text -152 -20 cart
+text -151 -20 is
+text -150 -20 book
+text -158 -19 book
+text -157 -19 on
+text -156 -19 tile
+text -155 -19 and
+text -154 -19 car
+text -153 -19 and
+text -152 -19 cart
+text -151 -19 is
+text -150 -19 revert
+text -158 -17 lamp
+text -157 -17 on
+text -156 -17 tile
+text -155 -17 and
+text -154 -17 car
+text -153 -17 and
+text -152 -17 lift
+text -151 -17 is
+text -150 -17 book
+text -158 -16 book
+text -157 -16 on
+text -156 -16 tile
+text -155 -16 and
+text -154 -16 car
+text -153 -16 and
+text -152 -16 lift
+text -151 -16 is
+text -150 -16 revert
+text -158 -14 lamp
+text -157 -14 on
+text -156 -14 tile
+text -155 -14 and
+text -154 -14 car
+text -153 -14 and
+text -152 -14 train
+text -151 -14 is
+text -150 -14 book
+text -158 -13 book
+text -157 -13 on
+text -156 -13 tile
+text -155 -13 and
+text -154 -13 car
+text -153 -13 and
+text -152 -13 train
+text -151 -13 is
+text -150 -13 revert
+text -158 -11 lamp
+text -157 -11 on
+text -156 -11 tile
+text -155 -11 and
+text -154 -11 not
+text -153 -11 on
+text -152 -11 car
+text -151 -11 and
+text -150 -11 cart
+text -149 -11 and
+text -148 -11 not
+text -147 -11 on
+text -146 -11 car
+text -145 -11 and
+text -144 -11 lift
+text -143 -11 and
+text -142 -11 not
+text -141 -11 on
+text -140 -11 car
+text -139 -11 and
+text -138 -11 train
+text -137 -11 is
+text -136 -11 revert
+text -158 -10 book
+text -157 -10 on
+text -156 -10 tile
+text -155 -10 and
+text -154 -10 not
+text -153 -10 on
+text -152 -10 car
+text -151 -10 and
+text -150 -10 cart
+text -149 -10 and
+text -148 -10 not
+text -147 -10 on
+text -146 -10 car
+text -145 -10 and
+text -144 -10 lift
+text -143 -10 and
+text -142 -10 not
+text -141 -10 on
+text -140 -10 car
+text -139 -10 and
+text -138 -10 train
+text -137 -10 is
+text -136 -10 weak
+text -158 -8 donut
+text -157 -8 and
+text -156 -8 stick
+text -155 -8 and
+text -154 -8 scissors
+text -153 -8 and
+text -152 -8 bubble
+text -151 -8 and
+text -150 -8 dust
+text -149 -8 and
+text -148 -8 hand
+text -147 -8 and
+text -146 -8 sax
+text -145 -8 and
+text -144 -8 cash
+text -143 -8 and
+text -142 -8 cog
+text -141 -8 and
+text -140 -8 cat
+text -139 -8 and
+text -138 -8 algae
+text -137 -8 and
+text -136 -8 bottle
+text -135 -8 and
+text -134 -8 cake
+text -133 -8 and
+text -132 -8 drink
+text -131 -8 and
+text -130 -8 egg
+text -129 -8 and
+text -128 -8 fruit
+text -127 -8 on
+text -126 -8 tile
+text -125 -8 and
+text -124 -8 car
+text -123 -8 and
+text -122 -8 cart
+text -121 -8 and
+text -120 -8 book
+text -119 -8 is
+text -118 -8 banana
+text -158 -7 donut
+text -157 -7 and
+text -156 -7 stick
+text -155 -7 and
+text -154 -7 scissors
+text -153 -7 and
+text -152 -7 bubble
+text -151 -7 and
+text -150 -7 dust
+text -149 -7 and
+text -148 -7 hand
+text -147 -7 and
+text -146 -7 sax
+text -145 -7 and
+text -144 -7 cash
+text -143 -7 and
+text -142 -7 cog
+text -141 -7 and
+text -140 -7 cat
+text -139 -7 and
+text -138 -7 algae
+text -137 -7 and
+text -136 -7 bottle
+text -135 -7 and
+text -134 -7 cake
+text -133 -7 and
+text -132 -7 drink
+text -131 -7 and
+text -130 -7 egg
+text -129 -7 and
+text -128 -7 fruit
+text -127 -7 on
+text -126 -7 tile
+text -125 -7 and
+text -124 -7 car
+text -123 -7 and
+text -122 -7 lift
+text -121 -7 and
+text -120 -7 book
+text -119 -7 is
+text -118 -7 banana
+text -158 -6 donut
+text -157 -6 and
+text -156 -6 stick
+text -155 -6 and
+text -154 -6 scissors
+text -153 -6 and
+text -152 -6 bubble
+text -151 -6 and
+text -150 -6 dust
+text -149 -6 and
+text -148 -6 hand
+text -147 -6 and
+text -146 -6 sax
+text -145 -6 and
+text -144 -6 cash
+text -143 -6 and
+text -142 -6 cog
+text -141 -6 and
+text -140 -6 cat
+text -139 -6 and
+text -138 -6 algae
+text -137 -6 and
+text -136 -6 bottle
+text -135 -6 and
+text -134 -6 cake
+text -133 -6 and
+text -132 -6 drink
+text -131 -6 and
+text -130 -6 egg
+text -129 -6 and
+text -128 -6 fruit
+text -127 -6 on
+text -126 -6 tile
+text -125 -6 and
+text -124 -6 car
+text -123 -6 and
+text -122 -6 train
+text -121 -6 and
+text -120 -6 book
+text -119 -6 is
+text -118 -6 banana
+text -158 -4 banana
+text -157 -4 facing
+text -156 -4 up
+text -155 -4 is
+text -154 -4 fallup
+text -158 -3 banana
+text -157 -3 facing
+text -156 -3 down
+text -155 -3 is
+text -154 -3 fall
+text -158 -2 banana
+text -157 -2 facing
+text -156 -2 left
+text -155 -2 is
+text -154 -2 fallleft
+text -158 -1 banana
+text -157 -1 facing
+text -156 -1 right
+text -155 -1 is
+text -154 -1 fallright
+text -158 1 banana
+text -157 1 on
+text -156 1 sun
+text -155 1 is
+text -154 1 up
+text -158 2 banana
+text -157 2 on
+text -156 2 moon
+text -155 2 is
+text -154 2 down
+text -158 3 banana
+text -157 3 on
+text -156 3 planet
+text -155 3 is
+text -154 3 left
+text -158 4 banana
+text -157 4 on
+text -156 4 star
+text -155 4 is
+text -154 4 right
+text -158 6 banana
+text -157 6 on
+text -156 6 lily
+text -155 6 is
+text -154 6 revert
+text -158 7 banana
+text -157 7 on
+text -156 7 banana
+text -155 7 eat
+text -154 7 banana
+object -65 -69 water right
+object -64 -69 arrow down
+object -65 -68 water right
+object -63 -68 arrow down
+object -65 -67 water right
+object -62 -67 arrow down
+object -65 -66 water right
+object -61 -66 arrow down
+object -58 -66 statue down
+object -38 -66 statue down
+object -38 -66 lily right
+object -65 -65 lily right
+object -65 -65 water right
+object -64 -65 lock right
+object -64 -65 arrow right
+object -64 -65 fire right
+object -58 -65 track right
+object -50 -65 arrow down
+object -50 -65 lock right
+object -42 -65 bomb right
+object -41 -65 ghost right
+object -40 -65 wall right
+object -39 -65 hedge right
+object -38 -65 track right
+object -30 -65 lock right
+object -30 -65 arrow down
+object -22 -65 bomb right
+object -65 -64 lily right
+object -65 -64 water right
+object -64 -64 lock right
+object -64 -64 arrow right
+object -64 -64 fire right
+object -58 -64 track right
+object -54 -64 arrow down
+object -54 -64 lock right
+object -50 -64 track right
+object -46 -64 arrow down
+object -46 -64 lock right
+object -42 -64 bomb right
+object -41 -64 ghost right
+object -40 -64 wall right
+object -39 -64 hedge right
+object -38 -64 track right
+object -34 -64 lock right
+object -34 -64 arrow down
+object -30 -64 track right
+object -26 -64 lock right
+object -26 -64 arrow down
+object -22 -64 bomb right
+object -65 -63 lily right
+object -65 -63 water right
+object -64 -63 lock right
+object -64 -63 arrow right
+object -64 -63 fire right
+object -58 -63 track right
+object -56 -63 arrow down
+object -56 -63 lock right
+object -54 -63 track right
+object -52 -63 arrow down
+object -52 -63 lock right
+object -50 -63 track right
+object -48 -63 arrow down
+object -48 -63 lock right
+object -46 -63 track right
+object -44 -63 arrow down
+object -44 -63 lock right
+object -42 -63 bomb right
+object -41 -63 ghost right
+object -40 -63 wall right
+object -39 -63 hedge right
+object -38 -63 track right
+object -36 -63 lock right
+object -36 -63 arrow down
+object -34 -63 track right
+object -32 -63 lock right
+object -32 -63 arrow down
+object -30 -63 track right
+object -28 -63 lock right
+object -28 -63 arrow down
+object -26 -63 track right
+object -24 -63 lock right
+object -24 -63 arrow down
+object -22 -63 bomb right
+object -65 -62 lily right
+object -65 -62 water right
+object -64 -62 lock right
+object -64 -62 arrow right
+object -64 -62 fire right
+object -58 -62 track right
+object -57 -62 arrow down
+object -57 -62 lock right
+object -56 -62 track right
+object -55 -62 arrow down
+object -55 -62 lock right
+object -54 -62 track right
+object -53 -62 arrow down
+object -53 -62 lock right
+object -52 -62 track right
+object -51 -62 arrow down
+object -51 -62 lock right
+object -50 -62 track right
+object -49 -62 arrow down
+object -49 -62 lock right
+object -48 -62 track right
+object -47 -62 arrow down
+object -47 -62 lock right
+object -46 -62 track right
+object -45 -62 arrow down
+object -45 -62 lock right
+object -44 -62 track right
+object -43 -62 arrow down
+object -43 -62 lock right
+object -42 -62 bomb right
+object -41 -62 ghost right
+object -40 -62 wall right
+object -39 -62 hedge right
+object -38 -62 track right
+object -37 -62 lock right
+object -37 -62 arrow down
+object -36 -62 track right
+object -35 -62 lock right
+object -35 -62 arrow down
+object -34 -62 track right
+object -33 -62 lock right
+object -33 -62 arrow down
+object -32 -62 track right
+object -31 -62 lock right
+object -31 -62 arrow down
+object -30 -62 track right
+object -29 -62 lock right
+object -29 -62 arrow down
+object -28 -62 track right
+object -27 -62 lock right
+object -27 -62 arrow down
+object -26 -62 track right
+object -25 -62 lock right
+object -25 -62 arrow down
+object -24 -62 track right
+object -23 -62 lock right
+object -23 -62 arrow down
+object -22 -62 bomb right
+object -65 -61 robot right
+object -64 -61 track down
+object -63 -61 track down
+object -62 -61 track down
+object -61 -61 track down
+object -60 -61 lily right
+object -59 -61 arrow right
+object -59 -61 fire right
+object -58 -61 tile right
+object -57 -61 tile right
+object -56 -61 tile right
+object -55 -61 tile right
+object -54 -61 tile right
+object -53 -61 tile right
+object -52 -61 tile right
+object -51 -61 tile right
+object -50 -61 tile right
+object -49 -61 tile right
+object -48 -61 tile right
+object -47 -61 tile right
+object -46 -61 tile right
+object -45 -61 tile right
+object -44 -61 tile right
+object -43 -61 tile right
+object -42 -61 bomb right
+object -41 -61 ghost right
+object -40 -61 wall right
+object -39 -61 hedge right
+object -38 -61 tile right
+object -37 -61 tile right
+object -36 -61 tile right
+object -35 -61 tile right
+object -34 -61 tile right
+object -33 -61 tile right
+object -32 -61 tile right
+object -31 -61 tile right
+object -30 -61 tile right
+object -29 -61 tile right
+object -28 -61 tile right
+object -27 -61 tile right
+object -26 -61 tile right
+object -25 -61 tile right
+object -24 -61 tile right
+object -23 -61 tile right
+object -22 -61 bomb right
+object -61 -60 arrow right
+object -61 -60 lock up
+object -60 -60 lily right
+object -59 -60 arrow right
+object -59 -60 fire right
+object -58 -60 tile right
+object -57 -60 tile right
+object -56 -60 tile right
+object -55 -60 tile right
+object -54 -60 tile right
+object -53 -60 tile right
+object -52 -60 tile right
+object -51 -60 tile right
+object -50 -60 tile right
+object -49 -60 tile right
+object -48 -60 tile right
+object -47 -60 tile right
+object -46 -60 tile right
+object -45 -60 tile right
+object -44 -60 tile right
+object -43 -60 tile right
+object -42 -60 bomb right
+object -41 -60 ghost right
+object -40 -60 wall right
+object -39 -60 hedge right
+object -38 -60 tile right
+object -37 -60 tile right
+object -36 -60 tile right
+object -35 -60 tile right
+object -34 -60 tile right
+object -33 -60 tile right
+object -32 -60 tile right
+object -31 -60 tile right
+object -30 -60 tile right
+object -29 -60 tile right
+object -28 -60 tile right
+object -27 -60 tile right
+object -26 -60 tile right
+object -25 -60 tile right
+object -24 -60 tile right
+object -23 -60 tile right
+object -22 -60 bomb right
+object -62 -59 arrow right
+object -62 -59 lock up
+object -61 -59 track down
+object -60 -59 lily right
+object -59 -59 arrow right
+object -59 -59 fire right
+object -58 -59 tile right
+object -57 -59 tile right
+object -56 -59 tile right
+object -55 -59 tile right
+object -54 -59 tile right
+object -53 -59 tile right
+object -52 -59 tile right
+object -51 -59 tile right
+object -50 -59 tile right
+object -49 -59 tile right
+object -48 -59 tile right
+object -47 -59 tile right
+object -46 -59 tile right
+object -45 -59 tile right
+object -44 -59 tile right
+object -43 -59 tile right
+object -42 -59 bomb right
+object -41 -59 ghost right
+object -40 -59 wall right
+object -39 -59 hedge right
+object -38 -59 tile right
+object -37 -59 tile right
+object -36 -59 tile right
+object -35 -59 tile right
+object -34 -59 tile right
+object -33 -59 tile right
+object -32 -59 tile right
+object -31 -59 tile right
+object -30 -59 tile right
+object -29 -59 tile right
+object -28 -59 tile right
+object -27 -59 tile right
+object -26 -59 tile right
+object -25 -59 tile right
+object -24 -59 tile right
+object -23 -59 tile right
+object -22 -59 bomb right
+object -61 -58 arrow right
+object -61 -58 lock up
+object -60 -58 lily right
+object -59 -58 arrow right
+object -59 -58 fire right
+object -58 -58 tile right
+object -57 -58 tile right
+object -56 -58 tile right
+object -55 -58 tile right
+object -54 -58 tile right
+object -53 -58 tile right
+object -52 -58 tile right
+object -51 -58 tile right
+object -50 -58 tile right
+object -49 -58 tile right
+object -48 -58 tile right
+object -47 -58 tile right
+object -46 -58 tile right
+object -45 -58 tile right
+object -44 -58 tile right
+object -43 -58 tile right
+object -42 -58 bomb right
+object -41 -58 ghost right
+object -40 -58 wall right
+object -39 -58 hedge right
+object -38 -58 tile right
+object -37 -58 tile right
+object -36 -58 tile right
+object -35 -58 tile right
+object -34 -58 tile right
+object -33 -58 tile right
+object -32 -58 tile right
+object -31 -58 tile right
+object -30 -58 tile right
+object -29 -58 tile right
+object -28 -58 tile right
+object -27 -58 tile right
+object -26 -58 tile right
+object -25 -58 tile right
+object -24 -58 tile right
+object -23 -58 tile right
+object -22 -58 bomb right
+object -63 -57 arrow right
+object -63 -57 lock up
+object -62 -57 track down
+object -61 -57 track down
+object -60 -57 lily right
+object -59 -57 arrow right
+object -59 -57 fire right
+object -58 -57 tile right
+object -57 -57 tile right
+object -56 -57 tile right
+object -55 -57 tile right
+object -54 -57 tile right
+object -53 -57 tile right
+object -52 -57 tile right
+object -51 -57 tile right
+object -50 -57 tile right
+object -49 -57 tile right
+object -48 -57 tile right
+object -47 -57 tile right
+object -46 -57 tile right
+object -45 -57 tile right
+object -44 -57 tile right
+object -43 -57 tile right
+object -42 -57 bomb right
+object -41 -57 ghost right
+object -40 -57 wall right
+object -39 -57 hedge right
+object -38 -57 tile right
+object -37 -57 tile right
+object -36 -57 tile right
+object -35 -57 tile right
+object -34 -57 tile right
+object -33 -57 tile right
+object -32 -57 tile right
+object -31 -57 tile right
+object -30 -57 tile right
+object -29 -57 tile right
+object -28 -57 tile right
+object -27 -57 tile right
+object -26 -57 tile right
+object -25 -57 tile right
+object -24 -57 tile right
+object -23 -57 tile right
+object -22 -57 bomb right
+object -61 -56 arrow right
+object -61 -56 lock up
+object -60 -56 lily right
+object -59 -56 arrow right
+object -59 -56 fire right
+object -58 -56 tile right
+object -57 -56 tile right
+object -56 -56 tile right
+object -55 -56 tile right
+object -54 -56 tile right
+object -53 -56 tile right
+object -52 -56 tile right
+object -51 -56 tile right
+object -50 -56 tile right
+object -49 -56 tile right
+object -48 -56 tile right
+object -47 -56 tile right
+object -46 -56 tile right
+object -45 -56 tile right
+object -44 -56 tile right
+object -43 -56 tile right
+object -42 -56 bomb right
+object -41 -56 ghost right
+object -40 -56 wall right
+object -39 -56 hedge right
+object -38 -56 tile right
+object -37 -56 tile right
+object -36 -56 tile right
+object -35 -56 tile right
+object -34 -56 tile right
+object -33 -56 tile right
+object -32 -56 tile right
+object -31 -56 tile right
+object -30 -56 tile right
+object -29 -56 tile right
+object -28 -56 tile right
+object -27 -56 tile right
+object -26 -56 tile right
+object -25 -56 tile right
+object -24 -56 tile right
+object -23 -56 tile right
+object -22 -56 bomb right
+object -62 -55 arrow right
+object -62 -55 lock up
+object -61 -55 track down
+object -60 -55 lily right
+object -59 -55 arrow right
+object -59 -55 fire right
+object -58 -55 tile right
+object -57 -55 tile right
+object -56 -55 tile right
+object -55 -55 tile right
+object -54 -55 tile right
+object -53 -55 tile right
+object -52 -55 tile right
+object -51 -55 tile right
+object -50 -55 tile right
+object -49 -55 tile right
+object -48 -55 tile right
+object -47 -55 tile right
+object -46 -55 tile right
+object -45 -55 tile right
+object -44 -55 tile right
+object -43 -55 tile right
+object -42 -55 bomb right
+object -41 -55 ghost right
+object -40 -55 wall right
+object -39 -55 hedge right
+object -38 -55 tile right
+object -37 -55 tile right
+object -36 -55 tile right
+object -35 -55 tile right
+object -34 -55 tile right
+object -33 -55 tile right
+object -32 -55 tile right
+object -31 -55 tile right
+object -30 -55 tile right
+object -29 -55 tile right
+object -28 -55 tile right
+object -27 -55 tile right
+object -26 -55 tile right
+object -25 -55 tile right
+object -24 -55 tile right
+object -23 -55 tile right
+object -22 -55 bomb right
+object -61 -54 arrow right
+object -61 -54 lock up
+object -60 -54 lily right
+object -59 -54 arrow right
+object -59 -54 fire right
+object -58 -54 tile right
+object -57 -54 tile right
+object -56 -54 tile right
+object -55 -54 tile right
+object -54 -54 tile right
+object -53 -54 tile right
+object -52 -54 tile right
+object -51 -54 tile right
+object -50 -54 tile right
+object -49 -54 tile right
+object -48 -54 tile right
+object -47 -54 tile right
+object -46 -54 tile right
+object -45 -54 tile right
+object -44 -54 tile right
+object -43 -54 tile right
+object -42 -54 bomb right
+object -41 -54 ghost right
+object -40 -54 wall right
+object -39 -54 hedge right
+object -38 -54 tile right
+object -37 -54 tile right
+object -36 -54 tile right
+object -35 -54 tile right
+object -34 -54 tile right
+object -33 -54 tile right
+object -32 -54 tile right
+object -31 -54 tile right
+object -30 -54 tile right
+object -29 -54 tile right
+object -28 -54 tile right
+object -27 -54 tile right
+object -26 -54 tile right
+object -25 -54 tile right
+object -24 -54 tile right
+object -23 -54 tile right
+object -22 -54 bomb right
+object -64 -53 arrow right
+object -64 -53 lock up
+object -63 -53 track down
+object -62 -53 track down
+object -61 -53 track down
+object -60 -53 lily right
+object -59 -53 arrow right
+object -59 -53 fire right
+object -58 -53 tile right
+object -57 -53 tile right
+object -56 -53 tile right
+object -55 -53 tile right
+object -54 -53 tile right
+object -53 -53 tile right
+object -52 -53 tile right
+object -51 -53 tile right
+object -50 -53 tile right
+object -49 -53 tile right
+object -48 -53 tile right
+object -47 -53 tile right
+object -46 -53 tile right
+object -45 -53 tile right
+object -44 -53 tile right
+object -43 -53 tile right
+object -42 -53 bomb right
+object -41 -53 ghost right
+object -40 -53 wall right
+object -39 -53 hedge right
+object -38 -53 tile right
+object -37 -53 tile right
+object -36 -53 tile right
+object -35 -53 tile right
+object -34 -53 tile right
+object -33 -53 tile right
+object -32 -53 tile right
+object -31 -53 tile right
+object -30 -53 tile right
+object -29 -53 tile right
+object -28 -53 tile right
+object -27 -53 tile right
+object -26 -53 tile right
+object -25 -53 tile right
+object -24 -53 tile right
+object -23 -53 tile right
+object -22 -53 bomb right
+object -61 -52 arrow right
+object -61 -52 lock up
+object -60 -52 lily right
+object -59 -52 arrow right
+object -59 -52 fire right
+object -58 -52 tile right
+object -57 -52 tile right
+object -56 -52 tile right
+object -55 -52 tile right
+object -54 -52 tile right
+object -53 -52 tile right
+object -52 -52 tile right
+object -51 -52 tile right
+object -50 -52 tile right
+object -49 -52 tile right
+object -48 -52 tile right
+object -47 -52 tile right
+object -46 -52 tile right
+object -45 -52 tile right
+object -44 -52 tile right
+object -43 -52 tile right
+object -42 -52 bomb right
+object -41 -52 ghost right
+object -40 -52 wall right
+object -39 -52 hedge right
+object -38 -52 tile right
+object -37 -52 tile right
+object -36 -52 tile right
+object -35 -52 tile right
+object -34 -52 tile right
+object -33 -52 tile right
+object -32 -52 tile right
+object -31 -52 tile right
+object -30 -52 tile right
+object -29 -52 tile right
+object -28 -52 tile right
+object -27 -52 tile right
+object -26 -52 tile right
+object -25 -52 tile right
+object -24 -52 tile right
+object -23 -52 tile right
+object -22 -52 bomb right
+object -62 -51 arrow right
+object -62 -51 lock up
+object -61 -51 track down
+object -60 -51 lily right
+object -59 -51 arrow right
+object -59 -51 fire right
+object -58 -51 tile right
+object -57 -51 tile right
+object -56 -51 tile right
+object -55 -51 tile right
+object -54 -51 tile right
+object -53 -51 tile right
+object -52 -51 tile right
+object -51 -51 tile right
+object -50 -51 tile right
+object -49 -51 tile right
+object -48 -51 tile right
+object -47 -51 tile right
+object -46 -51 tile right
+object -45 -51 tile right
+object -44 -51 tile right
+object -43 -51 tile right
+object -42 -51 bomb right
+object -41 -51 ghost right
+object -40 -51 wall right
+object -39 -51 hedge right
+object -38 -51 tile right
+object -37 -51 tile right
+object -36 -51 tile right
+object -35 -51 tile right
+object -34 -51 tile right
+object -33 -51 tile right
+object -32 -51 tile right
+object -31 -51 tile right
+object -30 -51 tile right
+object -29 -51 tile right
+object -28 -51 tile right
+object -27 -51 tile right
+object -26 -51 tile right
+object -25 -51 tile right
+object -24 -51 tile right
+object -23 -51 tile right
+object -22 -51 bomb right
+object -61 -50 arrow right
+object -61 -50 lock up
+object -60 -50 lily right
+object -59 -50 arrow right
+object -59 -50 fire right
+object -58 -50 tile right
+object -57 -50 tile right
+object -56 -50 tile right
+object -55 -50 tile right
+object -54 -50 tile right
+object -53 -50 tile right
+object -52 -50 tile right
+object -51 -50 tile right
+object -50 -50 tile right
+object -49 -50 tile right
+object -48 -50 tile right
+object -47 -50 tile right
+object -46 -50 tile right
+object -45 -50 tile right
+object -44 -50 tile right
+object -43 -50 tile right
+object -42 -50 bomb right
+object -41 -50 ghost right
+object -40 -50 wall right
+object -39 -50 hedge right
+object -38 -50 tile right
+object -37 -50 tile right
+object -36 -50 tile right
+object -35 -50 tile right
+object -34 -50 tile right
+object -33 -50 tile right
+object -32 -50 tile right
+object -31 -50 tile right
+object -30 -50 tile right
+object -29 -50 tile right
+object -28 -50 tile right
+object -27 -50 tile right
+object -26 -50 tile right
+object -25 -50 tile right
+object -24 -50 tile right
+object -23 -50 tile right
+object -22 -50 bomb right
+object -63 -49 arrow right
+object -63 -49 lock up
+object -62 -49 track down
+object -61 -49 track down
+object -60 -49 lily right
+object -59 -49 arrow right
+object -59 -49 fire right
+object -58 -49 tile right
+object -57 -49 tile right
+object -56 -49 tile right
+object -55 -49 tile right
+object -54 -49 tile right
+object -53 -49 tile right
+object -52 -49 tile right
+object -51 -49 tile right
+object -50 -49 tile right
+object -49 -49 tile right
+object -48 -49 tile right
+object -47 -49 tile right
+object -46 -49 tile right
+object -45 -49 tile right
+object -44 -49 tile right
+object -43 -49 tile right
+object -42 -49 bomb right
+object -41 -49 ghost right
+object -40 -49 wall right
+object -39 -49 hedge right
+object -38 -49 tile right
+object -37 -49 tile right
+object -36 -49 tile right
+object -35 -49 tile right
+object -34 -49 tile right
+object -33 -49 tile right
+object -32 -49 tile right
+object -31 -49 tile right
+object -30 -49 tile right
+object -29 -49 tile right
+object -28 -49 tile right
+object -27 -49 tile right
+object -26 -49 tile right
+object -25 -49 tile right
+object -24 -49 tile right
+object -23 -49 tile right
+object -22 -49 bomb right
+object -61 -48 arrow right
+object -61 -48 lock up
+object -60 -48 lily right
+object -59 -48 arrow right
+object -59 -48 fire right
+object -58 -48 tile right
+object -57 -48 tile right
+object -56 -48 tile right
+object -55 -48 tile right
+object -54 -48 tile right
+object -53 -48 tile right
+object -52 -48 tile right
+object -51 -48 tile right
+object -50 -48 tile right
+object -49 -48 tile right
+object -48 -48 tile right
+object -47 -48 tile right
+object -46 -48 tile right
+object -45 -48 tile right
+object -44 -48 tile right
+object -43 -48 tile right
+object -42 -48 bomb right
+object -41 -48 ghost right
+object -40 -48 wall right
+object -39 -48 hedge right
+object -38 -48 tile right
+object -37 -48 tile right
+object -36 -48 tile right
+object -35 -48 tile right
+object -34 -48 tile right
+object -33 -48 tile right
+object -32 -48 tile right
+object -31 -48 tile right
+object -30 -48 tile right
+object -29 -48 tile right
+object -28 -48 tile right
+object -27 -48 tile right
+object -26 -48 tile right
+object -25 -48 tile right
+object -24 -48 tile right
+object -23 -48 tile right
+object -22 -48 bomb right
+object -62 -47 arrow right
+object -62 -47 lock up
+object -61 -47 track down
+object -60 -47 lily right
+object -59 -47 arrow right
+object -59 -47 fire right
+object -58 -47 tile right
+object -57 -47 tile right
+object -56 -47 tile right
+object -55 -47 tile right
+object -54 -47 tile right
+object -53 -47 tile right
+object -52 -47 tile right
+object -51 -47 tile right
+object -50 -47 tile right
+object -49 -47 tile right
+object -48 -47 tile right
+object -47 -47 tile right
+object -46 -47 tile right
+object -45 -47 tile right
+object -44 -47 tile right
+object -43 -47 tile right
+object -42 -47 bomb right
+object -41 -47 ghost right
+object -40 -47 wall right
+object -39 -47 hedge right
+object -38 -47 tile right
+object -37 -47 tile right
+object -36 -47 tile right
+object -35 -47 tile right
+object -34 -47 tile right
+object -33 -47 tile right
+object -32 -47 tile right
+object -31 -47 tile right
+object -30 -47 tile right
+object -29 -47 tile right
+object -28 -47 tile right
+object -27 -47 tile right
+object -26 -47 tile right
+object -25 -47 tile right
+object -24 -47 tile right
+object -23 -47 tile right
+object -22 -47 bomb right
+object -61 -46 arrow right
+object -61 -46 lock up
+object -60 -46 lily right
+object -59 -46 arrow right
+object -59 -46 fire right
+object -58 -46 tile right
+object -57 -46 tile right
+object -56 -46 tile right
+object -55 -46 tile right
+object -54 -46 tile right
+object -53 -46 tile right
+object -52 -46 tile right
+object -51 -46 tile right
+object -50 -46 tile right
+object -49 -46 tile right
+object -48 -46 tile right
+object -47 -46 tile right
+object -46 -46 tile right
+object -45 -46 tile right
+object -44 -46 tile right
+object -43 -46 tile right
+object -42 -46 bomb right
+object -41 -46 ghost right
+object -40 -46 wall right
+object -39 -46 hedge right
+object -38 -46 tile right
+object -37 -46 tile right
+object -36 -46 tile right
+object -35 -46 tile right
+object -34 -46 tile right
+object -33 -46 tile right
+object -32 -46 tile right
+object -31 -46 tile right
+object -30 -46 tile right
+object -29 -46 tile right
+object -28 -46 tile right
+object -27 -46 tile right
+object -26 -46 tile right
+object -25 -46 tile right
+object -24 -46 tile right
+object -23 -46 tile right
+object -22 -46 bomb right
+object -64 -45 bomb right
+object -63 -45 bomb right
+object -62 -45 bomb right
+object -61 -45 bomb right
+object -58 -45 arrow right
+object -58 -45 bomb right
+object -57 -45 arrow right
+object -57 -45 bomb right
+object -56 -45 arrow right
+object -56 -45 bomb right
+object -55 -45 arrow right
+object -55 -45 bomb right
+object -54 -45 arrow right
+object -54 -45 bomb right
+object -53 -45 arrow right
+object -53 -45 bomb right
+object -52 -45 arrow right
+object -52 -45 bomb right
+object -51 -45 arrow right
+object -51 -45 bomb right
+object -50 -45 arrow right
+object -50 -45 bomb right
+object -49 -45 arrow right
+object -49 -45 bomb right
+object -48 -45 arrow right
+object -48 -45 bomb right
+object -47 -45 arrow right
+object -47 -45 bomb right
+object -46 -45 arrow right
+object -46 -45 bomb right
+object -45 -45 arrow right
+object -45 -45 bomb right
+object -44 -45 arrow right
+object -44 -45 bomb right
+object -43 -45 arrow right
+object -43 -45 bomb right
+object -38 -45 bomb right
+object -37 -45 bomb right
+object -36 -45 bomb right
+object -35 -45 bomb right
+object -34 -45 bomb right
+object -33 -45 bomb right
+object -32 -45 bomb right
+object -31 -45 bomb right
+object -30 -45 bomb right
+object -29 -45 bomb right
+object -28 -45 bomb right
+object -27 -45 bomb right
+object -26 -45 bomb right
+object -25 -45 bomb right
+object -24 -45 bomb right
+object -23 -45 bomb right
+object -22 -45 ghost right
+object -22 -45 lily right
+object -21 -45 wall right
+object -58 -44 wall right
+object -57 -44 wall right
+object -56 -44 wall right
+object -55 -44 wall right
+object -54 -44 wall right
+object -53 -44 wall right
+object -52 -44 wall right
+object -51 -44 wall right
+object -50 -44 wall right
+object -49 -44 wall right
+object -48 -44 wall right
+object -47 -44 wall right
+object -46 -44 wall right
+object -45 -44 wall right
+object -44 -44 wall right
+object -43 -44 wall right
+object -38 -44 arrow right
+object -37 -44 arrow right
+object -36 -44 arrow right
+object -35 -44 arrow right
+object -34 -44 arrow right
+object -33 -44 arrow right
+object -32 -44 arrow right
+object -31 -44 arrow right
+object -30 -44 arrow right
+object -29 -44 arrow right
+object -28 -44 arrow right
+object -27 -44 arrow right
+object -26 -44 arrow right
+object -25 -44 arrow right
+object -24 -44 arrow right
+object -23 -44 arrow right
+object -22 -44 ghost right
+object -22 -44 lily right
+object -21 -44 wall right
+object -38 -43 wall right
+object -37 -43 wall right
+object -36 -43 wall right
+object -35 -43 wall right
+object -34 -43 wall right
+object -33 -43 wall right
+object -32 -43 wall right
+object -31 -43 wall right
+object -30 -43 wall right
+object -29 -43 wall right
+object -28 -43 wall right
+object -27 -43 wall right
+object -26 -43 wall right
+object -25 -43 wall right
+object -24 -43 wall right
+object -23 -43 wall right
+object -74 -69 bolt right
+object -74 -62 wind right
+object -74 -66 wind right
+object -74 -67 wind right
+object -74 -65 bolt right
+object -74 -68 wind right
+object -74 -63 wind right
+object -74 -64 wind right
+object -85 -30 bomb right
+object -85 -29 bomb right
+object -15 -16 wall right
+object -14 -16 wall right
+object -13 -16 wall right
+object -12 -16 wall right
+object -11 -16 wall right
+object -10 -16 wall right
+object -9 -16 wall right
+object -8 -16 wall right
+object -16 -15 wall right
+object -15 -15 clock right
+object -15 -15 arrow right
+object -8 -15 arrow down
+object -7 -15 wall right
+object -16 -14 wall right
+object -15 -14 flag right
+object -14 -14 arrow down
+object -8 -14 arrow left
+object -7 -14 wall right
+object -16 -13 wall right
+object -14 -13 arrow right
+object -8 -13 arrow down
+object -7 -13 wall right
+object -16 -12 wall right
+object -14 -12 arrow down
+object -8 -12 arrow left
+object -7 -12 wall right
+object -16 -11 wall right
+object -14 -11 arrow right
+object -8 -11 arrow down
+object -7 -11 wall right
+object -16 -10 wall right
+object -14 -10 arrow down
+object -8 -10 arrow left
+object -7 -10 wall right
+object -16 -9 wall right
+object -14 -9 arrow right
+object -8 -9 arrow down
+object -7 -9 wall right
+object -16 -8 wall right
+object -15 -8 arrow up
+object -8 -8 arrow left
+object -7 -8 wall right
+object -15 -7 wall right
+object -14 -7 wall right
+object -13 -7 wall right
+object -12 -7 wall right
+object -11 -7 wall right
+object -10 -7 wall right
+object -9 -7 wall right
+object -8 -7 wall right
+text -12 0 clock
+text -11 0 is
+text -10 0 auto
+text -12 1 clock
+text -11 1 on
+text -10 1 flag
+text -9 1 is
+text -8 1 power
+text -12 3 clock
+text -11 3 on
+text -10 3 sun
+text -9 3 is
+text -8 3 up
+text -12 4 clock
+text -11 4 on
+text -10 4 moon
+text -9 4 is
+text -8 4 down
+text -12 5 clock
+text -11 5 on
+text -10 5 planet
+text -9 5 is
+text -8 5 left
+text -12 6 clock
+text -11 6 on
+text -10 6 star
+text -9 6 is
+text -8 6 right
+object -94 -39 bolt right
+object -87 -45 cactus down
+object -86 -45 burger down
+text -69 -39 cactus
+text -69 -38 burger
+text -68 -39 make
+text -68 -38 make
+text -67 -39 cat
+text -67 -38 bottle
