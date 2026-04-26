@@ -34,7 +34,7 @@ The custom ISA is as follows:
 (UNDETERMINED BUT WE SHOULD PUT IT IN A TABLE)
 
 Instructions to run the CPU that we built and the program that plays bad apple and ___OTHER SONGS NAME___.
-1. Open the cpu.level in the level editor.
+1. Open cpu.level in the level editor.
 2. Using the schematics importer, import the instructions (ex: bad_apple_inst.schem) and place it in the instructions area of the CPU.
 3. Again using the schematics importer, import the data (ex: bad_apple_data.schem) and place it in the memory area of the CPU.
 4. Hit enter to "run" the CPU.
