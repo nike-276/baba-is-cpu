@@ -31,7 +31,22 @@ Signals and data are represented using Objects (we picked all of them for a reas
 | Fruit    | 0xF   |
 
 The custom ISA is as follows:
-(UNDETERMINED BUT WE SHOULD PUT IT IN A TABLE)
+
+### ISA Binary Code
+
+| Binary Code | Instruction | Description |
+|-------------|-------------|-------------|
+| `00000000`  | halt        | `pc = pc` |
+| `000001tt`  | print       | `print(regs[rt])` |
+| `00001000`  | play        | play the stdout as music |
+| `0001aatt`  | sub         | `regs[rt] = regs[rt] - regs[ra]` |
+| `0010iitt`  | addi        | `regs[rt] = regs[rt] + (immediate value)` |
+| `0011aatt`  | cpy         | `regs[rt] = regs[ra]` |
+| `1100aatt`  | jz          | `if (regs[ra] == 0): pc = regs[rt]` |
+| `1101aatt`  | js          | `if (regs[ra] < 0): pc = regs[rt]` |
+| `1110aatt`  | ld          | `regs[rt] = mem[regs[ra]]` |
+| `1111aatt`  | st          | `mem[regs[ra]] = regs[rt]` |
+| others      | nop         | no operation |
 
 Instructions to run the CPU that we built and the program that plays bad apple and ___OTHER SONGS NAME___.
 1. Open cpu.level in the level editor.
