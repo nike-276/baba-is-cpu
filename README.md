@@ -63,6 +63,7 @@ NOTE: sometimes when importing schematics you may accidentally place an object. 
 
  - 0.00000000393 GHz Clock Speed
  - 1 instruction per cycle
+<!-- -->
 As you can see in our comparison.png, our CPU is comparable to modern CPUs.
 
 ---
