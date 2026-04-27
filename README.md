@@ -32,9 +32,10 @@ Signals and data are represented using Objects (we picked all of them for a reas
 | Egg      | 0xE   |
 | Fruit    | 0xF   |
 
-The custom ISA is as follows:
 
 ### ISA Binary Code
+
+The custom ISA is as follows:
 
 | Binary Code | Instruction | Description |
 |-------------|-------------|-------------|
