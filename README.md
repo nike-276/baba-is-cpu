@@ -8,6 +8,8 @@ A from-scratch Baba Is You simulator and level editor in C++. Implements the ful
 
 A single-cycle CPU using Baba Is You rules and objects. Printing is done via hexadecimal output along two tracks in the simulator, which doubles as a music player. A map of the layout of our CPU can be found in CPUDiagram.png.
 
+### Object Table
+
 Signals and data are represented using Objects (we picked all of them for a reason, try to figure out why!):
 | Object   | Value |
 |----------|-------|
@@ -55,6 +57,12 @@ Instructions to run the CPU that we built and the program that plays bad apple a
 4. Hit enter to "run" the CPU.
 
 NOTE: sometimes when importing schematics you may accidentally place an object. CTRL+Z to remove the extra object.
+
+### Specs
+
+ - 0.00000000393 GHz Clock Speed
+ - 1 instruction per cycle
+As you can see in our comparison.png, our CPU is comparable to modern CPUs.
 
 ---
 
