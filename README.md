@@ -61,7 +61,7 @@ NOTE: sometimes when importing schematics you may accidentally place an object. 
 
 ### Specs
 
- - 0.00000000393 GHz Clock Speed
+ - 0.000000000393 GHz Clock Speed
  - 1 instruction per cycle
 <!-- -->
 As you can see in our comparison.png, our CPU is comparable to modern CPUs.
