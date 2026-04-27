@@ -51,7 +51,7 @@ The custom ISA is as follows:
 | `1111aatt`  | st          | `mem[regs[ra]] = regs[rt]` |
 | others      | nop         | no operation |
 
-Instructions to run the CPU that we built and the program that plays bad apple and ___OTHER SONGS NAME___.
+Instructions to run the CPU that we built and the program that plays bad apple and ___OTHER SONGS NAME___. To play your own short tune, use program/tune/tune.py to generate your own short tune.
 1. Open cpu.level in the level editor.
 2. Using the schematics importer, import the instructions (ex: bad_apple_inst.schem) and place it in the instructions area of the CPU.
 3. Again using the schematics importer, import the data (ex: bad_apple_data.schem) and place it in the memory area of the CPU.
