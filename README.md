@@ -77,6 +77,32 @@ As you can see in our comparison.png, our CPU is comparable to modern CPUs.
 
 ---
 
+## Quickstart — run Bad Apple on the CPU
+
+End-to-end: build the GUI, load the prebuilt CPU level, drop in the program + memory schematics, and let it run.
+
+```sh
+# 1. Build the GUI binary (raylib is fetched automatically; ~2 min cold).
+cmake -S . -B build-cmake
+cmake --build build-cmake -j
+
+# 2. Open the prebuilt CPU.
+./build-cmake/src/app/babaiwt --edit cpu.level
+```
+
+Then, inside the editor:
+
+1. **Load instructions.** Press `Ctrl+F`, type `bad_apple_inst`, press `Enter`. Click once inside the instruction region of the CPU to stamp the schematic.
+2. **Load data.** Press `Ctrl+F`, type `bad_apple_data`, press `Enter`. Click once inside the memory region.
+3. **Switch to play mode.** Press `Enter` (or `Space`).
+4. **Run it.** Press `P` to start auto-tick. Press `+` / `-` to change tick speed, or `0` for max speed (one tick per frame).
+
+> If a stray tile gets placed while you're navigating the picker, `Ctrl+Z` removes it.
+
+`ESC` returns to edit mode and restores the pre-play snapshot. Closing the window exits.
+
+---
+
 ## Building
 
 ### GUI build (editor + play loop)
@@ -88,64 +114,28 @@ cmake --build build-cmake -j
 
 Binary: `build-cmake/src/app/babaiwt`
 
-### Headless build (scenarios + unit tests only)
+### Headless build (no raylib, scenarios + unit tests only)
 
 ```sh
 make            # → build/babaiwt  +  build/unit_tests
-make check      # run unit tests + all scenario tests
-make test       # scenario tests only
 ```
 
 ---
 
 ## Running
 
-### Open the level editor
+### Open the editor
 
 ```sh
 ./build-cmake/src/app/babaiwt --edit                 # blank level
 ./build-cmake/src/app/babaiwt --edit my.level        # open an existing level
 ```
 
-### Play a level directly
+### Play a level
 
 ```sh
 ./build-cmake/src/app/babaiwt --play my.level
 ```
-
-### Run a test scenario (headless)
-
-```sh
-./build-cmake/src/app/babaiwt --test tests/scenarios/01-baba-is-you-basic-move.test
-# or with the Makefile build:
-./build/babaiwt tests/scenarios/01-baba-is-you-basic-move.test
-```
-
-### Profile the tick pipeline
-
-```sh
-./build/babaiwt --bench <path.level|path.test> [N=500]
-```
-
-Runs N wait-ticks (after a 10-tick warm-up) and prints a table of where time goes, sorted by total cost:
-
-```
-=== Benchmark — 1000 ticks ===
-Phase                     min(µs)  mean(µs)  max(µs)  total(ms)     %
---------------------------------------------------------------------
-parse_post_destruct            0.9       1.2      35.7       1.24   14%
-apply_destruct                 0.9       1.2       3.9       1.22   14%
-parse_post_transform           0.8       1.2       2.0       1.19   13%
-parse_post_move                0.8       1.2       1.8       1.17   13%
-parse_initial                  0.8       1.1       3.4       1.07   12%
-apply_nudge                    0.7       0.9       1.7       0.90   10%
-apply_fear                     0.5       0.7       4.7       0.70    8%
-...
---------------------------------------------------------------------
-TOTAL                          6.8       9.0      44.5       9.03  100%
-```
-
-Both `.level` and `.test` files are accepted. Run against your actual slow level for accurate numbers — rule count and object density both affect results significantly.
 
 ---
 
@@ -212,19 +202,30 @@ Type any character to filter the palette by name substring.
 
 ## File formats
 
-| Extension | Purpose |
-|-----------|---------|
-| `.level` | A playable level (version header + tile records) |
-| `.test` | Test scenario: `[setup]` level + `[inputs]` actions + `[expected]` assertions |
-| `.schem` | Reusable schematic fragment with optional I/O port tags |
+| Extension | Purpose | How it's normally produced |
+|-----------|---------|----------------------------|
+| `.level`  | A playable level (version header + tile records) | Editor (`--edit`, `Ctrl+S`) |
+| `.schem`  | Reusable fragment with optional I/O port tags    | Editor (`Ctrl+Shift+E` on a selection) |
+| `.test`   | `[setup]` level + `[inputs]` actions + `[expected]` assertions | Hand-authored |
 
-All formats are plain text, hand-editable. Full grammar in [`docs/file-format-v1.md`](docs/file-format-v1.md).
+All formats are plain text and hand-editable. Full grammar in [`docs/file-format-v1.md`](docs/file-format-v1.md).
 
 ---
 
-## Writing a level
+## Authoring content
 
-Level files are plain text:
+### In the editor (recommended for `.level` and `.schem`)
+
+The editor is the primary authoring tool. Place tiles, then:
+
+- `Ctrl+S` to save a level (prompts for filename on first save).
+- Shift-drag to box-select, then `Ctrl+Shift+E` to save the selection as a schematic. While in tagging mode, LMB marks input tiles, RMB marks output tiles, `Enter` confirms and saves to `schematics/<name>.schem`.
+
+You almost never need to hand-edit `.level` or `.schem` files.
+
+### Manual `.level` format (advanced)
+
+For scripted level generation or version-control diffs, the format is plain text:
 
 ```
 version 1
@@ -239,16 +240,22 @@ text 0 2 flag
 text 1 2 is
 text 2 2 win
 
-# Objects
+# Objects (kind, then facing)
 object 5 5 baba right
 object 10 5 flag right
 ```
 
-Rules are formed by placing text tiles on the grid so they read `NOUN IS PROPERTY` horizontally or vertically. The engine re-parses rules every tick.
+Rules form when text tiles read `NOUN IS PROPERTY` horizontally or vertically. The engine re-parses every tick. Full record list in [`docs/file-format-v1.md`](docs/file-format-v1.md).
+
+### Manual `.schem` format (advanced)
+
+`.schem` is a `.level` body with optional `input`/`output` tags marking ports. See [`docs/file-format-v1.md`](docs/file-format-v1.md). In practice, every schematic in `schematics/` was produced by the editor.
 
 ---
 
-## Writing a test scenario
+## Writing test scenarios
+
+Test scenarios are hand-authored and live under `tests/scenarios/*.test`. They are the behavior contract.
 
 ```
 [setup]
@@ -278,17 +285,79 @@ not_won
 
 Supported assertions: `at`, `not_at`, `text_at`, `count`, `text_count`, `won`, `not_won`, `tick`, `sound_count`.
 
-Run all scenarios: `make test`
+---
+
+## Testing
+
+The test suite is fully headless and uses the `Makefile` build (no raylib). Two test types:
+
+- **Unit tests** (`tests/unit/*.cpp`) — C++ checks for `World`, loader, rule parser.
+- **Scenario tests** (`tests/scenarios/*.test`) — `.test` files driven through the engine; these are the behavior contract.
+
+```sh
+make            # build build/babaiwt + build/unit_tests
+make check      # unit tests + all scenarios
+make test       # scenarios only
+make clean
+```
+
+Run a single scenario directly:
+
+```sh
+./build/babaiwt tests/scenarios/01-baba-is-you-basic-move.test
+# Equivalent through the GUI binary:
+./build-cmake/src/app/babaiwt --test tests/scenarios/01-baba-is-you-basic-move.test
+```
+
+---
+
+## Benchmarking
+
+Phase-level tick profiler. Useful when adding a new rule or chasing a slow level.
+
+```sh
+./build/babaiwt --bench <path.level|path.test> [N=500] [--no-log]
+```
+
+Runs N wait-ticks after a 10-tick warm-up and prints a table of where time goes, sorted by total cost:
+
+```
+=== Benchmark — 1000 ticks ===
+Phase                     min(µs)  mean(µs)  max(µs)  total(ms)     %
+--------------------------------------------------------------------
+parse_post_destruct            0.9       1.2      35.7       1.24   14%
+apply_destruct                 0.9       1.2       3.9       1.22   14%
+parse_post_transform           0.8       1.2       2.0       1.19   13%
+parse_post_move                0.8       1.2       1.8       1.17   13%
+parse_initial                  0.8       1.1       3.4       1.07   12%
+apply_nudge                    0.7       0.9       1.7       0.90   10%
+apply_fear                     0.5       0.7       4.7       0.70    8%
+...
+--------------------------------------------------------------------
+TOTAL                          6.8       9.0      44.5       9.03  100%
+```
+
+Notes:
+
+- Both `.level` and `.test` inputs are accepted.
+- Results are written under `logs/benchmarks/` unless `--no-log` is passed.
+- Rule count and object density dominate the results — bench against your actual slow level.
 
 ---
 
 ## Implemented rules
 
-The engine supports: `IS`, `AND`, `NOT`, `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`, `FACING`, `FACEDBY`, `FEAR`, `POWERED` / `POWERED2` / `POWERED3`, `PLAY`.
+**Operators.** `IS` (predicate, `X IS X` identity protection, `X IS NOUN` transform, `X IS TEXT`, `X IS WORD`), `AND` (subjects, predicates, MAKE/EAT/HAS targets), `NOT` (predicate side), `ON`, `NOT ON`, `MAKE`, `EAT`, `HAS`, `FACING`, `FACEDBY`, `FEAR`, `POWERED` / `POWERED2` / `POWERED3`, `PLAY`.
 
-Properties: `YOU`, `PUSH`, `STOP`, `WIN`, `DEFEAT`, `SINK`, `HOT`, `MELT`, `OPEN`, `SHUT`, `WEAK`, `MOVE`, `AUTO`, `FALL*`, `UP/DOWN/LEFT/RIGHT`, `STILL`, `NUDGE*`, `POWER` / `POWER2` / `POWER3`.
+**Movement properties.** `YOU`, `PUSH`, `STOP`, `MOVE`, `AUTO`, `FALL` / `FALLUP` / `FALLLEFT` / `FALLRIGHT`, `UP` / `DOWN` / `LEFT` / `RIGHT` (facing setters), `STILL`, `NUDGERIGHT` / `NUDGEUP` / `NUDGELEFT` / `NUDGEDOWN`.
 
-Full catalog with implementation status: [`docs/feature-status.md`](docs/feature-status.md)
+**Removal / interaction properties.** `SINK`, `HOT`, `MELT`, `DEFEAT`, `OPEN` / `SHUT`, `WEAK`.
+
+**Transform / meta properties.** `TEXT` (as predicate), `WORD`, `WIN`, `POWER` / `POWER2` / `POWER3`.
+
+**Always-on base rule.** `TEXT IS PUSH` (cancellable with `TEXT IS NOT PUSH`).
+
+Full catalog with implementation status, edge cases, and deferred constructs: [`docs/feature-status.md`](docs/feature-status.md). Grammar and parse semantics: [`docs/rule-engine-spec.md`](docs/rule-engine-spec.md).
 
 ---
 
@@ -305,5 +374,8 @@ src/
 tests/
   scenarios/ .test scenario files (the behavior contract)
   unit/      C++ unit tests
+schematics/  Reusable .schem fragments (CPU components, programs)
+program/     Source assets for compiled programs (apple/, tune/)
+scripts/     Assembler, memory compiler, sprite tooling
 docs/        Architecture, rule-engine spec, file format spec, GUI guide
 ```

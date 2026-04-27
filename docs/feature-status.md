@@ -62,6 +62,7 @@ checklist) and any scenario file that locks the behavior down.
 | `FALL`       | DONE     | Slides downward until blocked in one tick; does NOT push (stops at PUSH or STOP objects). |
 | `FALLUP` / `FALLLEFT` / `FALLRIGHT` | DONE | Same slide semantics as FALL in respective directions. |
 | `UP` / `DOWN` / `LEFT` / `RIGHT` | DONE | Sets object's facing each tick (APPLY_DIRECTIONAL phase 1.5, before APPLY_INPUT). No movement by themselves; combine with MOVE/AUTO for motion. |
+| `STILL`      | DONE     | Object refuses to move under any self-propelled motion (MOVE, AUTO, FALL\*, NUDGE\*, SHIFT, SWAP). Player input still resolves normally for YOU+STILL. Checked in `try_move` and every auto-motion phase via `object_has_property(..., P_Still)`. |
 | `SHIFT`      | PLANNED  | Carries any object that ends a tick on top of it one tile in SHIFT's facing direction. |
 | `PULL`       | PLANNED  | Mirror of PUSH on the back of the chain. |
 | `SWAP`       | PLANNED  | Two SWAP-property objects on neighbouring tiles trade places when one moves. |
@@ -107,7 +108,7 @@ Removal precedence inside DESTRUCT (lower = earlier):
 | Property | Status | Notes |
 |----------|--------|-------|
 | `TEXT` (as predicate) | DONE | `X IS TEXT` converts non-text X objects to text tiles (kind unchanged, `text` flag set). One-directional; coexistence guard skips if text already present on tile. |
-| `WORD` | DEFERRED | Variant treating a non-text object as a noun for parsing. |
+| `WORD` | DONE | `X IS WORD` makes non-text X objects act as their own text tile during rule formation (i.e. the object is read as the noun X by the parser). Implemented in `RuleSet::parse` pass 2 (`ruleset.cpp:830`) and consumed in `tick.cpp` rule-strip walk via `any_grants(P_Word)` + per-object `object_has_property(..., P_Word)`. Granted via unconditional, ON-conditional, FACING-conditional, and POWERED-conditional forms. |
 | `MIMIC`| DEFERRED | Subject takes on properties of overlapped object. |
 | `WRITE`| DEFERRED | Cosmetic; pulls letters together. |
 
