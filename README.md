@@ -6,7 +6,7 @@ A from-scratch Baba Is You simulator and level editor in C++. Implements the ful
 
 ## Project Overview
 
-A single-cycle CPU using Baba Is You rules and objects. Printing is done via hexadecimal output along two tracks in the simulator, which doubles as a music player. A map of the layout of our CPU can be found at (RENAME THE FILE/ADD IT IN) layout.png.
+A single-cycle CPU using Baba Is You rules and objects. Printing is done via hexadecimal output along two tracks in the simulator, which doubles as a music player. A map of the layout of our CPU can be found in CPUDiagram.png.
 
 Signals and data are represented using Objects (we picked all of them for a reason, try to figure out why!):
 | Object   | Value |
