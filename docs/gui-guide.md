@@ -61,8 +61,9 @@ Switching back to Edit restores the snapshot taken on the last Play entry
 | `Ctrl+X` (with selection)       | Cut selection to clipboard (undoable). |
 | `Ctrl+V` (with clipboard)       | Enter paste mode; hover to preview, LMB to stamp. |
 | `Ctrl+Shift+E` (with selection) | Save selection as a schematic. Prompts for name → saves to `schematics/<name>.schem`. Then enter tag mode: LMB=input tile (blue), RMB=output tile (red), MMB=clear, Enter=save. |
-| `Ctrl+I`                        | Import schematic. Opens fuzzy picker of `schematics/`; type to filter, Up/Down to navigate, Enter to load. Then LMB to stamp; `Ctrl+R` to rotate 90° CW. |
+| `Ctrl+F`                        | Import schematic. Opens fuzzy picker of `schematics/`; type to filter, Up/Down to navigate, Enter to load. Then LMB to stamp; `Ctrl+R` to rotate 90° CW. |
 | `Ctrl+B`                        | Toggle global abstract view for all placed schematics (conforming outline, gray fill, blue=input, red=output, name label). |
+| `Ctrl+P`                        | Toggle layer-overlay view (works in both Edit and Play). Off: objects sharing a tile are drawn in squished horizontal bands (`tile_px / count` tall each). On: every object draws at full tile height, directly on top of the others. |
 | `Enter` / `Space`               | Enter Play mode (snapshots world). |
 
 ## Controls — Play mode
@@ -96,10 +97,17 @@ Use the window's close button or Alt+F4 to exit.
 
 ## Rendering
 
-No sprites yet — all tiles are colored rectangles with text labels. The
-draw order per tile is: non-text objects first (ascending id), then text
-objects (ascending id). Multiple objects on the same tile stack with a
-small vertical offset.
+Tiles use PNG sprites loaded from `assets/sprites/objects/` and
+`assets/sprites/text/` (filename = lowercase kind name, e.g. `baba.png`);
+a kind with no matching file falls back to a colored rectangle with an
+ALL-CAPS text label. The draw order per tile is: non-text objects first
+(ascending id), then text objects (ascending id).
+
+When multiple objects share a tile, by default (`Ctrl+P` off) the tile's
+height is divided into `count` equal horizontal bands and each object's
+sprite is squashed to fit its band — not just offset. `Ctrl+P` toggles
+layer-overlay mode, which instead draws every object at full tile height,
+directly on top of the others.
 
 Grid lines and a fixed right-side rules panel ("ACTIVE RULES") are always
 visible. The HUD bar at the bottom shows current mode, filename (with `*`
@@ -123,7 +131,7 @@ Schematics (`.schem` files) are reusable snippets of tile layouts.
 4. The file is written to `schematics/<name>.schem` and abstract view is enabled automatically.
 
 **Importing a schematic:**
-1. `Ctrl+I` → fuzzy-search the list → Enter.
+1. `Ctrl+F` → fuzzy-search the list → Enter.
 2. Move cursor to position the preview; `Ctrl+R` to rotate 90° CW.
 3. LMB to stamp. `ESC` to cancel.
 4. `Ctrl+B` toggles the abstract overlay for all placed schematics.
